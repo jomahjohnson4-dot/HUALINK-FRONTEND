@@ -10,7 +10,8 @@ import {
   ArrowRight, 
   ShieldCheck, 
   Zap,
-  Sparkles
+  Sparkles,
+  MessageSquare
 } from 'lucide-react';
 
 const SERVICE_CATEGORIES = [
@@ -27,11 +28,13 @@ const MOCK_SERVICES = [
     title: 'Custom Web & Mobile App Development',
     category: 'web',
     provider: 'Hualink Tech Solutions',
+    phone: '255700000000', // Format: 255XXXXXXXXX
     price: 'From 700,000 TSH',
     timeline: '5-10 Days Delivery',
     location: 'Dar es Salaam & Online',
     description: 'Professional responsive web applications, e-commerce storefronts, and custom client-side software engineered with modern UI/UX standards.',
     tag: 'Top Rated',
+    status: 'Online Now',
     image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=600&q=80',
   },
   {
@@ -39,11 +42,13 @@ const MOCK_SERVICES = [
     title: 'Logo, Posters, Flyers & Brand Banners',
     category: 'graphic',
     provider: 'TeKeL Graphics Studio',
+    phone: '255700000000',
     price: 'From 25,000 TSH',
     timeline: '24 Hours Turnaround',
     location: 'Mbeya & Regional Hubs',
     description: 'High-impact visual identity design, custom company logos, marketing posters, social media banners, and promotional print assets.',
     tag: 'TeKeL Branding',
+    status: 'Fast Response',
     image: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&w=600&q=80',
   },
   {
@@ -51,11 +56,13 @@ const MOCK_SERVICES = [
     title: 'Modern Office & Home Furniture Supply',
     category: 'furniture',
     provider: 'Hualink Logistics & Interiors',
+    phone: '255700000000',
     price: 'From 150,000 TSH',
     timeline: 'Instant Stock / 3 Days Custom',
     location: 'Dar es Salaam Depot',
     description: 'Durable executive desks, ergonomic office chairs, custom shelving units, and contemporary home furnishing solutions built for longevity.',
     tag: 'Direct Supply',
+    status: 'Available',
     image: 'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?auto=format&fit=crop&w=600&q=80',
   },
   {
@@ -63,11 +70,13 @@ const MOCK_SERVICES = [
     title: 'Computer Maintenance, Repair & Networking',
     category: 'tech',
     provider: 'Hualink Systems Support',
+    phone: '255700000000',
     price: 'From 30,000 TSH',
     timeline: 'Same Day Service',
     location: 'All Regional Depots',
     description: 'Professional laptop/desktop hardware diagnosis, operating system troubleshooting, driver installation, and office network routing setups.',
     tag: 'Verified Tech',
+    status: 'Online Now',
     image: 'https://images.unsplash.com/photo-1588508065123-287b28e013da?auto=format&fit=crop&w=600&q=80',
   },
   {
@@ -75,11 +84,13 @@ const MOCK_SERVICES = [
     title: 'Agency Dashboard & Web UI Prototyping',
     category: 'web',
     provider: 'Hualink Tech Solutions',
+    phone: '255700000000',
     price: 'From 450,000 TSH',
     timeline: '4 Days Delivery',
     location: 'Online Delivery',
     description: 'Dark-themed creative studio dashboards, custom client portals, and interactive web interfaces designed for maximum performance.',
     tag: 'Pro Feature',
+    status: 'Available',
     image: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=600&q=80',
   },
   {
@@ -87,11 +98,13 @@ const MOCK_SERVICES = [
     title: 'Custom Product Packaging & Promotional Banners',
     category: 'graphic',
     provider: 'TeKeL Graphics Studio',
+    phone: '255700000000',
     price: 'From 50,000 TSH',
     timeline: '2 Days Delivery',
     location: 'Mbeya Hub',
     description: 'Custom product packaging labels, roll-up banners, billboard graphics, and promotional flyers tailored to your brand identity.',
     tag: 'TeKeL Special',
+    status: 'Fast Response',
     image: 'https://images.unsplash.com/photo-1542744094-3a31243324d0?auto=format&fit=crop&w=600&q=80',
   },
 ];
@@ -109,8 +122,16 @@ export default function Services() {
     return matchesCategory && matchesSearch;
   });
 
+  // Open WhatsApp with pre-filled inquiry details
+  const handleWhatsAppClick = (service) => {
+    const text = encodeURIComponent(
+      `Hello ${service.provider}! 👋\n\nI am contacting you via *Hualink Hub* regarding:\n📌 *${service.title}*\n\nEstimated Price: ${service.price}\nLocation/Target: ${service.location}\n\nI would like to inquire about starting this service.`
+    );
+    window.open(`https://wa.me/${service.phone}?text=${text}`, '_blank');
+  };
+
   return (
-    <div className="bg-gray-900 min-h-screen text-white pt-6 pb-20">
+    <div className="bg-gray-900 min-h-screen text-white pt-6 pb-20 font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         
         {/* Top Header Banner */}
@@ -208,15 +229,23 @@ export default function Services() {
                   className="bg-gray-800 border border-gray-700/70 hover:border-red-600/60 rounded-2xl overflow-hidden flex flex-col justify-between transition-all group shadow-lg"
                 >
                   <div>
-                    {/* Image Header */}
+                    {/* Image Header with Tag & Online Badge */}
                     <div className="relative h-48 bg-gray-900 overflow-hidden">
                       <img
                         src={service.image}
                         alt={service.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
+                      
+                      {/* Top Tag */}
                       <span className="absolute top-3 left-3 bg-black/80 backdrop-blur-md text-red-500 text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-red-500/30 uppercase tracking-wider">
                         {service.tag}
+                      </span>
+
+                      {/* Top Online Status Indicator */}
+                      <span className="absolute top-3 right-3 bg-emerald-500/20 backdrop-blur-md border border-emerald-500/40 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        {service.status}
                       </span>
                     </div>
 
@@ -247,13 +276,24 @@ export default function Services() {
                     </div>
                   </div>
 
-                  {/* Action Button */}
-                  <div className="p-4 pt-0">
+                  {/* Dual Action Buttons */}
+                  <div className="p-4 pt-0 space-y-2">
+                    {/* Primary Booking Button */}
                     <button className="w-full bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs py-2.5 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-2">
                       <span>Book Service</span>
                       <ArrowRight size={14} />
                     </button>
+
+                    {/* Pro WhatsApp Direct Contact Button */}
+                    <button 
+                      onClick={() => handleWhatsAppClick(service)}
+                      className="w-full bg-gray-900/80 hover:bg-gray-900 border border-emerald-500/40 hover:border-emerald-500/80 text-emerald-400 hover:text-emerald-300 font-bold text-xs py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <MessageSquare size={14} />
+                      <span>Chat on WhatsApp</span>
+                    </button>
                   </div>
+
                 </div>
               ))}
             </div>

@@ -9,19 +9,15 @@ import {
   Layers,
   UserCheck,
   Search,
-  PackageCheck
+  PackageCheck,
+  CheckCircle2,
+  Clock,
+  MapPin,
+  CreditCard
 } from 'lucide-react';
 
 export default function Landing() {
   const [currentSlide, setCurrentSlide] = useState(0);
-
-  // Auto-slide every 5 seconds
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
 
   const slides = [
     {
@@ -48,10 +44,18 @@ export default function Landing() {
       subtitle: "ELECTRONICS & NETWORK MAINTENANCE",
       description: "Quality hardware stock, networking maintenance setup, and enterprise office furniture solutions.",
       buttonText: "Learn More",
-      buttonLink: "/shop",
+      buttonLink: "/docs/help", // Navigates directly to Help Center & Documentation
       image: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&q=80&w=1600",
     }
   ];
+
+  // Auto-slide every 5 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [slides.length]);
 
   const steps = [
     {
@@ -125,7 +129,7 @@ export default function Landing() {
             <div className="pt-2">
               <Link 
                 to={slides[currentSlide].buttonLink} 
-                className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider px-8 py-3.5 rounded-full transition-all inline-flex items-center gap-2 shadow-lg shadow-red-600/30"
+                className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider px-8 py-3.5 rounded-full transition-all inline-flex items-center gap-2 shadow-lg shadow-red-600/30 cursor-pointer"
               >
                 <span>{slides[currentSlide].buttonText}</span>
                 <ArrowRight size={14} />
@@ -206,7 +210,7 @@ export default function Landing() {
       </section>
 
       {/* ================= 2. THREE SIMPLE STEPS SECTION ================= */}
-      <section className="py-20 bg-slate-50 border-b border-slate-200">
+      <section className="py-20 bg-slate-50">
         <div className="max-w-7xl mx-auto px-6">
           
           {/* Section Header */}
@@ -268,6 +272,84 @@ export default function Landing() {
             })}
           </div>
 
+        </div>
+      </section>
+
+      {/* ================= 3. WHY CHOOSE HUALINK DISTRIBUTION ================= */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <div className="bg-black text-white rounded-3xl p-8 sm:p-12 shadow-2xl">
+          
+          {/* Section Title */}
+          <div className="text-center mb-10">
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
+              Why Choose <span className="text-red-600 italic">HUALINK DISTRIBUTION</span>?
+            </h2>
+          </div>
+
+          {/* Feature Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            
+            {/* Feature 1 */}
+            <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-5 flex items-start gap-4 hover:border-zinc-700 transition-colors">
+              <div className="text-red-600 shrink-0 mt-0.5">
+                <CheckCircle2 size={22} />
+              </div>
+              <div>
+                <h3 className="text-sm font-extrabold text-white mb-1">
+                  100% Verified Outlets
+                </h3>
+                <p className="text-xs text-zinc-400 font-medium leading-relaxed">
+                  Zero counterfeit goods or unvetted vendors across our distribution network.
+                </p>
+              </div>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-5 flex items-start gap-4 hover:border-zinc-700 transition-colors">
+              <div className="text-red-600 shrink-0 mt-0.5">
+                <Clock size={22} />
+              </div>
+              <div>
+                <h3 className="text-sm font-extrabold text-white mb-1">
+                  Live Route Tracking
+                </h3>
+                <p className="text-xs text-zinc-400 font-medium leading-relaxed">
+                  Real-time status updates from warehouse dispatch direct to your door.
+                </p>
+              </div>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-5 flex items-start gap-4 hover:border-zinc-700 transition-colors">
+              <div className="text-red-600 shrink-0 mt-0.5">
+                <MapPin size={22} />
+              </div>
+              <div>
+                <h3 className="text-sm font-extrabold text-white mb-1">
+                  Regional Stock Hubs
+                </h3>
+                <p className="text-xs text-zinc-400 font-medium leading-relaxed">
+                  Localized inventory centers for faster regional deliveries across Tanzania.
+                </p>
+              </div>
+            </div>
+
+            {/* Feature 4 */}
+            <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-5 flex items-start gap-4 hover:border-zinc-700 transition-colors">
+              <div className="text-red-600 shrink-0 mt-0.5">
+                <CreditCard size={22} />
+              </div>
+              <div>
+                <h3 className="text-sm font-extrabold text-white mb-1">
+                  Secure Direct Pay
+                </h3>
+                <p className="text-xs text-zinc-400 font-medium leading-relaxed">
+                  Encrypted transactions, mobile money integration, and transparent invoices.
+                </p>
+              </div>
+            </div>
+
+          </div>
         </div>
       </section>
 

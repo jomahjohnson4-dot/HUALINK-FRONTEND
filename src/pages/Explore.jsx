@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Zap, 
   Truck, 
@@ -13,7 +13,15 @@ import {
   Building2, 
   Compass,
   Boxes,
+  Edit2,
+  Trash2,
+  PackagePlus,
+  AlertCircle,
+  CheckCircle,
+  RefreshCw,
+  LayoutDashboard
 } from 'lucide-react';
+import API from '../api/axios';
 
 const EXPLORE_CATEGORIES = [
   { id: 'all', name: 'All Distribution Capabilities', icon: Compass },
@@ -73,6 +81,145 @@ const EXPLORE_CARDS = [
 export default function Explore() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  
+  const [userRole] = useState(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        return parsed?.role?.toLowerCase() || null;
+      } catch (e) {
+        console.error('Failed to parse user profile:', e);
+      }
+    }
+    return null;
+  });
+
+  const [products, setProducts] = useState([]);
+  const [fetchingProducts, setFetchingProducts] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [formLoading, setFormLoading] = useState(false);
+  const [msg, setMsg] = useState({ type: '', text: '' });
+
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    basePrice: '',
+    stockCount: '',
+    category: 'Electronics',
+    image: '',
+  });
+
+  const isAdminOrDepot = userRole === 'admin' || userRole === 'depot';
+
+  // Standalone fetch handler for manual triggers like sync button or form submit
+  const fetchProducts = useCallback(async () => {
+    try {
+      setFetchingProducts(true);
+      const res = await API.get('/products');
+      setProducts(res.data?.data || res.data || []);
+    } catch (err) {
+      console.error('Failed to load products:', err);
+    } finally {
+      setFetchingProducts(false);
+    }
+  }, []);
+
+  // Async data fetching in effect scheduled outside current execution frame
+  useEffect(() => {
+    let isMounted = true;
+
+    if (isAdminOrDepot) {
+      queueMicrotask(async () => {
+        try {
+          if (isMounted) setFetchingProducts(true);
+          const res = await API.get('/products');
+          if (isMounted) setProducts(res.data?.data || res.data || []);
+        } catch (err) {
+          console.error('Failed to load products:', err);
+        } finally {
+          if (isMounted) setFetchingProducts(false);
+        }
+      });
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAdminOrDepot]);
+
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleEditSelect = (product) => {
+    setEditingId(product.id);
+    setFormData({
+      name: product.name || '',
+      description: product.description || '',
+      basePrice: product.basePrice ?? product.price ?? '',
+      stockCount: product.stockCount ?? product.stock ?? '',
+      category: product.category || 'Electronics',
+      image: product.image || '',
+    });
+  };
+
+  const resetForm = () => {
+    setEditingId(null);
+    setFormData({
+      name: '',
+      description: '',
+      basePrice: '',
+      stockCount: '',
+      category: 'Electronics',
+      image: '',
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setFormLoading(true);
+    setMsg({ type: '', text: '' });
+
+    const payload = {
+      ...formData,
+      basePrice: parseFloat(formData.basePrice),
+      stockCount: parseInt(formData.stockCount, 10),
+    };
+
+    try {
+      if (editingId) {
+        await API.put(`/products/${editingId}`, payload);
+        setMsg({ type: 'success', text: 'Depot item updated successfully!' });
+      } else {
+        await API.post('/products', payload);
+        setMsg({ type: 'success', text: 'New item added to depot inventory!' });
+      }
+      resetForm();
+      fetchProducts();
+    } catch (err) {
+      setMsg({
+        type: 'error',
+        text: err.response?.data?.message || 'Operation failed. Verify authorization.',
+      });
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this product from regional inventory?')) return;
+    try {
+      await API.delete(`/products/${id}`);
+      setProducts(products.filter((p) => p.id !== id));
+      setMsg({ type: 'success', text: 'Product removed from stock.' });
+    } catch (err) {
+      setMsg({
+        type: 'error',
+        text: err.response?.data?.message || 'Could not delete product.',
+      });
+    }
+  };
 
   const filteredCards = EXPLORE_CARDS.filter((card) => {
     const matchesCategory =
@@ -84,18 +231,18 @@ export default function Explore() {
   });
 
   return (
-    <div className="bg-gray-900 min-h-screen text-white pt-6 pb-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+    <div className="bg-gray-900 min-h-screen text-white pt-6 pb-20 font-sans">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
         
         {/* Banner Header */}
-        <div className="bg-gradient-to-r from-red-600 to-black rounded-3xl p-6 sm:p-10 mb-8 border border-red-900/40 shadow-2xl relative overflow-hidden">
+        <div className="bg-gradient-to-r from-red-600 via-red-950 to-black rounded-3xl p-6 sm:p-10 border border-red-900/40 shadow-2xl relative overflow-hidden">
           <div className="relative z-10 max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-black/50 border border-red-500/30 rounded-full px-3 py-1 text-xs font-bold text-red-400 mb-4 uppercase tracking-wider">
               <Zap size={14} />
               <span>Hualink Distribution Network</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-black italic tracking-tight text-white uppercase">
-              Explore Our Capabilities
+              Explore Capabilities & Depot Hubs
             </h1>
             <p className="text-xs sm:text-sm text-gray-300 mt-2 font-medium">
               Discover Hualink supply chain services, regional distribution depots, TeKeL graphics design, and hardware maintenance solutions.
@@ -104,9 +251,9 @@ export default function Explore() {
         </div>
 
         {/* Action Feature Badges */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-gray-800/80 border border-gray-700/80 rounded-2xl p-4 flex items-center gap-3">
-            <div className="p-2.5 bg-red-600/20 text-red-500 rounded-xl">
+            <div className="p-2.5 bg-red-600/20 text-red-500 rounded-xl shrink-0">
               <Truck size={20} />
             </div>
             <div>
@@ -116,7 +263,7 @@ export default function Explore() {
           </div>
 
           <div className="bg-gray-800/80 border border-gray-700/80 rounded-2xl p-4 flex items-center gap-3">
-            <div className="p-2.5 bg-orange-500/20 text-orange-400 rounded-xl">
+            <div className="p-2.5 bg-orange-500/20 text-orange-400 rounded-xl shrink-0">
               <Palette size={20} />
             </div>
             <div>
@@ -126,7 +273,7 @@ export default function Explore() {
           </div>
 
           <div className="bg-gray-800/80 border border-gray-700/80 rounded-2xl p-4 flex items-center gap-3">
-            <div className="p-2.5 bg-blue-500/20 text-blue-400 rounded-xl">
+            <div className="p-2.5 bg-blue-500/20 text-blue-400 rounded-xl shrink-0">
               <MapPin size={20} />
             </div>
             <div>
@@ -136,7 +283,7 @@ export default function Explore() {
           </div>
 
           <div className="bg-gray-800/80 border border-gray-700/80 rounded-2xl p-4 flex items-center gap-3">
-            <div className="p-2.5 bg-emerald-500/20 text-emerald-400 rounded-xl">
+            <div className="p-2.5 bg-emerald-500/20 text-emerald-400 rounded-xl shrink-0">
               <Wrench size={20} />
             </div>
             <div>
@@ -146,7 +293,226 @@ export default function Explore() {
           </div>
         </div>
 
-        {/* Content Layout */}
+        {/* RESTRICTED ADMIN / DEPOT MANAGEMENT PANEL */}
+        {isAdminOrDepot && (
+          <div className="bg-gray-800/90 border border-red-600/40 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-700 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-600 text-white rounded-xl">
+                  <LayoutDashboard size={20} />
+                </div>
+                <div>
+                  <h2 className="text-lg font-black text-white uppercase tracking-wider">
+                    Depot Inventory Management
+                  </h2>
+                  <p className="text-xs text-gray-400">
+                    Create, update stock counts, and adjust catalog prices in real-time
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={fetchProducts}
+                className="self-start sm:self-auto px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 border border-gray-600 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer"
+              >
+                <RefreshCw size={14} className={fetchingProducts ? 'animate-spin' : ''} />
+                <span>Sync Inventory</span>
+              </button>
+            </div>
+
+            {msg.text && (
+              <div
+                className={`p-4 rounded-2xl text-xs font-bold flex items-center gap-2 ${
+                  msg.type === 'error'
+                    ? 'bg-red-950/80 text-red-300 border border-red-800'
+                    : 'bg-emerald-950/80 text-emerald-300 border border-emerald-800'
+                }`}
+              >
+                {msg.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle size={18} />}
+                <span>{msg.text}</span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              {/* Product Form */}
+              <div className="lg:col-span-5 bg-gray-900/90 p-6 rounded-2xl border border-gray-700 space-y-4">
+                <div className="flex items-center gap-2 border-b border-gray-800 pb-3">
+                  <PackagePlus className="text-red-500" size={18} />
+                  <h3 className="text-xs font-black uppercase text-gray-200">
+                    {editingId ? 'Edit Stock Item' : 'Add New Inventory Item'}
+                  </h3>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-3">
+                  <div>
+                    <label className="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">
+                      Item Name
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      required
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      placeholder="e.g. HP EliteBook 840 G7"
+                      className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-red-600"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">
+                        Price (TZS)
+                      </label>
+                      <input
+                        type="number"
+                        name="basePrice"
+                        required
+                        value={formData.basePrice}
+                        onChange={handleInputChange}
+                        placeholder="750000"
+                        className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-red-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">
+                        Stock Count
+                      </label>
+                      <input
+                        type="number"
+                        name="stockCount"
+                        required
+                        value={formData.stockCount}
+                        onChange={handleInputChange}
+                        placeholder="15"
+                        className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-red-600"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">
+                      Category
+                    </label>
+                    <select
+                      name="category"
+                      value={formData.category}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-red-600"
+                    >
+                      <option value="Electronics">Electronics</option>
+                      <option value="Networking">Networking</option>
+                      <option value="Furniture">Furniture</option>
+                      <option value="Graphics">Graphics Assets</option>
+                      <option value="Appliances">Home Appliances</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-extrabold uppercase text-gray-400 block mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      name="description"
+                      rows="2"
+                      value={formData.description}
+                      onChange={handleInputChange}
+                      placeholder="Brief item specification..."
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-red-600"
+                    />
+                  </div>
+
+                  <div className="pt-2 flex gap-2">
+                    <button
+                      type="submit"
+                      disabled={formLoading}
+                      className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg shadow-red-600/20"
+                    >
+                      {editingId ? 'Save Changes' : 'Publish Item'}
+                    </button>
+                    {editingId && (
+                      <button
+                        type="button"
+                        onClick={resetForm}
+                        className="py-3 px-4 bg-gray-700 text-gray-300 font-extrabold text-xs uppercase rounded-xl hover:bg-gray-600 transition-all cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                </form>
+              </div>
+
+              {/* Product Inventory Table */}
+              <div className="lg:col-span-7 bg-gray-900/90 p-6 rounded-2xl border border-gray-700 overflow-x-auto">
+                <h3 className="text-xs font-black uppercase text-gray-200 mb-4">
+                  Depot Product Stock ({products.length})
+                </h3>
+                
+                {products.length === 0 ? (
+                  <p className="text-xs text-gray-400 py-6 text-center">No products found in depot database.</p>
+                ) : (
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-gray-800 text-gray-400 uppercase text-[10px]">
+                        <th className="py-2">Product</th>
+                        <th className="py-2">Price</th>
+                        <th className="py-2">Stock</th>
+                        <th className="py-2 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-800 font-medium">
+                      {products.map((item) => {
+                        const price = item.basePrice ?? item.price ?? 0;
+                        const stock = item.stockCount ?? item.stock ?? 0;
+                        return (
+                          <tr key={item.id}>
+                            <td className="py-3 font-bold text-white max-w-[150px] truncate">
+                              {item.name}
+                              <span className="block text-[10px] text-gray-400 font-normal">{item.category}</span>
+                            </td>
+                            <td className="py-3 font-extrabold text-red-400">
+                              {Number(price).toLocaleString()} TZS
+                            </td>
+                            <td className="py-3">
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                                  stock < 10
+                                    ? 'bg-red-950 text-red-400 border border-red-800'
+                                    : 'bg-gray-800 text-gray-300'
+                                }`}
+                              >
+                                {stock} left
+                              </span>
+                            </td>
+                            <td className="py-3 text-right space-x-2">
+                              <button
+                                onClick={() => handleEditSelect(item)}
+                                className="p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors cursor-pointer"
+                                title="Edit Item"
+                              >
+                                <Edit2 size={14} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(item.id)}
+                                className="p-1.5 bg-red-950/60 hover:bg-red-900/80 text-red-400 rounded-lg transition-colors cursor-pointer"
+                                title="Delete Item"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Capabilities Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           
           {/* Sidebar Navigation */}
