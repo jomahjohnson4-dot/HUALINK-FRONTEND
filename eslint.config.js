@@ -17,5 +17,9 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+    rules: {
+      // Ignore React as an unused var (Vite uses JSX transform automatically)
+      'no-unused-vars': ['warn', { varsIgnorePattern: '^(React|[A-Z_])' }],
+    },
   },
 ])

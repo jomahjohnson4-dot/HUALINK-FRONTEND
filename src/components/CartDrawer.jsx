@@ -4,7 +4,18 @@ import { Link } from 'react-router-dom';
 export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQuantity, onRemoveItem }) {
   if (!isOpen) return null;
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  // Safe numeric parser to prevent NaN TZS errors
+  const parsePrice = (item) => {
+    const rawPrice = item?.price ?? item?.unitPrice ?? 0;
+    const numeric = typeof rawPrice === 'string' ? parseFloat(rawPrice.replace(/[^0-9.]/g, '')) : Number(rawPrice);
+    return isNaN(numeric) ? 0 : numeric;
+  };
+
+  const subtotal = cartItems.reduce((sum, item) => {
+    const itemPrice = parsePrice(item);
+    const itemQty = Number(item.quantity) || 1;
+    return sum + itemPrice * itemQty;
+  }, 0);
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -51,51 +62,57 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
                 </button>
               </div>
             ) : (
-              cartItems.map((item) => (
-                <div 
-                  key={item.id} 
-                  className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl flex gap-4 items-center justify-between"
-                >
-                  <img 
-                    src={item.image} 
-                    alt={item.name} 
-                    className="w-16 h-16 rounded-xl object-cover bg-slate-200 shrink-0" 
-                  />
+              cartItems.map((item) => {
+                const itemPrice = parsePrice(item);
+                const itemQty = Number(item.quantity) || 1;
+                const itemTotal = itemPrice * itemQty;
 
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <h4 className="text-xs font-bold text-slate-900 truncate">{item.name}</h4>
-                    <p className="text-xs font-black text-slate-900">
-                      {Number(item.price * item.quantity).toLocaleString()} TZS
-                    </p>
+                return (
+                  <div 
+                    key={item.id || item.productId} 
+                    className="bg-slate-50 border border-slate-200/80 p-4 rounded-2xl flex gap-4 items-center justify-between"
+                  >
+                    <img 
+                      src={item.image || 'https://via.placeholder.com/150'} 
+                      alt={item.name || 'Product Image'} 
+                      className="w-16 h-16 rounded-xl object-cover bg-slate-200 shrink-0" 
+                    />
 
-                    {/* Quantity Selector */}
-                    <div className="flex items-center gap-2 pt-1">
-                      <div className="flex items-center border border-slate-200 rounded-lg bg-white px-2 py-0.5 text-xs font-bold text-slate-800">
-                        <button 
-                          onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
-                          className="hover:text-red-600 px-1"
-                        >
-                          -
-                        </button>
-                        <span className="px-2">{item.quantity}</span>
-                        <button 
-                          onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                          className="hover:text-red-600 px-1"
-                        >
-                          +
-                        </button>
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <h4 className="text-xs font-bold text-slate-900 truncate">{item.name || 'Hualink Item'}</h4>
+                      <p className="text-xs font-black text-slate-900">
+                        {itemTotal.toLocaleString()} TZS
+                      </p>
+
+                      {/* Quantity Selector */}
+                      <div className="flex items-center gap-2 pt-1">
+                        <div className="flex items-center border border-slate-200 rounded-lg bg-white px-2 py-0.5 text-xs font-bold text-slate-800">
+                          <button 
+                            onClick={() => onUpdateQuantity(item.id || item.productId, itemQty - 1)}
+                            className="hover:text-red-600 px-1 cursor-pointer"
+                          >
+                            -
+                          </button>
+                          <span className="px-2">{itemQty}</span>
+                          <button 
+                            onClick={() => onUpdateQuantity(item.id || item.productId, itemQty + 1)}
+                            className="hover:text-red-600 px-1 cursor-pointer"
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <button 
-                    onClick={() => onRemoveItem(item.id)}
-                    className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))
+                    <button 
+                      onClick={() => onRemoveItem(item.id || item.productId)}
+                      className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                );
+              })
             )}
           </div>
 
@@ -105,7 +122,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
               <div className="space-y-2">
                 <div className="flex justify-between text-xs text-slate-500 font-medium">
                   <span>Subtotal</span>
-                  <span className="font-bold text-slate-800">{Number(subtotal).toLocaleString()} TZS</span>
+                  <span className="font-bold text-slate-800">{subtotal.toLocaleString()} TZS</span>
                 </div>
                 <div className="flex justify-between text-xs text-slate-500 font-medium">
                   <span>Regional Delivery</span>
@@ -113,7 +130,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
                 </div>
                 <div className="border-t border-slate-200 pt-2 flex justify-between text-sm font-black text-slate-900">
                   <span>Total Amount</span>
-                  <span className="text-red-600">{Number(subtotal).toLocaleString()} TZS</span>
+                  <span className="text-red-600">{subtotal.toLocaleString()} TZS</span>
                 </div>
               </div>
 

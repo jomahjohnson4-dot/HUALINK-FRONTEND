@@ -62,25 +62,33 @@ export default function Register({ onRegisterSuccess }) {
     try {
       const payload = { accountType, ...formData };
       const response = await API.post('/auth/register', payload);
-      const { token, user } = response.data;
 
-      // Store JWT token and user session data
-      if (token) {
-        localStorage.setItem('token', token);
+      // Robust extraction for token & user (supports direct and nested backend response payloads)
+      const resData = response.data?.data || response.data;
+      const authToken = resData?.token || resData?.accessToken || response.data?.token;
+      const userPayload = resData?.user || response.data?.user;
+
+      // Store JWT token and user session data if present
+      if (authToken) {
+        localStorage.setItem('token', authToken);
       }
-      if (user) {
-        localStorage.setItem('user', JSON.stringify(user));
+      if (userPayload) {
+        localStorage.setItem('user', JSON.stringify(userPayload));
       }
+
+      // Notify Navbar / Navigation state across the app to update UI immediately
+      window.dispatchEvent(new Event('storage'));
 
       if (onRegisterSuccess) {
-        onRegisterSuccess(user || response.data);
+        onRegisterSuccess(userPayload || resData);
       }
 
-      navigate('/shop');
+      // Redirect user directly to checkout page
+      navigate('/checkout');
     } catch (err) {
       console.error('Registration error:', err);
       setError(
-        err.response?.data?.message || 'Registration failed. Please check your details and try again.'
+        err.response?.data?.message || err.message || 'Registration failed. Please check your details and try again.'
       );
     } finally {
       setLoading(false);

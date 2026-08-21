@@ -38,25 +38,35 @@ export default function Login({ onLoginSuccess }) {
 
     try {
       const response = await API.post('/auth/login', formData);
-      const { token, user } = response.data;
+      
+      // Robust extraction for token & user (supports both direct and nested data objects)
+      const resData = response.data?.data || response.data;
+      const authToken = resData?.token || resData?.accessToken || response.data?.token;
+      const userPayload = resData?.user || response.data?.user;
+
+      if (!authToken) {
+        throw new Error('Authentication failed: Server did not return a valid session token.');
+      }
 
       // Persist Session Token and User Payload
-      if (token) {
-        localStorage.setItem('token', token);
+      localStorage.setItem('token', authToken);
+      if (userPayload) {
+        localStorage.setItem('user', JSON.stringify(userPayload));
       }
-      if (user) {
-        localStorage.setItem('user', JSON.stringify(user));
-      }
+
+      // Dispatch storage event so Navigation/Header updates state immediately
+      window.dispatchEvent(new Event('storage'));
 
       if (onLoginSuccess) {
-        onLoginSuccess(user || response.data);
+        onLoginSuccess(userPayload || resData);
       }
 
-      navigate('/shop');
+      // Redirect user directly to checkout if items are waiting in cart, otherwise to shop
+      navigate('/checkout');
     } catch (err) {
       console.error('Login authentication error:', err);
       setError(
-        err.response?.data?.message || 'Invalid email or password. Please try again.'
+        err.response?.data?.message || err.message || 'Invalid email or password. Please try again.'
       );
     } finally {
       setLoading(false);

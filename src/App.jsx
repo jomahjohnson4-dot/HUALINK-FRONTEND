@@ -18,19 +18,38 @@ import Checkout from './pages/Checkout';
 import Documentation from './pages/Documentation';
 import HelpCenter from './pages/HelpCenter';
 
-// Protected Route Component for Auth-Gated Pages
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+// Dashboard Views
+import { AdminDashboard } from './pages/dashboards/AdminDashboard';
+import { SellerDashboard } from './pages/dashboards/SellerDashboard';
+import { CustomerDashboard } from './pages/dashboards/CustomerDashboard';
+
+// Role-Based Protected Route Component
+const ProtectedRoute = ({ children, allowedRoles }) => {
+  const { isAuthenticated, user, loading } = useAuth();
 
   if (loading) {
-    return <div className="p-10 text-center font-semibold text-gray-600">Loading application...</div>;
+    return <div className="p-10 text-center font-semibold text-slate-400 bg-slate-900 min-h-screen">Loading application...</div>;
   }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
+  if (allowedRoles && !allowedRoles.includes(user?.role?.toUpperCase())) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return children;
+};
+
+// Auto-Redirect Wrapper for Central /dashboard Route
+const DashboardRedirect = () => {
+  const { user } = useAuth();
+  const role = user?.role?.toUpperCase();
+
+  if (role === 'ADMIN') return <Navigate to="/dashboard/admin" replace />;
+  if (role === 'SELLER') return <Navigate to="/dashboard/seller" replace />;
+  return <Navigate to="/dashboard/customer" replace />;
 };
 
 // Main App Layout & Routing Content
@@ -117,11 +136,51 @@ function AppContent() {
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
 
-            {/* Protected Admin/Management Routes */}
+            {/* Central Dashboard Redirect Router */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <DashboardRedirect />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Customer Dashboard */}
+            <Route 
+              path="/dashboard/customer" 
+              element={
+                <ProtectedRoute allowedRoles={['CUSTOMER', 'SELLER', 'ADMIN']}>
+                  <CustomerDashboard />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Seller Dashboard */}
+            <Route 
+              path="/dashboard/seller" 
+              element={
+                <ProtectedRoute allowedRoles={['SELLER', 'ADMIN']}>
+                  <SellerDashboard />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Admin Dashboard */}
+            <Route 
+              path="/dashboard/admin" 
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN']}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Protected Management Routes */}
             <Route 
               path="/users" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['ADMIN']}>
                   <Users />
                 </ProtectedRoute>
               } 
