@@ -2,10 +2,12 @@ import React from 'react';
 
 export const SellerDashboard = () => {
   return (
-    <div className="p-6 space-y-6 bg-slate-900 text-white min-h-screen">
+    <div className="p-6 space-y-6 bg-slate-900 text-white min-h-screen font-sans">
       <header className="border-b border-slate-800 pb-4">
-        <h1 className="text-2xl font-bold">Seller Workspace</h1>
-        <p className="text-slate-400">Manage your product catalog and incoming customer orders</p>
+        <h1 className="text-2xl font-bold text-orange-500">Seller Workspace</h1>
+        <p className="text-slate-400 text-xs sm:text-sm mt-0.5">
+          Manage your product catalog and incoming customer orders
+        </p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -21,3 +23,5 @@ export const SellerDashboard = () => {
     </div>
   );
 };
+
+export default SellerDashboard;

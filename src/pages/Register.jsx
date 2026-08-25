@@ -63,27 +63,38 @@ export default function Register({ onRegisterSuccess }) {
       const payload = { accountType, ...formData };
       const response = await API.post('/auth/register', payload);
 
-      // Robust extraction for token & user (supports direct and nested backend response payloads)
+      // Robust extraction for token & user across response formats
       const resData = response.data?.data || response.data;
       const authToken = resData?.token || resData?.accessToken || response.data?.token;
-      const userPayload = resData?.user || response.data?.user;
+      const userPayload = resData?.user || response.data?.user || resData;
 
-      // Store JWT token and user session data if present
+      // 1. Store JWT token and user session data
       if (authToken) {
         localStorage.setItem('token', authToken);
       }
       if (userPayload) {
         localStorage.setItem('user', JSON.stringify(userPayload));
+
+        // Pre-fill checkout delivery cache with registered details
+        const existingCheckoutInfo = JSON.parse(localStorage.getItem('checkout_delivery_info') || '{}');
+        localStorage.setItem('checkout_delivery_info', JSON.stringify({
+          ...existingCheckoutInfo,
+          fullName: formData.fullName || userPayload.fullName || userPayload.name || '',
+          customerPhone: formData.phone || userPayload.phone || userPayload.phoneNumber || '',
+          region: formData.region || userPayload.region || 'Dar es Salaam',
+          address: existingCheckoutInfo.address || ''
+        }));
       }
 
-      // Notify Navbar / Navigation state across the app to update UI immediately
+      // 2. Dispatch sync events for Navbar/Checkout state listeners
       window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new Event('authChange'));
 
       if (onRegisterSuccess) {
-        onRegisterSuccess(userPayload || resData);
+        onRegisterSuccess(userPayload);
       }
 
-      // Redirect user directly to checkout page
+      // 3. Redirect user directly to checkout
       navigate('/checkout');
     } catch (err) {
       console.error('Registration error:', err);
@@ -127,7 +138,7 @@ export default function Register({ onRegisterSuccess }) {
       <div className="sm:mx-auto sm:w-full sm:max-w-lg">
         <div className="bg-white py-10 px-8 shadow-2xl shadow-slate-200/60 rounded-3xl border border-slate-100 sm:px-12 space-y-6">
           
-          {/* Account Type Selector Switch */}
+          {/* Account Type Switcher */}
           <div className="p-1.5 bg-slate-100 rounded-2xl flex items-center gap-1">
             <button
               type="button"
@@ -155,7 +166,7 @@ export default function Register({ onRegisterSuccess }) {
             </button>
           </div>
 
-          {/* Error Alert Display */}
+          {/* Error Banner */}
           {error && (
             <div className="p-4 bg-rose-50 border border-rose-200 text-rose-600 rounded-2xl text-xs font-bold flex items-center gap-2">
               <AlertCircle size={18} className="shrink-0" />
@@ -165,7 +176,7 @@ export default function Register({ onRegisterSuccess }) {
 
           <form className="space-y-5" onSubmit={handleSubmit}>
             
-            {/* Wholesale Business Name Field */}
+            {/* Business Field */}
             {accountType === 'wholesale' && (
               <div>
                 <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
@@ -188,7 +199,7 @@ export default function Register({ onRegisterSuccess }) {
               </div>
             )}
 
-            {/* Full Name Field */}
+            {/* Name */}
             <div>
               <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
                 Full Name
@@ -209,7 +220,7 @@ export default function Register({ onRegisterSuccess }) {
               </div>
             </div>
 
-            {/* Email Field */}
+            {/* Email */}
             <div>
               <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
                 Email Address
@@ -230,9 +241,8 @@ export default function Register({ onRegisterSuccess }) {
               </div>
             </div>
 
-            {/* Phone & Region Side-by-Side */}
+            {/* Phone & Region */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Phone Field */}
               <div>
                 <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
                   Phone Number
@@ -253,7 +263,6 @@ export default function Register({ onRegisterSuccess }) {
                 </div>
               </div>
 
-              {/* Region Select */}
               <div>
                 <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
                   Region
@@ -278,7 +287,7 @@ export default function Register({ onRegisterSuccess }) {
               </div>
             </div>
 
-            {/* Password Field */}
+            {/* Password */}
             <div>
               <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
                 Password
@@ -306,7 +315,7 @@ export default function Register({ onRegisterSuccess }) {
               </div>
             </div>
 
-            {/* Submit Button */}
+            {/* Action */}
             <button
               type="submit"
               disabled={loading}

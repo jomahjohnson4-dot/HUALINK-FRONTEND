@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Zap, 
   Truck, 
@@ -41,6 +42,7 @@ const EXPLORE_CARDS = [
     description: 'Order electronics, computer hardware, home appliances, and office furniture directly from Hualink central inventory with regional cargo dispatch.',
     highlights: ['Dar es Salaam HQ Stock', 'Bulk Discount Rates', 'Inter-Region Shipping'],
     actionText: 'Browse Bulk Catalog',
+    targetRoute: '/shop',
     image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80',
   },
   {
@@ -52,6 +54,7 @@ const EXPLORE_CARDS = [
     description: 'High-impact visual identity design including company logos, marketing posters, custom banners, food delivery packaging, and promotional flyers.',
     highlights: ['24-Hour Delivery', 'High Resolution Files', 'Mbeya & Regional Hubs'],
     actionText: 'Explore Brand Design',
+    targetRoute: '/services',
     image: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&w=600&q=80',
   },
   {
@@ -63,6 +66,7 @@ const EXPLORE_CARDS = [
     description: 'Locate Hualink distribution centers across Dar es Salaam, Mbeya, Mwanza, and Arusha for instant local pickup and same-day express dispatch.',
     highlights: ['4 Major Regional Hubs', 'Local Pickup Available', 'Synced Inventory Track'],
     actionText: 'Find Nearby Depot',
+    targetRoute: '/outlets',
     image: 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=600&q=80',
   },
   {
@@ -74,11 +78,13 @@ const EXPLORE_CARDS = [
     description: 'Professional laptop/desktop maintenance, operating system driver setup, networking configurations, and custom client web development.',
     highlights: ['Ubuntu & OS Troubleshooting', 'Cisco Network Setup', 'Verified Hardware Techs'],
     actionText: 'Request Technical Service',
+    targetRoute: '/services',
     image: 'https://images.unsplash.com/photo-1588508065123-287b28e013da?auto=format&fit=crop&w=600&q=80',
   },
 ];
 
 export default function Explore() {
+  const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -582,6 +588,14 @@ export default function Explore() {
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">
                 Showing Sections: <span className="text-white font-extrabold">{filteredCards.length}</span>
               </div>
+              {activeCategory !== 'all' && (
+                <button
+                  onClick={() => setActiveCategory('all')}
+                  className="text-xs text-red-500 font-bold hover:underline"
+                >
+                  Reset Filters
+                </button>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -624,9 +638,12 @@ export default function Explore() {
                     </div>
                   </div>
 
-                  {/* Action Button */}
+                  {/* Action Button - Route Navigation Enabled */}
                   <div className="p-5 pt-0">
-                    <button className="w-full bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs py-3 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-2">
+                    <button 
+                      onClick={() => navigate(card.targetRoute)}
+                      className="w-full bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs py-3 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-2"
+                    >
                       <span>{card.actionText}</span>
                       <ArrowRight size={14} />
                     </button>

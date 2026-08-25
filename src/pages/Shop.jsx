@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Filter, ShoppingCart, ShieldCheck, Eye, RefreshCw } from 'lucide-react';
+import { Search, Filter, ShoppingCart, Eye, RefreshCw, Check } from 'lucide-react';
 
-export default function Shop() {
+export default function Shop({ onAddToCart }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [addedId, setAddedId] = useState(null);
 
   // Categories aligned with Hualink & TeKeL offerings
   const categories = [
@@ -40,6 +41,15 @@ export default function Shop() {
 
     fetchProducts();
   }, []);
+
+  // Handle Add To Cart with button feedback
+  const handleAddClick = (product) => {
+    if (onAddToCart) {
+      onAddToCart(product, 1);
+    }
+    setAddedId(product.id);
+    setTimeout(() => setAddedId(null), 1500);
+  };
 
   // Filter products by category and search term
   const filteredProducts = products.filter((product) => {
@@ -148,7 +158,7 @@ export default function Shop() {
                     <div>
                       <span className="text-[10px] font-bold uppercase text-slate-400 block">Price</span>
                       <span className="text-base font-black text-slate-900">
-                        {Number(product.price).toLocaleString()} TZS
+                        {Number(product.price || 10000).toLocaleString()} TZS
                       </span>
                     </div>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -167,10 +177,28 @@ export default function Shop() {
                       <span>Details</span>
                     </Link>
                     <button
-                      className="w-full py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1 transition-all shadow-md shadow-red-600/20 cursor-pointer"
+                      type="button"
+                      onClick={() => handleAddClick(product)}
+                      disabled={product.stock <= 0}
+                      className={`w-full py-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1 transition-all shadow-md cursor-pointer ${
+                        addedId === product.id
+                          ? 'bg-emerald-600 text-white shadow-emerald-600/20'
+                          : product.stock <= 0
+                          ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                          : 'bg-red-600 hover:bg-red-700 text-white shadow-red-600/20'
+                      }`}
                     >
-                      <ShoppingCart size={14} />
-                      <span>Add</span>
+                      {addedId === product.id ? (
+                        <>
+                          <Check size={14} />
+                          <span>Added!</span>
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart size={14} />
+                          <span>Add</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>

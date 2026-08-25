@@ -10,10 +10,15 @@ import {
   Clock, 
   ArrowRight,
   Globe,
-  FileText
+  FileText,
+  Palette,
+  Layers,
+  PhoneCall,
+  CreditCard,
+  Building2
 } from 'lucide-react';
 
-// Comprehensive articles database
+// Comprehensive localized articles database
 const articlesData = {
   'what-is-hualink': {
     category: 'GETTING STARTED',
@@ -24,18 +29,37 @@ const articlesData = {
     content: (
       <div className="space-y-6 text-slate-700 text-sm leading-relaxed">
         <p>
-          We connect buyers directly with verified hardware inventory, IT hardware stock, <strong>TeKeL graphics design services</strong>, and custom office furniture.
+          Hualink connects enterprise buyers, institutions, and businesses directly with verified hardware inventory, IT networking stock, <strong>TeKeL graphics design services</strong>, and ergonomic office furniture solutions across Tanzania.
         </p>
-        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3">
-          <h4 className="font-extrabold text-slate-900 text-base">Core Services Overview</h4>
-          <ul className="space-y-2 list-disc list-inside text-xs sm:text-sm text-slate-600">
-            <li><strong>Regional Depot Dispatch:</strong> Stock hubs located in Dar es Salaam, Mbeya, Arusha, and Mwanza for fast freight turnaround.</li>
-            <li><strong>TeKeL Graphics & Brand Identity:</strong> Professional agency design services, UI prototyping, and promotional collateral.</li>
-            <li><strong>Enterprise Hardware Stock:</strong> Laptops, networking gear, and office furniture built for direct institutional procurement.</li>
+
+        <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-6 space-y-4">
+          <h4 className="font-black text-slate-900 text-xs uppercase tracking-wider">
+            Core Ecosystem Services
+          </h4>
+          <ul className="space-y-3 text-xs sm:text-sm text-slate-600">
+            <li className="flex items-start gap-3">
+              <Truck size={18} className="text-red-600 shrink-0 mt-0.5" />
+              <span>
+                <strong className="text-slate-900">Regional Hub Dispatch:</strong> Direct supply chain hubs located in Dar es Salaam, Mbeya, Arusha, and Mwanza for rapid freight turnaround.
+              </span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Palette size={18} className="text-red-600 shrink-0 mt-0.5" />
+              <span>
+                <strong className="text-slate-900">TeKeL Graphics & Brand Identity:</strong> Custom UI prototyping, visual agency branding, marketing collateral, and digital asset suites.
+              </span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Layers size={18} className="text-red-600 shrink-0 mt-0.5" />
+              <span>
+                <strong className="text-slate-900">Enterprise Hardware Stock:</strong> Laptops, networking routers/switches, desktop workstations, and office setups built for direct institutional procurement.
+              </span>
+            </li>
           </ul>
         </div>
+
         <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-semibold">
-          <ShieldCheck size={18} className="shrink-0" />
+          <ShieldCheck size={18} className="shrink-0 text-red-600" />
           <span>All dispatches include electronic serial tracking and regional depot receipt verifications.</span>
         </div>
       </div>
@@ -49,13 +73,18 @@ const articlesData = {
     summary: 'How to register a business or individual account on Hualink to unlock direct wholesale pricing.',
     content: (
       <div className="space-y-6 text-slate-700 text-sm leading-relaxed">
-        <p>Follow these steps to establish your procurement identity on the Hualink platform:</p>
-        <ol className="space-y-3 list-decimal list-inside font-medium text-slate-800">
-          <li>Click <strong>Register</strong> on the top navigation bar.</li>
-          <li>Select your account type (<strong>Individual Buyer</strong> or <strong>Enterprise Business</strong>).</li>
-          <li>Fill in your business name, TIN number (for B2B invoicing), and active contact phone.</li>
-          <li>Verify your phone number via SMS OTP code.</li>
-        </ol>
+        <p>Establishing your procurement identity on Hualink unlocks direct access to inventory hubs and bulk pricing structures across Tanzania.</p>
+        
+        <div className="space-y-3">
+          <h4 className="font-extrabold text-slate-900 text-sm">Step-by-Step Registration:</h4>
+          <ol className="space-y-3 list-decimal list-inside font-medium text-slate-800 text-xs sm:text-sm">
+            <li>Click the <strong className="text-red-600">Register</strong> button located on the top navigation bar.</li>
+            <li>Select your account classification: <strong>Individual Buyer</strong> or <strong>Enterprise Business</strong>.</li>
+            <li>Fill in your primary details, phone number (e.g., <code>0781359770</code>), and business location.</li>
+            <li>Enter your Tax Identification Number (TIN) if applying for B2B tax-exempt procurement.</li>
+            <li>Complete mobile authentication via SMS verification PIN.</li>
+          </ol>
+        </div>
       </div>
     )
   },
@@ -66,14 +95,16 @@ const articlesData = {
     author: 'Compliance Desk',
     summary: 'Details on compliance requirements for bulk order discounts and tax-exempt purchasing.',
     content: (
-      <div className="space-y-4 text-slate-700 text-sm leading-relaxed">
-        <p>Verified accounts receive priority dispatch status and custom payment terms for high-volume purchasing.</p>
-        <div className="p-4 bg-slate-100 rounded-xl border border-slate-200">
-          <h5 className="font-bold text-slate-900 text-xs uppercase mb-2">Required Verification Documents</h5>
-          <ul className="list-disc list-inside text-xs space-y-1 text-slate-600">
-            <li>Certificate of Incorporation or Business Registration</li>
-            <li>TIN & VRN Tax Certificates</li>
-            <li>National ID (NIDA) of authorized company representative</li>
+      <div className="space-y-6 text-slate-700 text-sm leading-relaxed">
+        <p>Verified business accounts gain priority warehouse dispatching, credit payment terms, and automated VAT invoicing for high-volume orders.</p>
+        
+        <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+          <h5 className="font-black text-slate-900 text-xs uppercase tracking-wider">Required Compliance Verification Documents</h5>
+          <ul className="list-disc list-inside text-xs space-y-2 text-slate-600">
+            <li>Certificate of Incorporation or BRELA Business Registration</li>
+            <li>TIN (Tax Identification Number) Certificate</li>
+            <li>VRN (Value Added Tax Registration) Certificate where applicable</li>
+            <li>National ID (NIDA) or Passport of designated purchasing agent</li>
           </ul>
         </div>
       </div>
@@ -86,8 +117,19 @@ const articlesData = {
     author: 'Inventory Desk',
     summary: 'How to search verified stock across localized regional hubs.',
     content: (
-      <div className="space-y-4 text-slate-700 text-sm leading-relaxed">
-        <p>Navigate to the <strong>Marketplace</strong> page to browse real-time inventory levels. Filter products by regional availability (Dar es Salaam, Mbeya, Mwanza) to ensure minimum transit delay.</p>
+      <div className="space-y-6 text-slate-700 text-sm leading-relaxed">
+        <p>Our catalog updates inventory counts in real time across main regional distribution depots.</p>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+          <div className="p-4 border border-slate-200 rounded-xl bg-white space-y-1">
+            <span className="font-extrabold text-slate-900 block">Regional Depot Filtering</span>
+            <p className="text-slate-500">Filter stock by location (Dar es Salaam, Mbeya, Arusha, Mwanza) to calculate accurate freight transit times.</p>
+          </div>
+          <div className="p-4 border border-slate-200 rounded-xl bg-white space-y-1">
+            <span className="font-extrabold text-slate-900 block">Tiered Volume Pricing</span>
+            <p className="text-slate-500">Bulk price adjustments apply automatically when adding higher item quantities to your cart.</p>
+          </div>
+        </div>
       </div>
     )
   },
@@ -96,22 +138,44 @@ const articlesData = {
     title: 'Placing & Paying for Orders',
     updated: 'August 2026',
     author: 'Finance & Payments',
-    summary: 'Accepted payment methods, escrow protection, and direct invoice generation.',
+    summary: 'Accepted payment methods, automated USSD push integrations, and direct receipts.',
     content: (
-      <div className="space-y-4 text-slate-700 text-sm leading-relaxed">
-        <p>We support mobile money integrations (M-Pesa, Tigo Pesa, Airtel Money), bank transfers, and direct regional cash receipts upon warehouse collection.</p>
+      <div className="space-y-6 text-slate-700 text-sm leading-relaxed">
+        <p>Hualink supports automated mobile money gateways for local order processing:</p>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div className="p-4 border border-slate-200 rounded-xl bg-slate-50 space-y-1">
+            <span className="font-black text-slate-900 block">Vodacom M-Pesa</span>
+            <p className="text-slate-500">Instant USSD payment push directly to your registered mobile line.</p>
+          </div>
+          <div className="p-4 border border-slate-200 rounded-xl bg-slate-50 space-y-1">
+            <span className="font-black text-slate-900 block">Airtel Money</span>
+            <p className="text-slate-500">Automated carrier prompt for rapid cargo processing.</p>
+          </div>
+          <div className="p-4 border border-slate-200 rounded-xl bg-slate-50 space-y-1">
+            <span className="font-black text-slate-900 block">AzamPay</span>
+            <p className="text-slate-500">Digital gateway integration supporting cards and banking apps.</p>
+          </div>
+        </div>
       </div>
     )
   },
   'tracking-dispatch': {
     category: 'BUYERS & ORDERING',
-    title: 'Tracking Your Dispatch',
+    title: 'Tracking Your Regional Dispatch',
     updated: 'August 2026',
-    author: 'Logistics Team',
-    summary: 'Real-time tracking for regional depot cargo transport.',
+    author: 'Logistics Operations',
+    summary: 'Real-time multi-step tracking for regional depot cargo transport.',
     content: (
-      <div className="space-y-4 text-slate-700 text-sm leading-relaxed">
-        <p>Once dispatched, enter your Waybill or Order Reference ID into the <strong>Track Active Order</strong> tool to view real-time location logs and driver contact details.</p>
+      <div className="space-y-6 text-slate-700 text-sm leading-relaxed">
+        <p>Every order transitions through four verified distribution phases visible in your <strong>Orders</strong> portal:</p>
+        
+        <ol className="space-y-3 list-decimal list-inside text-xs sm:text-sm font-semibold text-slate-800">
+          <li><strong>Order Confirmed & Placed:</strong> Payment cleared and invoice generated.</li>
+          <li><strong>Dispatched from Central Hub:</strong> Cargo loaded onto regional freight transport.</li>
+          <li><strong>In Transit to Regional Depot:</strong> Freight arriving at target depot hub (e.g., Mbeya or Arusha).</li>
+          <li><strong>Delivered & Verified:</strong> Final delivery complete and verified with local receipt.</li>
+        </ol>
       </div>
     )
   },
@@ -119,11 +183,11 @@ const articlesData = {
     category: 'WHOLESALE & B2B',
     title: 'Becoming a Wholesale Partner',
     updated: 'August 2026',
-    author: 'Partner Relations',
-    summary: 'Sell your verified stock or hardware directly on the Hualink supply hub.',
+    author: 'Partner Relations Desk',
+    summary: 'Sell your verified hardware stock or design services directly on the Hualink supply hub.',
     content: (
-      <div className="space-y-4 text-slate-700 text-sm leading-relaxed">
-        <p>Distributors and manufacturers can apply to list inventory across Hualink regional depots after completing quality assurance audits.</p>
+      <div className="space-y-6 text-slate-700 text-sm leading-relaxed">
+        <p>Hardware importers, tech vendors, and specialized service studios can apply to list inventory or services across Hualink regional depots after passing product quality audits.</p>
       </div>
     )
   },
@@ -134,8 +198,8 @@ const articlesData = {
     author: 'Enterprise Operations',
     summary: 'Custom logistics for container-load orders and institutional supply tenders.',
     content: (
-      <div className="space-y-4 text-slate-700 text-sm leading-relaxed">
-        <p>Institutional clients can request custom proforma invoices and scheduled multi-destination drops through their enterprise portal dashboard.</p>
+      <div className="space-y-6 text-slate-700 text-sm leading-relaxed">
+        <p>Enterprise clients can request custom proforma invoices, scheduled multi-destination freight drops, and dedicated account handling through their B2B dashboard portal.</p>
       </div>
     )
   }
@@ -190,39 +254,39 @@ export default function HelpCenter() {
   }, [searchQuery]);
 
   return (
-    <div className="bg-slate-50 min-h-screen text-slate-900 font-sans">
+    <div className="bg-slate-50 min-h-screen text-slate-900 font-sans pb-16">
       
       {/* Dynamic Sub-header Navigation */}
       <div className="border-b border-slate-200 bg-white sticky top-0 z-30 shadow-xs">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
           
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-red-600 text-white font-black flex items-center justify-center text-xs">
+            <Link to="/" className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-red-600 text-white font-black flex items-center justify-center text-xs">
                 HL
               </div>
               <span className="font-black tracking-tight text-slate-900 text-sm sm:text-base">
                 HUALINK <span className="text-red-600">HELP</span>
               </span>
-            </div>
+            </Link>
 
             <div className="hidden md:flex items-center gap-2">
               <span className="px-3 py-1 text-xs font-extrabold bg-slate-100 text-slate-700 rounded-full border border-slate-200">
-                Help Centre
+                {language === 'EN' ? 'Help Centre' : 'Kituo cha Msaada'}
               </span>
             </div>
           </div>
 
-          {/* Right Controls: Search & Language Toggle */}
+          {/* Search & Language Toggle */}
           <div className="flex items-center gap-3">
             <div className="relative w-48 sm:w-72">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input 
                 type="text" 
-                placeholder="Search help articles..."
+                placeholder={language === 'EN' ? "Search help articles..." : "Tafuta nakala za msaada..."}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-100 hover:bg-slate-100/80 focus:bg-white border border-slate-200 focus:border-red-500 text-xs rounded-full pl-9 pr-4 py-2 outline-hidden transition-all text-slate-800 placeholder-slate-400"
+                className="w-full bg-slate-100 hover:bg-slate-100/80 focus:bg-white border border-slate-200 focus:border-red-500 text-xs rounded-full pl-9 pr-4 py-2 outline-hidden transition-all text-slate-800 placeholder-slate-400 font-medium"
               />
             </div>
 
@@ -247,7 +311,7 @@ export default function HelpCenter() {
             
             <div className="mb-6 pb-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">
-                HELP DIRECTORY
+                {language === 'EN' ? 'HELP DIRECTORY' : 'ORODHA YA MSAADA'}
               </h3>
               <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
                 Interactive
@@ -296,14 +360,14 @@ export default function HelpCenter() {
               )}
             </div>
 
-            {/* Quick Order Tracking Action Button */}
+            {/* Quick Order Tracking Button */}
             <div className="mt-8 pt-6 border-t border-slate-100">
               <Link 
                 to="/orders" 
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
               >
                 <Truck size={16} />
-                <span>Track Active Order</span>
+                <span>{language === 'EN' ? 'Track Active Order' : 'Fuatilia Oda Yako'}</span>
               </Link>
             </div>
 
@@ -312,7 +376,7 @@ export default function HelpCenter() {
           {/* ================= RIGHT ARTICLE CONTENT ================= */}
           <main className="lg:col-span-8 bg-white rounded-3xl border border-slate-200/80 p-8 sm:p-10 shadow-xs min-h-[550px]">
             
-            {/* Article Meta Header */}
+            {/* Meta Header */}
             <div className="border-b border-slate-100 pb-6 mb-8 space-y-4">
               <div className="flex items-center gap-2">
                 <span className="p-1.5 bg-red-100 text-red-600 rounded-lg">
@@ -334,28 +398,28 @@ export default function HelpCenter() {
               </div>
             </div>
 
-            {/* Main Article Body Render */}
+            {/* Article Render */}
             <div className="prose prose-slate max-w-none">
               {currentArticle.content}
             </div>
 
-            {/* Article Footer Feedback Bar */}
+            {/* Article Footer Feedback */}
             <div className="mt-12 pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
               <p className="text-xs text-slate-500 font-medium">
-                Was this article helpful?
+                {language === 'EN' ? 'Was this article helpful?' : 'Je, nakala hii imekusaidia?'}
               </p>
               <div className="flex items-center gap-3">
                 <button 
                   onClick={() => alert("Thank you for your feedback!")}
                   className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
                 >
-                  Yes, it helped
+                  {language === 'EN' ? 'Yes, it helped' : 'Ndiyo, imesaidia'}
                 </button>
                 <button 
                   onClick={() => alert("Thank you! We will improve this article.")}
                   className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
                 >
-                  No, I need more help
+                  {language === 'EN' ? 'No, I need more help' : 'Hapana, nahitaji msaada zaidi'}
                 </button>
               </div>
             </div>

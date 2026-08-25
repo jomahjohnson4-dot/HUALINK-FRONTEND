@@ -16,7 +16,7 @@ export default function CheckoutForm({ cartItems = [], clearCart }) {
 
   // Safe numeric parser to prevent NaN calculations
   const parsePrice = (item) => {
-    const rawPrice = item?.price ?? item?.unitPrice ?? 0;
+    const rawPrice = item?.price ?? item?.unitPrice ?? item?.basePrice ?? 0;
     const numeric = typeof rawPrice === 'string' ? parseFloat(rawPrice.replace(/[^0-9.]/g, '')) : Number(rawPrice);
     return isNaN(numeric) ? 0 : numeric;
   };
@@ -49,7 +49,7 @@ export default function CheckoutForm({ cartItems = [], clearCart }) {
       try {
         const data = JSON.parse(event.data);
 
-        if (['COMPLETED', 'PAID'].includes(data.status)) {
+        if (['COMPLETED', 'PAID', 'SUCCESS'].includes((data.status || '').toUpperCase())) {
           setStatus({
             type: 'success',
             message: 'Payment received! Your order is confirmed.',
@@ -57,7 +57,7 @@ export default function CheckoutForm({ cartItems = [], clearCart }) {
           setLoading(false);
           if (clearCart) clearCart();
           eventSourceRef.current.close();
-        } else if (['FAILED', 'CANCELLED'].includes(data.status)) {
+        } else if (['FAILED', 'CANCELLED', 'DECLINED'].includes((data.status || '').toUpperCase())) {
           setStatus({
             type: 'error',
             message: 'Payment transaction failed or timed out. Please try again.',
@@ -72,7 +72,9 @@ export default function CheckoutForm({ cartItems = [], clearCart }) {
 
     eventSourceRef.current.onerror = (err) => {
       console.error('SSE connection error:', err);
-      eventSourceRef.current.close();
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
     };
   };
 
@@ -81,7 +83,7 @@ export default function CheckoutForm({ cartItems = [], clearCart }) {
     setLoading(true);
     setStatus({ type: '', message: '' });
 
-    // 1. Verify token existence
+    // 1. Verify auth token existence
     const token = localStorage.getItem('token');
     if (!token) {
       setStatus({
@@ -92,31 +94,38 @@ export default function CheckoutForm({ cartItems = [], clearCart }) {
       return;
     }
 
-    // Clean phone number input
-    const cleanPhone = customerPhone.replace(/[^0-9]/g, '');
-    if (cleanPhone.length < 10) {
+    // Standardize phone number for USSD Push (convert 0781... to 255781...)
+    const digitsOnly = customerPhone.replace(/[^0-9]/g, '');
+    if (digitsOnly.length < 9) {
       setStatus({ type: 'error', message: 'Enter a valid phone number (e.g., 0781359770).' });
       setLoading(false);
       return;
     }
 
-    // 2. Format payload to match orderController.js
+    const formattedPhone = digitsOnly.startsWith('0')
+      ? `255${digitsOnly.slice(1)}`
+      : digitsOnly.startsWith('255')
+      ? digitsOnly
+      : `255${digitsOnly}`;
+
+    // 2. Format payload to match backend schema requirements
     const payload = {
       customerName,
-      customerPhone: cleanPhone,
+      customerPhone: formattedPhone,
       deliveryRegion,
       deliveryAddress,
       paymentMethod,
       totalAmount,
       items: cartItems.map((item) => ({
-        productId: item.id || item.productId,
+        productId: item.id || item.productId || item._id,
         quantity: Number(item.quantity) || 1,
         unitPrice: parsePrice(item),
       })),
     };
 
     try {
-      const response = await fetch(`${API_BASE_URL}/orders`, {
+      // Step A: Create Order Record
+      const orderRes = await fetch(`${API_BASE_URL}/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -125,27 +134,57 @@ export default function CheckoutForm({ cartItems = [], clearCart }) {
         body: JSON.stringify(payload),
       });
 
-      const result = await response.json();
-
-      if (response.status === 401 || response.status === 403) {
+      if (orderRes.status === 401 || orderRes.status === 403) {
         localStorage.removeItem('token');
         throw new Error('Your session has expired. Please sign in again.');
       }
 
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to place order.');
+      const orderText = await orderRes.text();
+      const orderResult = orderText ? JSON.parse(orderText) : {};
+
+      if (!orderRes.ok) {
+        throw new Error(orderResult.message || 'Failed to place order.');
       }
 
-      const orderId = result.data?.id || result.data?.orderId;
+      const createdOrder = orderResult.data || orderResult;
+      const targetOrderId = createdOrder.id || createdOrder.orderId || createdOrder.orderNumber;
+
+      // Step B: Dispatch Mobile Money Payment Prompt
+      setStatus({
+        type: 'info',
+        message: 'Order created! Dispatching payment push request to your phone...',
+      });
+
+      const providerCode = paymentMethod.replace('-MONEY', '').replace('-', '');
+      
+      try {
+        await fetch(`${API_BASE_URL}/payments/initiate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            orderId: targetOrderId,
+            phone: formattedPhone,
+            amount: totalAmount,
+            provider: providerCode,
+          }),
+        });
+      } catch (payErr) {
+        console.warn('Payment dispatch warning:', payErr);
+      }
 
       setStatus({
         type: 'info',
-        message: 'Order created! Please check your phone for the USSD prompt...',
+        message: 'Payment prompt sent! Please enter your PIN on your mobile device...',
       });
 
-      subscribeToPaymentUpdates(orderId);
+      // Step C: Listen for Webhook status changes over SSE stream
+      subscribeToPaymentUpdates(targetOrderId);
     } catch (error) {
-      setStatus({ type: 'error', message: error.message });
+      console.error('Checkout Form Submission Error:', error);
+      setStatus({ type: 'error', message: error.message || 'Server error occurred during checkout.' });
       setLoading(false);
     }
   };
@@ -176,7 +215,7 @@ export default function CheckoutForm({ cartItems = [], clearCart }) {
           type="tel"
           value={customerPhone}
           onChange={(e) => setCustomerPhone(e.target.value)}
-          placeholder="0700000000"
+          placeholder="0781359770"
           disabled={loading}
           required
           className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:border-orange-500 text-xs font-semibold text-white placeholder-slate-500 disabled:opacity-50"

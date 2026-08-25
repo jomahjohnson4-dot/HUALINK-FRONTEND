@@ -39,30 +39,48 @@ export default function Login({ onLoginSuccess }) {
     try {
       const response = await API.post('/auth/login', formData);
       
-      // Robust extraction for token & user (supports both direct and nested data objects)
+      // Extract token & user payload across direct or nested responses
       const resData = response.data?.data || response.data;
       const authToken = resData?.token || resData?.accessToken || response.data?.token;
-      const userPayload = resData?.user || response.data?.user;
+      const userPayload = resData?.user || response.data?.user || resData;
 
       if (!authToken) {
         throw new Error('Authentication failed: Server did not return a valid session token.');
       }
 
-      // Persist Session Token and User Payload
+      // 1. Persist Session Token and User Payload
       localStorage.setItem('token', authToken);
       if (userPayload) {
         localStorage.setItem('user', JSON.stringify(userPayload));
+
+        // Pre-fill checkout delivery cache to prevent loss of user data on Checkout
+        const existingCheckoutInfo = JSON.parse(localStorage.getItem('checkout_delivery_info') || '{}');
+        localStorage.setItem('checkout_delivery_info', JSON.stringify({
+          ...existingCheckoutInfo,
+          fullName: userPayload.fullName || userPayload.name || existingCheckoutInfo.fullName || '',
+          customerPhone: userPayload.phone || userPayload.phoneNumber || existingCheckoutInfo.customerPhone || '',
+          region: userPayload.region || existingCheckoutInfo.region || 'Dar es Salaam',
+          address: userPayload.address || existingCheckoutInfo.address || ''
+        }));
       }
 
-      // Dispatch storage event so Navigation/Header updates state immediately
+      // 2. Dispatch custom & storage events so Navbar and Checkout update state instantly
       window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new Event('authChange'));
 
       if (onLoginSuccess) {
-        onLoginSuccess(userPayload || resData);
+        onLoginSuccess(userPayload);
       }
 
-      // Redirect user directly to checkout if items are waiting in cart, otherwise to shop
-      navigate('/checkout');
+      // 3. Auto-detect database role and route user to their respective dashboard
+      const userRole = userPayload?.role?.toUpperCase();
+      if (userRole === 'ADMIN') {
+        navigate('/dashboard/admin');
+      } else if (userRole === 'SELLER') {
+        navigate('/dashboard/seller');
+      } else {
+        navigate('/dashboard/customer');
+      }
     } catch (err) {
       console.error('Login authentication error:', err);
       setError(
@@ -263,12 +281,11 @@ export default function Login({ onLoginSuccess }) {
         </div>
       </div>
 
-      {/* ================= FORGOT PASSWORD MODAL ================= */}
+      {/* FORGOT PASSWORD MODAL */}
       {isForgotModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-8 border border-slate-100 shadow-2xl relative space-y-6">
             
-            {/* Modal Close Button */}
             <button
               onClick={closeResetModal}
               className="absolute top-6 right-6 text-slate-400 hover:text-slate-800 p-1.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
@@ -283,7 +300,6 @@ export default function Login({ onLoginSuccess }) {
               </div>
             )}
 
-            {/* Step 1: Send Code */}
             {resetStep === 1 && (
               <form onSubmit={handleSendCode} className="space-y-4">
                 <div className="w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center border border-red-100">
@@ -320,7 +336,6 @@ export default function Login({ onLoginSuccess }) {
               </form>
             )}
 
-            {/* Step 2: Verification Code */}
             {resetStep === 2 && (
               <form onSubmit={handleVerifyOtp} className="space-y-4">
                 <div className="w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center border border-red-100">
@@ -358,7 +373,6 @@ export default function Login({ onLoginSuccess }) {
               </form>
             )}
 
-            {/* Step 3: New Password */}
             {resetStep === 3 && (
               <form onSubmit={handleSetNewPassword} className="space-y-4">
                 <div className="w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center border border-red-100">
@@ -395,7 +409,6 @@ export default function Login({ onLoginSuccess }) {
               </form>
             )}
 
-            {/* Step 4: Success View */}
             {resetStep === 4 && (
               <div className="text-center space-y-4 py-2">
                 <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto border border-emerald-200">

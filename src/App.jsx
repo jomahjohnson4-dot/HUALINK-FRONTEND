@@ -1,9 +1,11 @@
-import { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import MobileBottomNav from './components/MobileBottomNav';
+
 import Landing from './pages/Landing';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
@@ -14,21 +16,31 @@ import Login from './pages/Login';
 import Outlets from './pages/Outlets';
 import Services from './pages/Services';
 import Explore from './pages/Explore';
-import Checkout from './pages/Checkout';
+import Checkout from './pages/Checkout'; 
 import Documentation from './pages/Documentation';
 import HelpCenter from './pages/HelpCenter';
 
-// Dashboard Views
-import { AdminDashboard } from './pages/dashboards/AdminDashboard';
-import { SellerDashboard } from './pages/dashboards/SellerDashboard';
-import { CustomerDashboard } from './pages/dashboards/CustomerDashboard';
+// Dashboard Views with fallback resolvers for default & named exports
+import AdminDashboardImport, { AdminDashboard as AdminDashboardNamed } from './pages/dashboards/AdminDashboard';
+import SellerDashboardImport, { SellerDashboard as SellerDashboardNamed } from './pages/dashboards/SellerDashboard';
+import CustomerDashboardImport, { CustomerDashboard as CustomerDashboardNamed } from './pages/dashboards/CustomerDashboard';
 
-// Role-Based Protected Route Component
+import ProviderChatPanel from './components/ProviderChatPanel';
+
+const AdminDashboard = AdminDashboardImport || AdminDashboardNamed;
+const SellerDashboard = SellerDashboardImport || SellerDashboardNamed;
+const CustomerDashboard = CustomerDashboardImport || CustomerDashboardNamed;
+
+// Role-Based Protected Route Guard Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { isAuthenticated, user, loading } = useAuth();
 
   if (loading) {
-    return <div className="p-10 text-center font-semibold text-slate-400 bg-slate-900 min-h-screen">Loading application...</div>;
+    return (
+      <div className="p-10 text-center font-bold text-slate-400 bg-slate-900 min-h-screen flex items-center justify-center">
+        Loading system profile...
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
@@ -36,13 +48,13 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   }
 
   if (allowedRoles && !allowedRoles.includes(user?.role?.toUpperCase())) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return children;
 };
 
-// Auto-Redirect Wrapper for Central /dashboard Route
+// Auto-Redirect Router based on Database User Role
 const DashboardRedirect = () => {
   const { user } = useAuth();
   const role = user?.role?.toUpperCase();
@@ -52,23 +64,250 @@ const DashboardRedirect = () => {
   return <Navigate to="/dashboard/customer" replace />;
 };
 
-// Main App Layout & Routing Content
+// Unauthorized Access View Component
+const UnauthorizedView = () => (
+  <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center font-sans">
+    <div className="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center font-black text-2xl mb-4">
+      !
+    </div>
+    <h1 className="text-2xl font-black text-slate-900">Access Restricted</h1>
+    <p className="text-xs text-slate-500 max-w-md mt-2 mb-6 font-semibold">
+      Your account role does not have permission to access this dashboard view.
+    </p>
+    <Link
+      to="/dashboard"
+      className="px-6 py-3 bg-red-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-red-700 transition-all"
+    >
+      Return to My Dashboard
+    </Link>
+  </div>
+);
+
+// Dynamic Live Chat Page Wrapper for Branch Support & Customer Inquiries
+const ProviderChatPage = ({ user }) => {
+  const location = useLocation();
+  const branchData = location.state || {};
+
+  const bookingDetails = {
+    id: branchData.branchId ? `branch_${branchData.branchId}` : 'general_inquiry',
+    serviceTitle: branchData.branchName || 'Live Support & Branch Inquiries',
+    serviceId: branchData.phone ? `Phone: ${branchData.phone}` : 'service_general',
+  };
+
+  return (
+    <div className="p-6 bg-slate-950 min-h-screen text-white flex flex-col items-center justify-center font-sans">
+      <div className="w-full max-w-2xl mb-4">
+        <h1 className="text-2xl font-bold text-orange-500">Branch & Service Communications Desk</h1>
+        <p className="text-xs text-slate-400">
+          Inquire about depot inventory, services, and active branch operations in real time.
+        </p>
+      </div>
+      <ProviderChatPanel
+        providerId={user?.id || user?._id || 'hualink_admin'}
+        selectedBooking={bookingDetails}
+      />
+    </div>
+  );
+};
+
+// Main App Layout Wrapper
+const AppLayout = ({ cartItems, handleUpdateQuantity, handleRemoveItem, handleClearCart, handleAddToCart, user }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Active tab state helper for MobileBottomNav matching current route
+  const getActiveTab = () => {
+    const path = location.pathname;
+    if (path.includes('/shop') || path.includes('/marketplace')) return 'marketplace';
+    if (path.includes('/outlets')) return 'shops';
+    if (path.includes('/services')) return 'services';
+    if (path.includes('/explore')) return 'explore';
+    return 'marketplace';
+  };
+
+  const handleTabChange = (tabId) => {
+    switch (tabId) {
+      case 'marketplace':
+        navigate('/shop');
+        break;
+      case 'shops':
+        navigate('/outlets');
+        break;
+      case 'services':
+        navigate('/services');
+        break;
+      case 'explore':
+        navigate('/explore');
+        break;
+      default:
+        navigate('/shop');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-white text-gray-900 flex flex-col justify-between pb-16 md:pb-0 relative font-sans">
+      <div>
+        <Navbar 
+          cartItems={cartItems} 
+          onUpdateQuantity={handleUpdateQuantity} 
+          onRemoveItem={handleRemoveItem}
+          user={user}
+        />
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          
+          {/* Products & Marketplace Routes */}
+          <Route path="/shop" element={<Products onAddToCart={handleAddToCart} />} />
+          <Route path="/marketplace" element={<Products onAddToCart={handleAddToCart} />} />
+          <Route path="/product/:id" element={<ProductDetail onAddToCart={handleAddToCart} />} />
+          
+          {/* Network & Service Routes */}
+          <Route path="/outlets" element={<Outlets />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/explore" element={<Explore />} />
+          
+          {/* Public Live Support Chat Route */}
+          <Route path="/chat" element={<ProviderChatPage user={user} />} />
+          
+          {/* Orders & Checkout Routes */}
+          <Route path="/orders" element={<Orders cartItems={cartItems} user={user} />} />
+          <Route path="/cart" element={<Orders cartItems={cartItems} user={user} />} />
+          <Route 
+            path="/checkout" 
+            element={
+              <Checkout 
+                cartItems={cartItems} 
+                user={user} 
+                onClearCart={handleClearCart} 
+              />
+            } 
+          />
+
+          {/* Knowledgebase & Documentation Routes */}
+          <Route path="/docs" element={<Documentation />} />
+          <Route path="/docs/help" element={<HelpCenter />} />
+          <Route path="/help" element={<HelpCenter />} />
+
+          {/* Auth & Access Control Routes */}
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/unauthorized" element={<UnauthorizedView />} />
+
+          {/* Central Dashboard Redirect Router */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <DashboardRedirect />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Customer Dashboard View */}
+          <Route 
+            path="/dashboard/customer" 
+            element={
+              <ProtectedRoute allowedRoles={['CUSTOMER', 'SELLER', 'ADMIN']}>
+                <CustomerDashboard />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Seller / Vendor Dashboard View */}
+          <Route 
+            path="/dashboard/seller" 
+            element={
+              <ProtectedRoute allowedRoles={['SELLER', 'ADMIN']}>
+                <SellerDashboard />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Admin System Management Dashboard View */}
+          <Route 
+            path="/dashboard/admin" 
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Internal Provider Live Chat View */}
+          <Route 
+            path="/dashboard/chat" 
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'SELLER']}>
+                <ProviderChatPage user={user} />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* System Account Management */}
+          <Route 
+            path="/users" 
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <Users />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Fallback 404 Route */}
+          <Route 
+            path="*" 
+            element={
+              <div className="p-12 text-center text-slate-500 font-bold min-h-[50vh] flex items-center justify-center">
+                404 - Page Not Found
+              </div>
+            } 
+          />
+        </Routes>
+      </div>
+
+      {/* Desktop Footer */}
+      <Footer />
+
+      {/* Mobile Navigation Bar */}
+      <MobileBottomNav activeTab={getActiveTab()} setActiveTab={handleTabChange} />
+    </div>
+  );
+};
+
+// Root Content Container with Persistent Global Cart State
 function AppContent() {
   const { user } = useAuth();
 
-  // Global State for Shopping Cart
-  const [cartItems, setCartItems] = useState([]);
+  // Lazy-initialize cart items from localStorage
+  const [cartItems, setCartItems] = useState(() => {
+    try {
+      const savedCart = localStorage.getItem('hualink_cart');
+      return savedCart ? JSON.parse(savedCart) : [];
+    } catch (err) {
+      console.error('Failed to parse cart items from local storage:', err);
+      return [];
+    }
+  });
 
-  // Cart Management Handlers
+  // Sync state changes with localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('hualink_cart', JSON.stringify(cartItems));
+    } catch (err) {
+      console.error('Failed to save cart to local storage:', err);
+    }
+  }, [cartItems]);
+
   const handleAddToCart = (product, quantity = 1) => {
     setCartItems((prevItems) => {
-      const existingIndex = prevItems.findIndex((item) => item.id === product.id);
+      const prodId = product.id || product._id;
+      const existingIndex = prevItems.findIndex((item) => (item.id || item._id) === prodId);
       if (existingIndex > -1) {
         const updated = [...prevItems];
         updated[existingIndex].quantity += quantity;
         return updated;
       }
-      return [...prevItems, { ...product, quantity }];
+      return [...prevItems, { ...product, id: prodId, quantity }];
     });
   };
 
@@ -78,125 +317,34 @@ function AppContent() {
       return;
     }
     setCartItems((prevItems) =>
-      prevItems.map((item) => (item.id === id ? { ...item, quantity: newQuantity } : item))
+      prevItems.map((item) => ((item.id || item._id) === id ? { ...item, quantity: newQuantity } : item))
     );
   };
 
   const handleRemoveItem = (id) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
+    setCartItems((prevItems) => prevItems.filter((item) => (item.id || item._id) !== id));
   };
 
   const handleClearCart = () => {
     setCartItems([]);
+    localStorage.removeItem('hualink_cart');
   };
 
   return (
     <Router>
-      <div className="min-h-screen bg-white text-gray-900 flex flex-col justify-between">
-        <div>
-          <Navbar 
-            cartItems={cartItems} 
-            onUpdateQuantity={handleUpdateQuantity} 
-            onRemoveItem={handleRemoveItem}
-            user={user}
-          />
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            
-            {/* Products & Marketplace Routes */}
-            <Route path="/shop" element={<Products onAddToCart={handleAddToCart} />} />
-            <Route path="/marketplace" element={<Products onAddToCart={handleAddToCart} />} />
-            <Route path="/product/:id" element={<ProductDetail onAddToCart={handleAddToCart} />} />
-            
-            {/* Network & Service Routes */}
-            <Route path="/outlets" element={<Outlets />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/explore" element={<Explore />} />
-            
-            {/* Orders & Checkout Routes */}
-            <Route path="/orders" element={<Orders cartItems={cartItems} user={user} />} />
-            <Route path="/cart" element={<Orders cartItems={cartItems} user={user} />} />
-            <Route 
-              path="/checkout" 
-              element={
-                <Checkout 
-                  cartItems={cartItems} 
-                  user={user} 
-                  onClearCart={handleClearCart} 
-                />
-              } 
-            />
-
-            {/* Knowledgebase & Documentation Routes */}
-            <Route path="/docs" element={<Documentation />} />
-            <Route path="/docs/help" element={<HelpCenter />} />
-            <Route path="/help" element={<HelpCenter />} />
-
-            {/* Auth Routes */}
-            <Route path="/register" element={<Register />} />
-            <Route path="/login" element={<Login />} />
-
-            {/* Central Dashboard Redirect Router */}
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <DashboardRedirect />
-                </ProtectedRoute>
-              } 
-            />
-
-            {/* Customer Dashboard */}
-            <Route 
-              path="/dashboard/customer" 
-              element={
-                <ProtectedRoute allowedRoles={['CUSTOMER', 'SELLER', 'ADMIN']}>
-                  <CustomerDashboard />
-                </ProtectedRoute>
-              } 
-            />
-
-            {/* Seller Dashboard */}
-            <Route 
-              path="/dashboard/seller" 
-              element={
-                <ProtectedRoute allowedRoles={['SELLER', 'ADMIN']}>
-                  <SellerDashboard />
-                </ProtectedRoute>
-              } 
-            />
-
-            {/* Admin Dashboard */}
-            <Route 
-              path="/dashboard/admin" 
-              element={
-                <ProtectedRoute allowedRoles={['ADMIN']}>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              } 
-            />
-
-            {/* Protected Management Routes */}
-            <Route 
-              path="/users" 
-              element={
-                <ProtectedRoute allowedRoles={['ADMIN']}>
-                  <Users />
-                </ProtectedRoute>
-              } 
-            />
-
-            {/* Fallback 404 Route */}
-            <Route path="*" element={<div className="p-10 text-center text-slate-600 font-bold">404 - Page Not Found</div>} />
-          </Routes>
-        </div>
-        <Footer />
-      </div>
+      <AppLayout 
+        cartItems={cartItems}
+        handleUpdateQuantity={handleUpdateQuantity}
+        handleRemoveItem={handleRemoveItem}
+        handleClearCart={handleClearCart}
+        handleAddToCart={handleAddToCart}
+        user={user}
+      />
     </Router>
   );
 }
 
-// Root App Export wrapped in AuthProvider
+// Export Root Wrapped in AuthProvider
 export default function App() {
   return (
     <AuthProvider>

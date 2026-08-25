@@ -14,7 +14,9 @@ import {
   Filter,
   Loader2,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  ShoppingCart,
+  Check
 } from 'lucide-react';
 import API from '../api/axios';
 
@@ -32,8 +34,9 @@ export default function Products({ onAddToCart }) {
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [addedId, setAddedId] = useState(null);
 
-  // Fetch product inventory from Express backend
+  // Manual retry handler
   const loadProducts = async () => {
     setLoading(true);
     setError(null);
@@ -83,12 +86,45 @@ export default function Products({ onAddToCart }) {
     };
   }, []);
 
-  // Filter products by category and search query
-  const filteredProducts = products.filter((product) => {
-    const productCategory = product.category ? product.category.toLowerCase() : '';
-    const matchesCategory =
-      selectedCategory === 'all' || productCategory === selectedCategory.toLowerCase();
+  // Handle Add To Cart Action
+  const handleAddClick = (product) => {
+    // Resolve price against Prisma basePrice field
+    const rawPrice = product.price ?? product.basePrice ?? product.base_price ?? product.unitPrice ?? 10000;
+    const safePrice = Number(rawPrice);
+    const targetId = product.id || product.productId || product._id || 'depot-item';
 
+    if (onAddToCart) {
+      onAddToCart({
+        ...product,
+        id: targetId,
+        productId: targetId,
+        name: product.name || product.title || 'Inventory Item',
+        price: safePrice > 0 ? safePrice : 10000,
+        unitPrice: safePrice > 0 ? safePrice : 10000,
+      }, 1);
+    }
+
+    setAddedId(targetId);
+    setTimeout(() => setAddedId(null), 1500);
+  };
+
+  // Robust Category & Search Filter Logic
+  const filteredProducts = products.filter((product) => {
+    const dbCategory = (product.category || '').toLowerCase().trim();
+    const activeCategoryObj = CATEGORIES.find((c) => c.id === selectedCategory);
+    const categoryName = activeCategoryObj ? activeCategoryObj.name.toLowerCase().trim() : '';
+
+    // Category Match: exact name match or fuzzy string inclusion
+    const matchesCategory =
+      selectedCategory === 'all' ||
+      dbCategory === selectedCategory.toLowerCase() ||
+      dbCategory === categoryName ||
+      (selectedCategory === 'smartphones' && dbCategory.includes('phone')) ||
+      (selectedCategory === 'electronics' && dbCategory.includes('electronic')) ||
+      (selectedCategory === 'home' && dbCategory.includes('home')) ||
+      (selectedCategory === 'fashion' && dbCategory.includes('fashion'));
+
+    // Search Query Match
     const matchesSearch =
       product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.description?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -97,7 +133,7 @@ export default function Products({ onAddToCart }) {
   });
 
   return (
-    <div className="bg-gray-900 min-h-screen text-white pt-6 pb-20">
+    <div className="bg-gray-900 min-h-screen text-white pt-6 pb-20 font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         
         {/* Top Distribution Banner */}
@@ -209,6 +245,7 @@ export default function Products({ onAddToCart }) {
                 <h3 className="text-sm font-bold text-white uppercase mb-1">Failed to Load Products</h3>
                 <p className="text-xs text-gray-400 font-medium mb-5">{error}</p>
                 <button
+                  type="button"
                   onClick={loadProducts}
                   className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl transition-all cursor-pointer shadow-md shadow-red-600/30"
                 >
@@ -229,72 +266,93 @@ export default function Products({ onAddToCart }) {
             {/* Product Grid */}
             {!loading && !error && filteredProducts.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProducts.map((product) => (
-                  <div
-                    key={product.id}
-                    className="bg-gray-800 border border-gray-700/70 hover:border-red-600/60 rounded-2xl overflow-hidden flex flex-col justify-between transition-all group shadow-lg"
-                  >
-                    <div>
-                      {/* Image Header */}
-                      <div className="relative h-48 bg-gray-900 overflow-hidden">
-                        {product.imageUrl || product.image ? (
-                          <img
-                            src={product.imageUrl || product.image}
-                            alt={product.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xs font-black text-gray-600 uppercase tracking-widest">
-                            Hualink Depot
+                {filteredProducts.map((product, index) => {
+                  // Resolve price against basePrice / base_price from database schema
+                  const rawPrice = product.price ?? product.basePrice ?? product.base_price ?? product.unitPrice ?? 10000;
+                  const safePrice = Number(rawPrice);
+                  const pId = product.id || product.productId || product._id || `item-${index}`;
+                  const isAdded = addedId === pId;
+
+                  return (
+                    <div
+                      key={pId}
+                      className="bg-gray-800 border border-gray-700/70 hover:border-red-600/60 rounded-2xl overflow-hidden flex flex-col justify-between transition-all group shadow-lg"
+                    >
+                      <div>
+                        {/* Image Header */}
+                        <div className="relative h-48 bg-gray-900 overflow-hidden">
+                          {product.imageUrl || product.image ? (
+                            <img
+                              src={product.imageUrl || product.image}
+                              alt={product.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xs font-black text-gray-600 uppercase tracking-widest">
+                              Hualink Depot
+                            </div>
+                          )}
+                          <span className="absolute top-3 left-3 bg-black/80 backdrop-blur-md text-red-500 text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-red-500/30 uppercase tracking-wider">
+                            {product.category || 'Direct Supply'}
+                          </span>
+                        </div>
+
+                        {/* Card Content */}
+                        <div className="p-4">
+                          <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-1">
+                            <CheckCircle2 size={13} className="text-red-500" />
+                            <span>{product.warehouseLocation || 'Dar es Salaam Hub'}</span>
                           </div>
-                        )}
-                        <span className="absolute top-3 left-3 bg-black/80 backdrop-blur-md text-red-500 text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-red-500/30 uppercase tracking-wider">
-                          {product.tag || product.category || 'Direct Supply'}
-                        </span>
+                          <h3 className="text-sm font-bold text-white line-clamp-2 leading-snug">
+                            {product.name}
+                          </h3>
+
+                          {/* Stock & Wholesale Info */}
+                          <div className="mt-3 pt-3 border-t border-gray-700/50 space-y-1">
+                            <div className="flex justify-between items-center text-[11px]">
+                              <span className="text-gray-400">Retail Unit:</span>
+                              <span className="font-extrabold text-white">
+                                {safePrice.toLocaleString()} TSH
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center text-[11px]">
+                              <span className="text-gray-400">Wholesale Tier:</span>
+                              <span className="font-bold text-red-400">
+                                {product.wholesalePrice ? `${Number(product.wholesalePrice).toLocaleString()} TSH` : 'Bulk Rates Available'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Card Content */}
-                      <div className="p-4">
-                        <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-1">
-                          <CheckCircle2 size={13} className="text-red-500" />
-                          <span>{product.location || 'Dar es Salaam Hub'}</span>
-                        </div>
-                        <h3 className="text-sm font-bold text-white line-clamp-2 leading-snug">
-                          {product.name}
-                        </h3>
-
-                        {/* Stock & Wholesale Info */}
-                        <div className="mt-3 pt-3 border-t border-gray-700/50 space-y-1">
-                          <div className="flex justify-between items-center text-[11px]">
-                            <span className="text-gray-400">Retail Unit:</span>
-                            <span className="font-extrabold text-white">
-                              {typeof product.price === 'number'
-                                ? `${product.price.toLocaleString()} TSH`
-                                : product.price}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center text-[11px]">
-                            <span className="text-gray-400">Wholesale Tier:</span>
-                            <span className="font-bold text-red-400">
-                              {product.wholesalePrice || 'Bulk Rates Available'}
-                            </span>
-                          </div>
-                        </div>
+                      {/* Action Button */}
+                      <div className="p-4 pt-0">
+                        <button
+                          type="button"
+                          onClick={() => handleAddClick(product)}
+                          className={`w-full font-extrabold text-xs py-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-md ${
+                            isAdded
+                              ? 'bg-emerald-600 text-white shadow-emerald-600/30'
+                              : 'bg-red-600 hover:bg-red-700 text-white shadow-red-600/30'
+                          }`}
+                        >
+                          {isAdded ? (
+                            <>
+                              <Check size={14} />
+                              <span>Added to Order</span>
+                            </>
+                          ) : (
+                            <>
+                              <ShoppingCart size={14} />
+                              <span>Order Supply</span>
+                              <ChevronRight size={14} />
+                            </>
+                          )}
+                        </button>
                       </div>
                     </div>
-
-                    {/* Action Button */}
-                    <div className="p-4 pt-0">
-                      <button
-                        onClick={() => onAddToCart && onAddToCart(product)}
-                        className="w-full bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs py-2.5 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-2"
-                      >
-                        <span>Order Supply</span>
-                        <ChevronRight size={14} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 

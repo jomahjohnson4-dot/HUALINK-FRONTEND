@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   MapPin, 
   Phone, 
@@ -75,8 +76,20 @@ const MOCK_BRANCHES = [
 ];
 
 export default function Outlets() {
+  const navigate = useNavigate();
   const [selectedRegion, setSelectedRegion] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const handleContactManager = (branch) => {
+    // Navigates to the public support desk route (/chat) accessible to guests
+    navigate('/chat', { 
+      state: { 
+        branchId: branch.id, 
+        branchName: branch.name, 
+        phone: branch.phone 
+      } 
+    });
+  };
 
   const filteredBranches = MOCK_BRANCHES.filter((branch) => {
     const matchesRegion =
@@ -242,7 +255,10 @@ export default function Outlets() {
 
                   {/* Actions */}
                   <div className="p-5 pt-0">
-                    <button className="w-full bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs py-3 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-2">
+                    <button 
+                      onClick={() => handleContactManager(branch)}
+                      className="w-full bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs py-3 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-2"
+                    >
                       <span>Contact Branch Manager</span>
                       <ArrowRight size={14} />
                     </button>

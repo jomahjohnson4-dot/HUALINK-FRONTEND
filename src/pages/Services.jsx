@@ -11,8 +11,13 @@ import {
   ShieldCheck, 
   Zap,
   Sparkles,
-  MessageSquare
+  MessageSquare,
+  X,
+  Send,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
+import ServiceContactModal from '../components/modals/ServiceContactModal';
 
 const SERVICE_CATEGORIES = [
   { id: 'all', name: 'All Services', icon: Sparkles },
@@ -28,7 +33,7 @@ const MOCK_SERVICES = [
     title: 'Custom Web & Mobile App Development',
     category: 'web',
     provider: 'Hualink Tech Solutions',
-    phone: '255700000000', // Format: 255XXXXXXXXX
+    phone: '255758139770',
     price: 'From 700,000 TSH',
     timeline: '5-10 Days Delivery',
     location: 'Dar es Salaam & Online',
@@ -42,7 +47,7 @@ const MOCK_SERVICES = [
     title: 'Logo, Posters, Flyers & Brand Banners',
     category: 'graphic',
     provider: 'TeKeL Graphics Studio',
-    phone: '255700000000',
+    phone: '255758139770',
     price: 'From 25,000 TSH',
     timeline: '24 Hours Turnaround',
     location: 'Mbeya & Regional Hubs',
@@ -56,7 +61,7 @@ const MOCK_SERVICES = [
     title: 'Modern Office & Home Furniture Supply',
     category: 'furniture',
     provider: 'Hualink Logistics & Interiors',
-    phone: '255700000000',
+    phone: '255758139770',
     price: 'From 150,000 TSH',
     timeline: 'Instant Stock / 3 Days Custom',
     location: 'Dar es Salaam Depot',
@@ -70,7 +75,7 @@ const MOCK_SERVICES = [
     title: 'Computer Maintenance, Repair & Networking',
     category: 'tech',
     provider: 'Hualink Systems Support',
-    phone: '255700000000',
+    phone: '255758139770',
     price: 'From 30,000 TSH',
     timeline: 'Same Day Service',
     location: 'All Regional Depots',
@@ -84,7 +89,7 @@ const MOCK_SERVICES = [
     title: 'Agency Dashboard & Web UI Prototyping',
     category: 'web',
     provider: 'Hualink Tech Solutions',
-    phone: '255700000000',
+    phone: '255758139770',
     price: 'From 450,000 TSH',
     timeline: '4 Days Delivery',
     location: 'Online Delivery',
@@ -98,7 +103,7 @@ const MOCK_SERVICES = [
     title: 'Custom Product Packaging & Promotional Banners',
     category: 'graphic',
     provider: 'TeKeL Graphics Studio',
-    phone: '255700000000',
+    phone: '255758139770',
     price: 'From 50,000 TSH',
     timeline: '2 Days Delivery',
     location: 'Mbeya Hub',
@@ -112,6 +117,19 @@ const MOCK_SERVICES = [
 export default function Services() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Booking Modal State
+  const [activeServiceModal, setActiveServiceModal] = useState(null);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [formData, setFormData] = useState({ name: '', phone: '', note: '' });
+
+  // Saved Booking & Live Chat Modal State
+  const [submittedBooking, setSubmittedBooking] = useState(null);
+  const [showContactModal, setShowContactModal] = useState(false);
+
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   const filteredServices = MOCK_SERVICES.filter((service) => {
     const matchesCategory =
@@ -122,12 +140,59 @@ export default function Services() {
     return matchesCategory && matchesSearch;
   });
 
-  // Open WhatsApp with pre-filled inquiry details
   const handleWhatsAppClick = (service) => {
     const text = encodeURIComponent(
       `Hello ${service.provider}! 👋\n\nI am contacting you via *Hualink Hub* regarding:\n📌 *${service.title}*\n\nEstimated Price: ${service.price}\nLocation/Target: ${service.location}\n\nI would like to inquire about starting this service.`
     );
     window.open(`https://wa.me/${service.phone}?text=${text}`, '_blank');
+  };
+
+  const handleOpenModal = (service) => {
+    setActiveServiceModal(service);
+    setIsSubmitted(false);
+    setIsLoading(false);
+    setErrorMessage('');
+    setFormData({ name: '', phone: '', note: '' });
+  };
+
+  const handleCloseModal = () => {
+    setActiveServiceModal(null);
+    setIsSubmitted(false);
+  };
+
+  const handleSubmitBooking = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setErrorMessage('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/bookings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          serviceTitle: activeServiceModal.title,
+          provider: activeServiceModal.provider,
+          clientName: formData.name,
+          clientPhone: formData.phone,
+          note: formData.note,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setSubmittedBooking(data.data);
+        setIsSubmitted(true);
+      } else {
+        setErrorMessage(data.message || 'Failed to send booking request. Please try again.');
+      }
+    } catch (error) {
+      setErrorMessage('Network connection error. Check your server status and try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -155,8 +220,6 @@ export default function Services() {
           
           {/* Sidebar Filter Panel */}
           <div className="lg:col-span-1 space-y-6">
-            
-            {/* Search Bar */}
             <div className="relative">
               <Search size={18} className="absolute left-3.5 top-3.5 text-gray-400" />
               <input
@@ -168,7 +231,6 @@ export default function Services() {
               />
             </div>
 
-            {/* Category Navigation */}
             <div className="bg-gray-800/80 border border-gray-700/80 rounded-2xl p-4 shadow-lg">
               <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-gray-400 mb-4 px-2">
                 <Filter size={14} className="text-red-500" />
@@ -198,7 +260,6 @@ export default function Services() {
               </div>
             </div>
 
-            {/* Quality Assurance Card */}
             <div className="bg-gray-800/50 border border-gray-700/60 rounded-2xl p-4">
               <div className="flex items-start gap-3">
                 <ShieldCheck className="text-red-500 shrink-0 mt-0.5" size={20} />
@@ -210,12 +271,10 @@ export default function Services() {
                 </div>
               </div>
             </div>
-
           </div>
 
           {/* Service Cards Grid */}
           <div className="lg:col-span-3">
-            
             <div className="flex items-center justify-between mb-6 pb-3 border-b border-gray-800">
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">
                 Available Services: <span className="text-white font-extrabold">{filteredServices.length}</span>
@@ -229,7 +288,6 @@ export default function Services() {
                   className="bg-gray-800 border border-gray-700/70 hover:border-red-600/60 rounded-2xl overflow-hidden flex flex-col justify-between transition-all group shadow-lg"
                 >
                   <div>
-                    {/* Image Header with Tag & Online Badge */}
                     <div className="relative h-48 bg-gray-900 overflow-hidden">
                       <img
                         src={service.image}
@@ -237,19 +295,16 @@ export default function Services() {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       
-                      {/* Top Tag */}
                       <span className="absolute top-3 left-3 bg-black/80 backdrop-blur-md text-red-500 text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-red-500/30 uppercase tracking-wider">
                         {service.tag}
                       </span>
 
-                      {/* Top Online Status Indicator */}
                       <span className="absolute top-3 right-3 bg-emerald-500/20 backdrop-blur-md border border-emerald-500/40 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                         {service.status}
                       </span>
                     </div>
 
-                    {/* Body */}
                     <div className="p-4">
                       <div className="flex items-center gap-1.5 text-[11px] text-red-400 font-bold mb-1">
                         <CheckCircle2 size={13} />
@@ -262,7 +317,6 @@ export default function Services() {
                         {service.description}
                       </p>
 
-                      {/* Pricing & Delivery Details */}
                       <div className="mt-4 pt-3 border-t border-gray-700/50 space-y-1.5">
                         <div className="flex justify-between items-center text-[11px]">
                           <span className="text-gray-400">Estimate:</span>
@@ -276,15 +330,15 @@ export default function Services() {
                     </div>
                   </div>
 
-                  {/* Dual Action Buttons */}
                   <div className="p-4 pt-0 space-y-2">
-                    {/* Primary Booking Button */}
-                    <button className="w-full bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs py-2.5 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-2">
+                    <button 
+                      onClick={() => handleOpenModal(service)}
+                      className="w-full bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs py-2.5 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-md shadow-red-600/20"
+                    >
                       <span>Book Service</span>
                       <ArrowRight size={14} />
                     </button>
 
-                    {/* Pro WhatsApp Direct Contact Button */}
                     <button 
                       onClick={() => handleWhatsAppClick(service)}
                       className="w-full bg-gray-900/80 hover:bg-gray-900 border border-emerald-500/40 hover:border-emerald-500/80 text-emerald-400 hover:text-emerald-300 font-bold text-xs py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"
@@ -293,16 +347,169 @@ export default function Services() {
                       <span>Chat on WhatsApp</span>
                     </button>
                   </div>
-
                 </div>
               ))}
             </div>
-
           </div>
-
         </div>
 
       </div>
+
+      {/* Booking Form Modal */}
+      {activeServiceModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-gray-800 border border-gray-700 rounded-3xl max-w-md w-full p-6 relative shadow-2xl space-y-5">
+            
+            <button 
+              onClick={handleCloseModal}
+              disabled={isLoading}
+              className="absolute top-5 right-5 text-gray-400 hover:text-white p-1 rounded-full bg-gray-700/60 transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+
+            {!isSubmitted ? (
+              <>
+                <div>
+                  <span className="text-[10px] font-black uppercase text-red-400 tracking-wider">
+                    {activeServiceModal.provider}
+                  </span>
+                  <h3 className="text-lg font-bold text-white mt-1 leading-snug">
+                    Book: {activeServiceModal.title}
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Estimate: <span className="text-white font-bold">{activeServiceModal.price}</span>
+                  </p>
+                </div>
+
+                {errorMessage && (
+                  <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
+                    <AlertCircle size={16} className="shrink-0" />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmitBooking} className="space-y-4">
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">
+                      Full Name
+                    </label>
+                    <input 
+                      type="text" 
+                      required 
+                      disabled={isLoading}
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Enter your name" 
+                      className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-red-600 transition-colors disabled:opacity-50"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">
+                      Phone Number / WhatsApp
+                    </label>
+                    <input 
+                      type="tel" 
+                      required 
+                      disabled={isLoading}
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      placeholder="e.g. 0758139770" 
+                      className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-red-600 transition-colors disabled:opacity-50"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">
+                      Project Scope & Specific Requirements
+                    </label>
+                    <textarea 
+                      rows="3" 
+                      required 
+                      disabled={isLoading}
+                      value={formData.note}
+                      onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+                      placeholder="Describe what you need designed, built, or repaired..." 
+                      className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-red-600 transition-colors disabled:opacity-50"
+                    />
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    disabled={isLoading}
+                    className="w-full py-3 bg-red-600 hover:bg-red-700 disabled:bg-red-800 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-lg shadow-red-600/20 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        <span>Sending Request...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send size={14} />
+                        <span>Submit Service Order</span>
+                      </>
+                    )}
+                  </button>
+                </form>
+              </>
+            ) : (
+              <div className="py-4 text-center space-y-4">
+                <div className="w-12 h-12 bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 rounded-full flex items-center justify-center mx-auto">
+                  <CheckCircle2 size={24} />
+                </div>
+                <div>
+                  <h4 className="text-base font-bold text-white">Booking Order Request Sent!</h4>
+                  <p className="text-xs text-gray-400 mt-2">
+                    Thank you, <span className="text-white font-semibold">{formData.name}</span>. The team at <span className="text-white font-semibold">{activeServiceModal.provider}</span> will contact you shortly via <span className="text-white font-semibold">{formData.phone}</span>. An SMS confirmation has also been dispatched.
+                  </p>
+                  {submittedBooking?.id && (
+                    <p className="text-[11px] text-slate-400 mt-1">
+                      Booking ID: <span className="font-mono text-white">#{submittedBooking.id}</span>
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      handleCloseModal();
+                      setShowContactModal(true);
+                    }}
+                    className="flex-1 py-2.5 bg-orange-500 hover:bg-orange-400 text-slate-950 font-extrabold text-xs rounded-xl transition-colors cursor-pointer shadow-lg shadow-orange-500/20 flex items-center justify-center gap-1.5"
+                  >
+                    <MessageSquare size={14} />
+                    <span>Open Live Chat & WhatsApp</span>
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={handleCloseModal} 
+                    className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
+
+      {/* Live Chat Modal Component */}
+      {showContactModal && submittedBooking && (
+        <ServiceContactModal
+          booking={submittedBooking}
+          providerPhone="255758139770"
+          currentUser={{ 
+            id: submittedBooking.clientPhone || formData.phone, 
+            name: submittedBooking.clientName || formData.name 
+          }}
+          onClose={() => setShowContactModal(false)}
+        />
+      )}
     </div>
   );
 }

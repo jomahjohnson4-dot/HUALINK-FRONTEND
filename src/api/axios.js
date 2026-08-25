@@ -1,15 +1,17 @@
 import axios from 'axios';
 
-// Create Axios instance using environment variable or local backend fallback
+// Standardized base URL with Vite environment variable support
+const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Allows cross-origin cookies / sessions
+  withCredentials: true,
 });
 
-// Request Interceptor: Automatically attach Bearer token if logged in
+// Request Interceptor: Automatically attach Bearer token to all outbound requests
 API.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -21,18 +23,21 @@ API.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Centralized error handling
+// Response Interceptor: Centralized Error Handling & Auth Cleanup
 API.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
-      // Automatically clear local session on unauthorized responses
+      // Clear token on 401 Unauthorized responses (session expired or invalid)
       if (error.response.status === 401) {
         localStorage.removeItem('token');
+        console.warn('[API Auth Session Expired]: Cleared local storage token.');
       }
       console.error(`[API Error ${error.response.status}]:`, error.response.data?.message || error.message);
     } else if (error.request) {
-      console.error('[Network Error]: Express backend unreachable at http://localhost:5000');
+      console.error(`[Network Error]: Backend unreachable at ${API_BASE_URL}. Ensure Express server is running.`);
+    } else {
+      console.error('[Request Setup Error]:', error.message);
     }
     return Promise.reject(error);
   }
