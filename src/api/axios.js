@@ -1,7 +1,10 @@
 import axios from 'axios';
 
-// Standardized base URL with Vite environment variable support
-const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+// Prioritize production Render backend URL with local fallback
+const API_BASE_URL = 
+  import.meta.env.VITE_API_URL || 
+  import.meta.env.VITE_API_BASE_URL || 
+  'https://hualink-backend.onrender.com/api';
 
 const API = axios.create({
   baseURL: API_BASE_URL,
