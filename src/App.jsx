@@ -18,6 +18,11 @@ import Login from './pages/Login';
 import Outlets from './pages/Outlets';
 import Services from './pages/Services';
 import Explore from './pages/Explore';
+import TopRankingPage from './pages/TopRankingPage';
+import ShopsPage from './pages/ShopsPage';
+import ServicesPage from './pages/ServicesPage';
+import AiSearchModePage from './pages/AiSearchModePage';
+import ProductDetailsPage from './pages/ProductDetailsPage';
 import Checkout from './pages/Checkout'; 
 import Documentation from './pages/Documentation';
 import HelpCenter from './pages/HelpCenter';
@@ -149,19 +154,26 @@ const AppLayout = ({ cartItems, handleUpdateQuantity, handleRemoveItem, handleCl
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col justify-between pb-16 md:pb-0 relative font-sans">
       <div>
-        <Navbar 
-          cartItems={cartItems} 
-          onUpdateQuantity={handleUpdateQuantity} 
-          onRemoveItem={handleRemoveItem}
-          user={user}
-        />
+        {/* Hide the full navigation bar on auth pages so only the clean minimal auth header remains */}
+        {location.pathname !== '/login' && location.pathname !== '/register' && (
+          <Navbar 
+            cartItems={cartItems} 
+            onUpdateQuantity={handleUpdateQuantity} 
+            onRemoveItem={handleRemoveItem}
+            user={user}
+          />
+        )}
         <Routes>
           <Route path="/" element={<Landing />} />
           
           {/* Products & Marketplace Routes */}
           <Route path="/shop" element={<Products onAddToCart={handleAddToCart} />} />
           <Route path="/marketplace" element={<Products onAddToCart={handleAddToCart} />} />
-          <Route path="/product/:id" element={<ProductDetail onAddToCart={handleAddToCart} />} />
+          <Route path="/product/:id" element={<ProductDetailsPage />} />
+          <Route path="/top-ranking" element={<TopRankingPage />} />
+          <Route path="/shops" element={<ShopsPage />} />
+          <Route path="/services" element={<ServicesPage />} />
+          <Route path="/ai-mode" element={<AiSearchModePage />} />
           
           {/* Network & Service Routes */}
           <Route path="/outlets" element={<Outlets />} />

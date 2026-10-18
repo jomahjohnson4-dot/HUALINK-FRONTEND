@@ -9,7 +9,7 @@ export default function FrequentlySearchedCard({
   const { t } = useTranslation();
 
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm flex flex-col h-full border border-gray-200">
+    <div className="bg-white rounded-xl p-8 md:p-10 shadow-sm flex flex-col h-full border border-gray-200">
       <div className="flex items-center justify-between mb-3">
         <div>
           <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">

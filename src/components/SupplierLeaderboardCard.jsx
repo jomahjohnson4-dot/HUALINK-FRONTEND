@@ -5,7 +5,7 @@ export default function SupplierLeaderboardCard() {
   const { t } = useTranslation();
 
   return (
-    <div className="bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 text-white rounded-xl p-5 shadow-lg border border-purple-500/30 flex flex-col h-full">
+    <div className="bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 text-white rounded-xl p-8 md:p-10 shadow-lg border border-purple-500/30 flex flex-col h-full">
       <div className="z-10 flex items-start justify-between">
         <div>
           <span className="text-[10px] font-black uppercase tracking-wider opacity-90 bg-white/20 px-2 py-1 rounded-full inline-block mb-2">

@@ -1,9 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import { ArrowRight, UserCheck, Search, PackageCheck } from 'lucide-react';
+import { ArrowRight, UserCheck, Search, PackageCheck, Target, Trophy, Wrench } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import TopBanner from '../components/TopBanner';
 import SearchHero from '../components/SearchHero';
 import CategoryDrawer from '../components/CategoryDrawer';
 import BrowsingHistoryCard from '../components/BrowsingHistoryCard';
@@ -32,15 +31,58 @@ export default function Landing() {
   const navigate = useNavigate();
 
   return (
-    <div className="bg-[#F5F5F5] min-h-screen font-sans text-slate-900">
-      {/* ================= 1. TOP ANNOUNCEMENT BANNER ================= */}
-      <TopBanner className="my-6" />
+    <div className="bg-[#F5F5F5] min-h-screen font-sans text-slate-900 py-8 px-4 md:px-12 space-y-16">
+      {/* ================= 2. CENTERED FLOATING SEARCH HERO ================= */}
+      <SearchHero className="mt-10 mb-8" />
 
-      {/* ================= 2. SEARCH HERO ================= */}
-      <SearchHero className="my-6" />
+      {/* ================= 4. ACTION SUB-BAR (Full-Width Seamless Strip) ================= */}
+      <div className="w-full bg-[#F7F7F7] border-t border-b border-gray-200/70 py-3.5 px-6 md:px-12">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-gray-900 font-extrabold text-base md:text-lg tracking-tight">
+              Welcome to Hualink Distribution
+            </span>
+          </div>
 
-      {/* ================= 3. MAIN 5-CARD HORIZONTAL GRID ================= */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 max-w-7xl mx-auto px-4 mb-6">
+          <div className="flex items-center gap-0">
+            {/* Tab 1: Request for Quotation */}
+            <button
+              onClick={() => navigate('/rfq')}
+              className="flex items-center gap-2 font-bold text-sm text-gray-800 hover:text-[#E50914] cursor-pointer group transition-colors"
+            >
+              <Target className="w-5 h-5 text-gray-900 group-hover:text-[#E50914] transition-colors" />
+              <span>Request for Quotation</span>
+            </button>
+
+            {/* Vertical Divider 1 */}
+            <div className="h-4 w-[1px] bg-gray-300 mx-4 md:mx-6" />
+
+            {/* Tab 2: Top Ranking */}
+            <button
+              onClick={() => navigate('/top-ranking')}
+              className="flex items-center gap-2 font-bold text-sm text-gray-800 hover:text-[#E50914] cursor-pointer group transition-colors"
+            >
+              <Trophy className="w-5 h-5 text-gray-900 group-hover:text-[#E50914] transition-colors" />
+              <span>Top Ranking</span>
+            </button>
+
+            {/* Vertical Divider 2 */}
+            <div className="h-4 w-[1px] bg-gray-300 mx-4 md:mx-6" />
+
+            {/* Tab 3: Fast Customization */}
+            <button
+              onClick={() => navigate('/customization')}
+              className="flex items-center gap-2 font-bold text-sm text-gray-800 hover:text-[#E50914] cursor-pointer group transition-colors"
+            >
+              <Wrench className="w-5 h-5 text-gray-900 group-hover:text-[#E50914] transition-colors" />
+              <span>Fast Customization</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ================= 5. MAIN 5-CARD HORIZONTAL GRID ================= */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 max-w-7xl mx-auto mt-16 mb-16">
         {/* Col 1: Category Drawer */}
         <CategoryDrawer />
 
@@ -65,10 +107,10 @@ export default function Landing() {
         <SupplierLeaderboardCard />
       </div>
 
-      {/* ================= 4. BOTTOM PRODUCT GRID (Alibaba 6-Column Grid) ================= */}
+      {/* ================= 6. BOTTOM PRODUCT GRID (Alibaba 6-Column Grid) ================= */}
       <ProductGrid />
 
-      {/* ================= 5. HOW IT WORKS ================= */}
+      {/* ================= 7. HOW IT WORKS ================= */}
       <section className="py-20 bg-white my-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-xl mx-auto space-y-3 mb-16">
@@ -127,7 +169,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ================= 5. WHY CHOOSE HUALINK ================= */}
+      {/* ================= 8. WHY CHOOSE HUALINK ================= */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 my-6">
         <div className="bg-charcoal text-white rounded-3xl p-8 sm:p-12 shadow-2xl">
           <div className="text-center mb-10">

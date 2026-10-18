@@ -15,7 +15,7 @@ export default function CategoryDrawer({ className = '' }) {
 
   return (
     <div
-      className={`bg-white rounded-xl p-4 shadow-sm border border-gray-200 ${className}`}
+      className={`bg-white rounded-xl p-8 md:p-10 shadow-sm border border-gray-200 ${className}`}
     >
       <div className="mb-3">
         <h2 className="text-xs font-black text-slate-900 uppercase tracking-wider">

@@ -1,18 +1,21 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  ArrowRight, 
-  ShieldCheck, 
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  ShieldCheck,
   AlertCircle,
   X,
   KeyRound,
-  CheckCircle2
+  CheckCircle2,
+  Globe,
+  QrCode,
 } from 'lucide-react';
-import API from '../api/axios';
+import Logo from '../components/Logo';
+import { useTranslation } from 'react-i18next';
 
 export default function Login({ onLoginSuccess }) {
   const navigate = useNavigate();
@@ -20,186 +23,189 @@ export default function Login({ onLoginSuccess }) {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isLangOpen, setIsLangOpen] = useState(false);
+  const { t, i18n } = useTranslation();
 
-  // Forgot Password Modal State
-  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
-  const [resetStep, setResetStep] = useState(1); // 1: Email, 2: OTP, 3: New Password, 4: Success
-  const [resetEmail, setResetEmail] = useState('');
-  const [otpCode, setOtpCode] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [resetLoading, setResetLoading] = useState(false);
-  const [resetError, setResetError] = useState('');
+  const handleLanguageChange = (lang) => {
+    i18n.changeLanguage(lang);
+    setIsLangOpen(false);
+  };
 
-  // Handle Main Login Form Submission via Axios
+  // OAuth / social sign-in handlers (mock session + redirect)
+  const handleOAuthLogin = (provider) => {
+    localStorage.setItem('hualink_auth', 'active');
+    localStorage.setItem('hualink_provider', provider);
+    window.dispatchEvent(new Event('authChange'));
+    navigate('/');
+  };
+
+  // Email Continue: validate email and sign the user in successfully
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
 
-    try {
-      const response = await API.post('/auth/login', formData);
-      
-      // Extract token & user payload across direct or nested responses
-      const resData = response.data?.data || response.data;
-      const authToken = resData?.token || resData?.accessToken || response.data?.token;
-      const userPayload = resData?.user || response.data?.user || resData;
-
-      if (!authToken) {
-        throw new Error('Authentication failed: Server did not return a valid session token.');
-      }
-
-      // 1. Persist Session Token and User Payload
-      localStorage.setItem('token', authToken);
-      if (userPayload) {
-        localStorage.setItem('user', JSON.stringify(userPayload));
-
-        // Pre-fill checkout delivery cache to prevent loss of user data on Checkout
-        const existingCheckoutInfo = JSON.parse(localStorage.getItem('checkout_delivery_info') || '{}');
-        localStorage.setItem('checkout_delivery_info', JSON.stringify({
-          ...existingCheckoutInfo,
-          fullName: userPayload.fullName || userPayload.name || existingCheckoutInfo.fullName || '',
-          customerPhone: userPayload.phone || userPayload.phoneNumber || existingCheckoutInfo.customerPhone || '',
-          region: userPayload.region || existingCheckoutInfo.region || 'Dar es Salaam',
-          address: userPayload.address || existingCheckoutInfo.address || ''
-        }));
-      }
-
-      // 2. Dispatch custom & storage events so Navbar and Checkout update state instantly
-      window.dispatchEvent(new Event('storage'));
-      window.dispatchEvent(new Event('authChange'));
-
-      if (onLoginSuccess) {
-        onLoginSuccess(userPayload);
-      }
-
-      // 3. Auto-detect database role and route user to their respective dashboard
-      const userRole = userPayload?.role?.toUpperCase();
-      if (userRole === 'ADMIN') {
-        navigate('/dashboard/admin');
-      } else if (userRole === 'SELLER') {
-        navigate('/dashboard/seller');
-      } else {
-        navigate('/dashboard/customer');
-      }
-    } catch (err) {
-      console.error('Login authentication error:', err);
-      setError(
-        err.response?.data?.message || err.message || 'Invalid email or password. Please try again.'
-      );
-    } finally {
-      setLoading(false);
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email || !emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address.');
+      return;
     }
-  };
 
-  // Step 1: Request Password Reset OTP
-  const handleSendCode = async (e) => {
-    e.preventDefault();
-    if (!resetEmail) return;
-    setResetLoading(true);
-    setResetError('');
+    // Simulate successful sign-in and persist user session
+    localStorage.setItem(
+      'hualink_user',
+      JSON.stringify({ name: 'Johnson', email: formData.email, isLoggedIn: true })
+    );
+    localStorage.setItem('hualink_auth', 'active');
+    localStorage.setItem('token', 'mock-session-token');
+    window.dispatchEvent(new Event('authChange'));
 
-    try {
-      await API.post('/auth/forgot-password', { email: resetEmail });
-      setResetStep(2);
-    } catch (err) {
-      setResetError(err.response?.data?.message || 'Failed to send verification code.');
-    } finally {
-      setResetLoading(false);
+    if (onLoginSuccess) {
+      onLoginSuccess({ email: formData.email });
     }
-  };
 
-  // Step 2: Verify OTP Code
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    if (otpCode.length < 4) return;
-    setResetLoading(true);
-    setResetError('');
-
-    try {
-      await API.post('/auth/verify-otp', { email: resetEmail, otp: otpCode });
-      setResetStep(3);
-    } catch (err) {
-      setResetError(err.response?.data?.message || 'Invalid or expired verification code.');
-    } finally {
-      setResetLoading(false);
-    }
-  };
-
-  // Step 3: Save New Password
-  const handleSetNewPassword = async (e) => {
-    e.preventDefault();
-    if (newPassword.length < 6) return;
-    setResetLoading(true);
-    setResetError('');
-
-    try {
-      await API.post('/auth/reset-password', {
-        email: resetEmail,
-        otp: otpCode,
-        newPassword,
-      });
-      setResetStep(4);
-    } catch (err) {
-      setResetError(err.response?.data?.message || 'Failed to reset password. Try again.');
-    } finally {
-      setResetLoading(false);
-    }
-  };
-
-  const closeResetModal = () => {
-    setIsForgotModalOpen(false);
-    setResetStep(1);
-    setResetEmail('');
-    setOtpCode('');
-    setNewPassword('');
-    setResetError('');
+    navigate('/');
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
-      
-      {/* Brand Header */}
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-8">
-        <Link to="/" className="inline-flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full border-2 border-red-600 flex items-center justify-center font-black tracking-tighter text-lg bg-white shadow-xs">
-            <span className="text-red-600 italic">H</span>
-            <span className="text-black italic -ml-0.5">L</span>
+    <div className="min-h-screen bg-[#F5F5F5] font-sans text-slate-900 flex flex-col">
+      {/* Minimal Auth Header */}
+      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-6 py-4 w-full flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Logo className="cursor-pointer" />
           </div>
-          <div className="flex flex-col text-left">
-            <div className="text-2xl font-black italic tracking-wide">
-              <span className="text-red-600">HUA</span>
-              <span className="text-black">LINK</span>
+
+          <div className="flex items-center gap-4 shrink-0">
+            {/* Top-Right Language Pill Selector (Dropdown) */}
+            <div className="relative group">
+              <button
+                onClick={() => setIsLangOpen((o) => !o)}
+                className="flex items-center gap-1.5 px-4 py-1.5 border border-gray-200 bg-gray-50 rounded-full text-xs font-semibold text-gray-900 hover:bg-gray-100 transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <Globe size={14} className="text-gray-500" />
+                <span className="font-bold">
+                  {i18n.language === 'en' ? 'English' : i18n.language === 'sw' ? 'Kiswahili' : '中文'}
+                </span>
+              </button>
+
+              {isLangOpen && (
+                <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 shadow-lg py-2 z-50 rounded-lg">
+                  <button
+                    onClick={() => handleLanguageChange('en')}
+                    className="w-full text-left px-3 py-2 text-xs font-semibold flex items-center gap-2 hover:bg-gray-50 transition-colors"
+                  >
+                    <span className={i18n.language === 'en' ? 'text-[#E50914] font-bold' : 'text-gray-600'}>English</span>
+                  </button>
+                  <button
+                    onClick={() => handleLanguageChange('sw')}
+                    className="w-full text-left px-3 py-2 text-xs font-semibold flex items-center gap-2 hover:bg-gray-50 transition-colors"
+                  >
+                    <span className={i18n.language === 'sw' ? 'text-[#E50914] font-bold' : 'text-gray-600'}>Kiswahili</span>
+                  </button>
+                  <button
+                    onClick={() => handleLanguageChange('zh')}
+                    className="w-full text-left px-3 py-2 text-xs font-semibold flex items-center gap-2 hover:bg-gray-50 transition-colors"
+                  >
+                    <span className={i18n.language === 'zh' ? 'text-[#E50914] font-bold' : 'text-gray-600'}>中文</span>
+                  </button>
+                </div>
+              )}
             </div>
-            <span className="text-[10px] text-black font-extrabold tracking-[0.25em] uppercase">
-              DISTRIBUTION
+          </div>
+        </div>
+      </header>
+
+      {/* Ken Burns zoom + fade-in animations for the hero image & badges */}
+      <style>{`@keyframes kenBurns { from { transform: scale(1); } to { transform: scale(1.05); } } @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+
+      {/* Split 2-Column Layout */}
+      <div className="min-h-[calc(100vh-80px)] w-full grid grid-cols-1 md:grid-cols-2 items-stretch">
+        {/* Left Column - Hero Image with Feature Badges */}
+        <div className="relative w-full h-full min-h-[550px] flex overflow-hidden">
+          <img
+            src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&q=80&w=1200"
+            alt="Business owner working in modern office"
+            className="w-full h-full object-cover rounded-none md:rounded-r-3xl"
+            style={{ animation: 'kenBurns 20s ease-in-out infinite alternate' }}
+          />
+
+          {/* Floating Feature Badges */}
+          <div className="absolute top-1/3 right-8 bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-full text-xs font-bold text-gray-900 shadow-xl border-l-4 border-[#E50914] animate-bounce">
+            {t('auth.topSellingSuppliers')}
+          </div>
+          <div className="absolute top-1/2 left-8 bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-full text-xs font-bold text-gray-900 shadow-xl border-l-4 border-[#E50914]">
+            {t('auth.freeShipping')}
+          </div>
+          <div className="absolute bottom-16 right-12 bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-full text-xs font-bold text-gray-900 shadow-xl border-l-4 border-[#E50914]">
+            {t('auth.moneyBackGuarantee')}
+          </div>
+
+          {/* Disclaimer */}
+          <div className="absolute bottom-3 left-6 text-[10px] text-white/80">
+            *Eligibility restrictions apply. Terms & Conditions apply.
+          </div>
+        </div>
+
+        {/* Right Column - Social Logins & Form */}
+        <div className="flex flex-col h-full min-h-[550px] p-8 md:p-12">
+          {/* Header */}
+          <h1 className="text-2xl font-black text-gray-900 mb-6">
+            {t('auth.signInOrCreateAccount')}
+          </h1>
+
+          {/* Social Login Buttons */}
+          <button
+            onClick={() => {
+              const email = formData.email || 'johnson@hualink.co.tz';
+              localStorage.setItem(
+                'hualink_user',
+                JSON.stringify({ name: 'Johnson', email, isLoggedIn: true })
+              );
+              localStorage.setItem('hualink_auth', 'active');
+              window.dispatchEvent(new Event('authChange'));
+              navigate('/');
+            }}
+            className="w-full bg-white border border-gray-300 hover:border-gray-400 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-3 text-sm text-gray-800 shadow-sm hover:shadow transition-all cursor-pointer mb-3"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              className="shrink-0"
+            >
+              <path
+                fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12c0 1.77.43 3.45 1.18 4.93l3.66-2.84z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23c4.3 0 8.01-2.47 9.82-6.16l-3.57-2.77c-.87 1.62-3.31 2.77-6.25 2.77-1.48 0-2.73-.4-3.71-1.06l3.57-2.77c.47 1.39 1.24 2.6 2.21 3.31zM12 4.26c1.77 0 3.45.43 4.93 1.18l3.66 2.84c.66-1.48 1.09-3.16 1.09-4.93C21.57 5.98 21.14 4.26 12 4.26z"
+              />
+            </svg>
+            {t('auth.continueWithGoogle')}
+          </button>
+
+          {/* Divider */}
+          <div className="relative mb-6">
+            <div className="border-t border-gray-300" />
+            <span className="absolute top-0 left-1/2 -translate-x-1/2 bg-[#F5F5F5] px-4 text-xs font-bold text-slate-600">
+              ─ OR ─
             </span>
           </div>
-        </Link>
-        <h2 className="mt-6 text-3xl font-black text-slate-900 tracking-tight">
-          Welcome Back
-        </h2>
-        <p className="mt-2 text-sm font-semibold text-slate-500">
-          Sign in to access your orders and distribution portal
-        </p>
-      </div>
 
-      {/* Login Card Container */}
-      <div className="sm:mx-auto sm:w-full sm:max-w-lg">
-        <div className="bg-white py-10 px-8 shadow-2xl shadow-slate-200/60 rounded-3xl border border-slate-100 sm:px-12 space-y-6">
-          
-          {error && (
-            <div className="p-4 bg-rose-50 border border-rose-200 text-rose-600 rounded-2xl text-xs font-bold flex items-center gap-2">
-              <AlertCircle size={18} className="shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            
-            {/* Email Field */}
+          {/* Auth Form */}
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
-                Email Address
+                {t('auth.emailAddress')}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
@@ -210,229 +216,28 @@ export default function Login({ onLoginSuccess }) {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="name@example.com"
-                  className="block w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold focus:bg-white focus:border-red-600 focus:outline-none transition-colors"
+                  placeholder={t('auth.emailPlaceholder')}
+                  className="w-full pl-12 pr-4 py-3 focus:ring-2 focus:ring-[#E50914] focus:outline-none border border-gray-300 rounded-xl text-sm"
                 />
               </div>
             </div>
 
-            {/* Password Field */}
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider">
-                  Password
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setIsForgotModalOpen(true)}
-                  className="text-xs font-bold text-red-600 hover:text-red-700 transition-colors cursor-pointer"
-                >
-                  Forgot?
-                </button>
-              </div>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                  <Lock size={20} />
-                </div>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="••••••••"
-                  className="block w-full pl-12 pr-12 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold focus:bg-white focus:border-red-600 focus:outline-none transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-800 cursor-pointer"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-            </div>
-
-            {/* Action Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 bg-red-600 hover:bg-red-700 disabled:bg-slate-300 text-white font-extrabold text-sm uppercase tracking-wider py-4 px-6 rounded-2xl flex items-center justify-center gap-2 shadow-xl shadow-red-600/25 transition-all cursor-pointer"
+              className="w-full bg-[#E50914] hover:bg-[#C0040F] text-white font-bold py-3 rounded-xl shadow-md transition-colors text-sm"
             >
-              <span>{loading ? 'Authenticating...' : 'Sign In'}</span>
-              <ArrowRight size={18} />
+              {loading ? 'Signing in...' : t('auth.continue')}
             </button>
           </form>
 
-          {/* Footer Info */}
-          <div className="mt-8 border-t border-slate-100 pt-6 space-y-4">
-            <div className="flex items-center justify-center gap-2 text-xs text-slate-500 font-semibold">
-              <ShieldCheck size={16} className="text-red-600" />
-              <span>Secured Direct Distribution Portal</span>
-            </div>
-
-            <p className="text-center text-xs text-slate-600 font-medium">
-              Don't have an account?{' '}
-              <Link to="/register" className="font-extrabold text-red-600 hover:text-red-700">
-                Create Account
-              </Link>
-            </p>
+          {/* QR Code Sign-In Footer Link */}
+          <div className="mt-8 flex items-center gap-1 text-xs text-gray-500 hover:text-gray-800 cursor-pointer">
+            <QrCode size={14} className="text-gray-700" />
+            <span>{t('auth.signInWithQR')}</span>
           </div>
-
         </div>
       </div>
-
-      {/* FORGOT PASSWORD MODAL */}
-      {isForgotModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-8 border border-slate-100 shadow-2xl relative space-y-6">
-            
-            <button
-              onClick={closeResetModal}
-              className="absolute top-6 right-6 text-slate-400 hover:text-slate-800 p-1.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
-            >
-              <X size={20} />
-            </button>
-
-            {resetError && (
-              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-600 rounded-xl text-xs font-bold flex items-center gap-2">
-                <AlertCircle size={16} className="shrink-0" />
-                <span>{resetError}</span>
-              </div>
-            )}
-
-            {resetStep === 1 && (
-              <form onSubmit={handleSendCode} className="space-y-4">
-                <div className="w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center border border-red-100">
-                  <KeyRound size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-black text-slate-900">Reset Password</h3>
-                  <p className="text-xs text-slate-500 font-medium mt-1">
-                    Enter your account email address to receive a verification code.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={resetEmail}
-                    onChange={(e) => setResetEmail(e.target.value)}
-                    placeholder="name@example.com"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:border-red-600 focus:outline-none transition-all"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={resetLoading}
-                  className="w-full py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-red-600/20"
-                >
-                  {resetLoading ? 'Sending Code...' : 'Send Verification Code'}
-                </button>
-              </form>
-            )}
-
-            {resetStep === 2 && (
-              <form onSubmit={handleVerifyOtp} className="space-y-4">
-                <div className="w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center border border-red-100">
-                  <Mail size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-black text-slate-900">Enter Verification Code</h3>
-                  <p className="text-xs text-slate-500 font-medium mt-1">
-                    We sent a verification code to <span className="font-bold text-slate-900">{resetEmail}</span>
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Verification Code
-                  </label>
-                  <input
-                    type="text"
-                    maxLength={6}
-                    required
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value)}
-                    placeholder="123456"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-center text-lg font-black tracking-widest focus:bg-white focus:border-red-600 focus:outline-none transition-all"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={resetLoading}
-                  className="w-full py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-red-600/20"
-                >
-                  {resetLoading ? 'Verifying Code...' : 'Verify Code'}
-                </button>
-              </form>
-            )}
-
-            {resetStep === 3 && (
-              <form onSubmit={handleSetNewPassword} className="space-y-4">
-                <div className="w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center border border-red-100">
-                  <Lock size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-black text-slate-900">Set New Password</h3>
-                  <p className="text-xs text-slate-500 font-medium mt-1">
-                    Create a new password for your account.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1.5">
-                    New Password
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:border-red-600 focus:outline-none transition-all"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={resetLoading}
-                  className="w-full py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-red-600/20"
-                >
-                  {resetLoading ? 'Updating Password...' : 'Save New Password'}
-                </button>
-              </form>
-            )}
-
-            {resetStep === 4 && (
-              <div className="text-center space-y-4 py-2">
-                <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto border border-emerald-200">
-                  <CheckCircle2 size={32} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-black text-slate-900">Password Reset Complete</h3>
-                  <p className="text-xs text-slate-500 font-medium mt-1">
-                    Your password has been updated. You can now sign in with your new password.
-                  </p>
-                </div>
-                <button
-                  onClick={closeResetModal}
-                  className="w-full py-3.5 bg-slate-900 hover:bg-black text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all"
-                >
-                  Back to Sign In
-                </button>
-              </div>
-            )}
-
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
