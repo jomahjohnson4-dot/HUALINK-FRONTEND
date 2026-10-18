@@ -1,5 +1,22 @@
 @import "tailwindcss";
 
+@theme {
+  /* Hualink brand palette */
+  --color-brand-red: #E50914;
+  --color-brand-red-dark: #b90c0e;
+  --color-brand-red-light: #FF2A3B;
+  --color-charcoal: #111111;
+  --color-bg-body: #F5F5F5;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 @layer base {
   body {
     font-family: 'Plus Jakarta Sans', sans-serif;

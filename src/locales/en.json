@@ -1,0 +1,205 @@
+{
+  "common": {
+    "home": "Home",
+    "marketplace": "Marketplace",
+    "shops": "Shops",
+    "services": "Services",
+    "explore": "Explore",
+    "helpCenter": "Help Center",
+    "trackOrders": "Track Orders",
+    "sellOnHualink": "Sell on Hualink",
+    "language": "Language",
+    "cart": "Cart",
+    "wishlist": "Wishlist",
+    "welcome": "Welcome",
+    "signIn": "Sign In",
+    "register": "Register",
+    "myAccount": "My Account",
+    "signOut": "Sign Out",
+    "myDashboard": "My Dashboard",
+    "orderHistory": "Order History",
+    "supplierPortal": "Supplier Portal",
+    "adminConsole": "Admin Console",
+    "userManagement": "User Management",
+    "regionCurrency": "TZ / TZS",
+    "searchPlaceholder": "Search products, suppliers & services",
+    "imageSearch": "Image Search",
+    "search": "Search",
+    "allCategories": "All Categories",
+    "superDeals": "Super Deals",
+    "verifiedSuppliers": "Verified Suppliers",
+    "printingDesign": "Printing & Design",
+    "electronics": "Electronics",
+    "soldCount": "{{count}} sold",
+    "soldCountShort": "1,000+ sold",
+    "freeShipping": "Free Shipping",
+    "requestQuote": "Request for Quotation",
+    "requestQuoteDesc": "Get bulk pricing from verified suppliers in minutes.",
+    "quickCart": "Quick Cart",
+    "liveChat": "Live Chat",
+    "backToTop": "Back to Top",
+    "categoriesForYou": "Categories for you",
+    "frequentlySearched": "Frequently Searched",
+    "trendingTech": "Trending Tech",
+    "todayDeals": "Today's Deals",
+    "bundleDeals": "Bundle Deals",
+    "discount": "-{{percent}}%",
+    "upTo": "Up to {{percent}}% off",
+    "verified": "Verified",
+    "new": "New",
+    "hot": "Hot",
+    "loading": "Loading...",
+    "viewAll": "View All",
+    "readMore": "Read More",
+    "copyright": "All rights reserved. © 2026 HUALINK DISTRIBUTION."
+  },
+  "footer": {
+    "quickLinks": "Quick Links",
+    "marketplaceCatalog": "Marketplace Catalog",
+    "regionalDepots": "Regional Depots & Outlets",
+    "servicesTeKel": "Services & TeKeL Graphics",
+    "exploreNetwork": "Explore Network",
+    "termsConditions": "Terms & Conditions",
+    "supplyScope": "Hualink Supply Scope",
+    "electronicsHardware": "Electronics & Hardware Stock",
+    "teKelGraphics": "TeKeL Graphics & Brand Design",
+    "officeFurniture": "Custom Office & Home Furniture",
+    "computersNetworking": "Computers & Networking Maintenance",
+    "bulkCargo": "Bulk Order Cargo Dispatch",
+    "contactInfo": "Contact Information",
+    "mainAddress": "Main Address",
+    "darEsSalaam": "Dar es Salaam, Tanzania",
+    "directHotline": "Direct Hotline",
+    "hotlineNumber": "+255 760 706 872",
+    "officialEmail": "Official Email",
+    "emailAddress": "info@hualink.co.tz",
+    "aboutDesc": "Redefining direct product distribution through quality-checked stock, verified inventory management, and a unified regional supply network."
+  },
+  "hero": {
+    "slide1": {
+      "title": "Hualink Direct Distribution Hub",
+      "subtitle": "VERIFIED STOCK & DIRECT REGIONAL SUPPLY",
+      "description": "Empowering businesses across Tanzania with direct distribution, verified inventory, and seamless bulk ordering.",
+      "buttonText": "Browse Catalog"
+    },
+    "slide2": {
+      "title": "TeKeL Graphics & Brand Design",
+      "subtitle": "CREATIVE SOLUTIONS & PRINTING",
+      "description": "High-end corporate branding, custom graphics design, and commercial promotional printing packages.",
+      "buttonText": "Explore Services"
+    },
+    "slide3": {
+      "title": "IT & Hardware Distribution",
+      "subtitle": "ELECTRONICS & NETWORK MAINTENANCE",
+      "description": "Quality hardware stock, networking maintenance setup, and enterprise office furniture solutions.",
+      "buttonText": "Learn More"
+    }
+  },
+  "steps": {
+    "title": "Start Your Journey in",
+    "titleHighlight": "Three Simple Steps",
+    "subtitle": "From inventory browsing to direct dispatch — Hualink makes regional fulfillment seamless.",
+    "step1": {
+      "title": "Create Your Account",
+      "description": "Sign up in minutes to access direct regional distribution rates, stock tracking, and TeKeL services.",
+      "linkText": "Get Started",
+      "linkUrl": "/register"
+    },
+    "step2": {
+      "title": "Browse & Select",
+      "description": "Explore verified hardware stock, custom furniture, or request TeKeL brand design services across Tanzania.",
+      "linkText": "Explore Catalog",
+      "linkUrl": "/shop"
+    },
+    "step3": {
+      "title": "Order & Receive",
+      "description": "Place bulk or individual supply orders and track rapid regional dispatch straight to your regional depot.",
+      "linkText": "Track Order",
+      "linkUrl": "/orders"
+    }
+  },
+  "whyChoose": {
+    "title": "Why Choose",
+    "titleBrand": "HUALINK DISTRIBUTION",
+    "features": [
+      {
+        "title": "100% Verified Outlets",
+        "description": "Zero counterfeit goods or unvetted vendors across our distribution network."
+      },
+      {
+        "title": "Live Route Tracking",
+        "description": "Real-time status updates from warehouse dispatch direct to your door."
+      },
+      {
+        "title": "Regional Stock Hubs",
+        "description": "Localized inventory centers for faster regional deliveries across Tanzania."
+      },
+      {
+        "title": "Secure Direct Pay",
+        "description": "Encrypted transactions, mobile money integration, and transparent invoices."
+      }
+    ]
+  },
+  "categoryDrawer": {
+    "header": "Categories for you",
+    "apparel": "Apparel & Accessories",
+    "consumerElectronics": "Consumer Electronics",
+    "printingDesign": "Printing & Design",
+    "hardwareTools": "Hardware & Tools",
+    "packaging": "Packaging"
+  },
+  "landing": {
+    "topBanner": "Explore popular products from select suppliers",
+    "topBannerButton": "Source now →",
+    "tabAI": "AI Mode",
+    "tabProducts": "Products",
+    "tabManufacturers": "Manufacturers",
+    "tabWorldwide": "Worldwide",
+    "searchPlaceholder": "Search products, suppliers, or services...",
+    "imageSearch": "Image Search",
+    "searchWithFile": "Search with File",
+    "searchButton": "Search",
+    "welcomeText": "Welcome to Hualink Distribution",
+    "requestQuote": "Request for Quotation",
+    "topRanking": "Top Ranking",
+    "fastCustomization": "Fast Customization",
+    "browsingHistory": "Browsing history",
+    "frequentlySearched": "Frequently searched",
+    "vehiclesMachinery": "Vehicles & Machinery",
+    "electronicsGear": "Electronics & Gear",
+    "topSuppliers": "Top Suppliers",
+    "supplierLeaderboard": "Supplier Leaderboard",
+    "sourceNow": "Source now",
+    "smartphones": "Smartphones",
+    "chargersPower": "Chargers & Power",
+    "consumerElectronics": "Consumer Electronics",
+    "more": "More",
+    "appDownload": "Download App",
+    "freeDelivery": "Free regional delivery on verified bulk electronics and smartphone orders."
+  },
+  "quickCards": {
+    "frequentlySearched": {
+      "title": "Frequently Searched",
+      "item1": "Electronics",
+      "item2": "Apparel",
+      "item3": "Furniture",
+      "item4": "Printing Services",
+      "item5": "Hardware Stock"
+    },
+    "verifiedSuppliers": {
+      "title": "Verified Suppliers",
+      "item1": "Dar es Salaam Depot",
+      "item2": "Arusha Hardware Co.",
+      "item3": "Mwanza Print House",
+      "item4": "Dodoma Office Supply"
+    },
+    "trendingTech": {
+      "title": "Trending Tech",
+      "item1": "Laptops",
+      "item2": "Networking Gear",
+      "item3": "POS Systems",
+      "item4": "Solar Kits",
+      "item5": "CCTV Cameras"
+    }
+  }
+}

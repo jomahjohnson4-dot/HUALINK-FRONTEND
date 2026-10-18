@@ -1,0 +1,205 @@
+{
+  "common": {
+    "home": "首页",
+    "marketplace": "市场",
+    "shops": "商店",
+    "services": "服务",
+    "explore": "探索",
+    "helpCenter": "帮助中心",
+    "trackOrders": "追踪订单",
+    "sellOnHualink": "在 Hualink 开店",
+    "language": "语言",
+    "cart": "购物车",
+    "wishlist": "心愿单",
+    "welcome": "欢迎来到华联分销",
+    "signIn": "登录",
+    "register": "注册",
+    "myAccount": "我的账户",
+    "signOut": "退出",
+    "myDashboard": "我的仪表盘",
+    "orderHistory": "订单历史",
+    "supplierPortal": "供应商门户",
+    "adminConsole": "管理后台",
+    "userManagement": "用户管理",
+    "regionCurrency": "TZ / TZS",
+    "searchPlaceholder": "搜索产品、供应商与服务",
+    "imageSearch": "以图搜搜",
+    "search": "搜索",
+    "allCategories": "全部分类",
+    "superDeals": "特惠活动",
+    "verifiedSuppliers": "实力商家",
+    "printingDesign": "印刷与设计",
+    "electronics": "消费电子",
+    "soldCount": "已售 {{count}}",
+    "soldCountShort": "1,000+ 已售",
+    "freeShipping": "免运费",
+    "requestQuote": "发布询价单",
+    "requestQuoteDesc": "几分钟内从认证供应商处获取批发价格。",
+    "quickCart": "快速购物车",
+    "liveChat": "在线客服",
+    "backToTop": "返回顶部",
+    "categoriesForYou": "为你推荐分类",
+    "frequentlySearched": "热搜推荐",
+    "trendingTech": "热门科技",
+    "todayDeals": "今日特惠",
+    "bundleDeals": "组合优惠",
+    "discount": "-{{percent}}%",
+    "upTo": "最高立减 {{percent}}%",
+    "verified": "已认证",
+    "new": "新品",
+    "hot": "热卖",
+    "loading": "加载中...",
+    "viewAll": "查看全部",
+    "readMore": "阅读更多",
+    "copyright": "版权所有 © 2026 HUALINK DISTRIBUTION。"
+  },
+  "footer": {
+    "quickLinks": "快速链接",
+    "marketplaceCatalog": "市场目录",
+    "regionalDepots": "地区仓库与门店",
+    "servicesTeKel": "服务与 TeKeL 图形设计",
+    "exploreNetwork": "探索网络",
+    "termsConditions": "条款与条件",
+    "supplyScope": "Hualink 供应范围",
+    "electronicsHardware": "电子产品与硬件库存",
+    "teKelGraphics": "TeKeL 图形与品牌设计",
+    "officeFurniture": "定制办公与家庭家具",
+    "computersNetworking": "计算机与网络维护",
+    "bulkCargo": "批量订单货运配送",
+    "contactInfo": "联系信息",
+    "mainAddress": "主要地址",
+    "darEsSalaam": "达累斯萨拉姆, 坦桑尼亚",
+    "directHotline": "直通热线",
+    "hotlineNumber": "+255 760 706 872",
+    "officialEmail": "官方邮箱",
+    "emailAddress": "info@hualink.co.tz",
+    "aboutDesc": "通过经质检的库存、经过验证的库存管理和统一的区域供应网络，重新定义直接产品分销。"
+  },
+  "hero": {
+    "slide1": {
+      "title": "Hualink 直销配送中心",
+      "subtitle": "已验证库存与直接区域供应",
+      "description": "为坦桑尼亚各地企业提供直销配送、已验证库存和无缝批量订购服务。",
+      "buttonText": "浏览目录"
+    },
+    "slide2": {
+      "title": "TeKeL 图形与品牌设计",
+      "subtitle": "创意方案与印刷",
+      "description": "高端企业品牌形象、定制平面设计和商业促销印刷方案。",
+      "buttonText": "探索服务"
+    },
+    "slide3": {
+      "title": "IT 与硬件分销",
+      "subtitle": "电子产品与网络维护",
+      "description": "优质硬件库存、网络维护搭建和企业办公家具解决方案。",
+      "buttonText": "了解更多"
+    }
+  },
+  "steps": {
+    "title": "三步开启您的旅程",
+    "titleHighlight": "",
+    "subtitle": "从库存浏览到直接配送，Hualink 让区域履约变得简单。",
+    "step1": {
+      "title": "创建您的账户",
+      "description": "几分钟内注册，即可获取直接区域配送费率、库存追踪和 TeKeL 服务。",
+      "linkText": "立即开始",
+      "linkUrl": "/register"
+    },
+    "step2": {
+      "title": "浏览并选择",
+      "description": "浏览已验证硬件库存、定制家具，或申请 TeKeL 品牌设计服务，覆盖坦桑尼亚各地。",
+      "linkText": "浏览目录",
+      "linkUrl": "/shop"
+    },
+    "step3": {
+      "title": "下单并收货",
+      "description": "下达批量或个体供应订单，并追踪快速区域配送直至您的地区仓库。",
+      "linkText": "追踪订单",
+      "linkUrl": "/orders"
+    }
+  },
+  "whyChoose": {
+    "title": "为什么选择",
+    "titleBrand": "HUALINK DISTRIBUTION",
+    "features": [
+      {
+        "title": "100% 已验证门店",
+        "description": "我们的分销网络中没有假冒伪劣商品或未审核供应商。"
+      },
+      {
+        "title": "实时路线追踪",
+        "description": "从仓库发货到送到您家门口的实时状态更新。"
+      },
+      {
+        "title": "区域库存中心",
+        "description": "分布于坦桑尼亚各地的本地化库存中心，实现更快的区域配送。"
+      },
+      {
+        "title": "安全直接支付",
+        "description": "加密交易、移动货币支付和透明发票。"
+      }
+    ]
+  },
+  "categoryDrawer": {
+    "header": "为你推荐分类",
+    "apparel": "服装与配饰",
+    "consumerElectronics": "消费电子",
+    "printingDesign": "印刷与设计",
+    "hardwareTools": "五金与工具",
+    "packaging": "包装"
+  },
+  "landing": {
+    "topBanner": "探索精选供应商的热门产品",
+    "topBannerButton": "立即采购 →",
+    "tabAI": "AI 模式",
+    "tabProducts": "产品",
+    "tabManufacturers": "制造商",
+    "tabWorldwide": "全球",
+    "searchPlaceholder": "搜索产品、供应商或服务...",
+    "imageSearch": "以图搜搜",
+    "searchWithFile": "上传文件搜索",
+    "searchButton": "搜索",
+    "welcomeText": "欢迎来到华联分销",
+    "requestQuote": "发布询价单",
+    "topRanking": "热销排行榜",
+    "fastCustomization": "快速定制",
+    "browsingHistory": "浏览历史",
+    "frequentlySearched": "热搜推荐",
+    "vehiclesMachinery": "车辆与机械",
+    "electronicsGear": "电子与设备",
+    "topSuppliers": "顶级供应商",
+    "supplierLeaderboard": "优质供应商榜单",
+    "sourceNow": "立即采购",
+    "smartphones": "智能手机",
+    "chargersPower": "充电器与电源",
+    "consumerElectronics": "消费电子",
+    "more": "更多",
+    "appDownload": "下载应用",
+    "freeDelivery": "合格批量电子产品和智能手机订单的免费区域配送。"
+  },
+  "quickCards": {
+    "frequentlySearched": {
+      "title": "热搜推荐",
+      "item1": "电子产品",
+      "item2": "服装",
+      "item3": "家具",
+      "item4": "印刷服务",
+      "item5": "硬件库存"
+    },
+    "verifiedSuppliers": {
+      "title": "实力商家",
+      "item1": "达累斯萨拉姆仓库",
+      "item2": "阿鲁沙五金公司",
+      "item3": "姆万扎印刷社",
+      "item4": "多多玛办公用品"
+    },
+    "trendingTech": {
+      "title": "热门科技",
+      "item1": "笔记本电脑",
+      "item2": "网络设备",
+      "item3": "POS 系统",
+      "item4": "太阳能套装",
+      "item5": "监控摄像头"
+    }
+  }
+}

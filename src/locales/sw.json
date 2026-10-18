@@ -1,0 +1,205 @@
+{
+  "common": {
+    "home": "Nyumbani",
+    "marketplace": "Soko",
+    "shops": "Duka",
+    "services": "Huduma",
+    "explore": "Tafakari",
+    "helpCenter": "Msaidizi wa Msaada",
+    "trackOrders": "Zifuate Azizo",
+    "sellOnHualink": "Waza Bidhaa kwenye Hualink",
+    "language": "Lugha",
+    "cart": "Karafu",
+    "wishlist": "Favoriti",
+    "welcome": "Karibu Hualink Distribution",
+    "signIn": "Ingia",
+    "register": "Jisajili",
+    "myAccount": "Akaunti Yangu",
+    "signOut": "Ondoka",
+    "myDashboard": "Dasibodi Yangu",
+    "orderHistory": "Historia ya Azizo",
+    "supplierPortal": "Mlango wa Wauza",
+    "adminConsole": "Mfumo wa Mtaala",
+    "userManagement": "Usimamizi wa Mtu",
+    "regionCurrency": "TZ / TZS",
+    "searchPlaceholder": "Tafuta bidhaa, wauza na huduma",
+    "imageSearch": "Pata kwa Picha",
+    "search": "Tafuta",
+    "allCategories": "Aina Zote za Bidhaa",
+    "superDeals": "Punguzo Kabambe",
+    "verifiedSuppliers": "Wauzaji Yaliyothibitishwa",
+    "printingDesign": "Uchapishaji na Ubunifu",
+    "electronics": "Vifaa vya Elektroniki",
+    "soldCount": "{{count}} zimesaguliwa",
+    "soldCountShort": "1,000+ zimesaguliwa",
+    "freeShipping": "Upelelezi bure",
+    "requestQuote": "Omba Nukuu ya Bei",
+    "requestQuoteDesc": "Pata bei ya kuuza wengi kutoka wauza waliojikwa dakika chache.",
+    "quickCart": "Karafu haraka",
+    "liveChat": "Sema na Sasa",
+    "backToTop": "Ruka juu",
+    "categoriesForYou": "Aina za ajili yako",
+    "frequentlySearched": "Zinazotafutwa Sana",
+    "trendingTech": "Teknolojia ya Sasa",
+    "todayDeals": "Pekee za Leo",
+    "bundleDeals": "Pekee ya Kubandika",
+    "discount": "-{{percent}}%",
+    "upTo": "Asilimia {{percent}} au zaidi kupunguza",
+    "verified": "Uathirika",
+    "new": "Mpya",
+    "hot": "Moto",
+    "loading": "Inapakia...",
+    "viewAll": "Angalia Zote",
+    "readMore": "Soma Zaidi",
+    "copyright": "Haki zote zilifadhiwa. © 2026 HUALINK DISTRIBUTION."
+  },
+  "footer": {
+    "quickLinks": "Viungo Vipya",
+    "marketplaceCatalog": "Barua ya Soko",
+    "regionalDepots": "Makazi Mikoa & Duka",
+    "servicesTeKel": "Huduma & TeKeL Graphics",
+    "exploreNetwork": "Tafakari Mtandao",
+    "termsConditions": "Masharti na Sheria",
+    "supplyScope": "Mwelekeo wa Uboreshaji wa Hualink",
+    "electronicsHardware": "Viumbe vyaji na Sasamu",
+    "teKelGraphics": "TeKeL Graphics na Ubunifu wa Nchi",
+    "officeFurniture": "Vifaa vya Ofisi na Nyumba yaliyotengenezwa",
+    "computersNetworking": "Kompyuta na Uboreshaji wa Mtandao",
+    "bulkCargo": "Tuma Barabara ya Malipo kuu",
+    "contactInfo": "Mawasiliano",
+    "mainAddress": "Anuani Kuu",
+    "darEsSalaam": "Dar es Salaam, Tanzania",
+    "directHotline": "Simu ya Moja kwa Moja",
+    "hotlineNumber": "+255 760 706 872",
+    "officialEmail": "Barua Pepe rasmi",
+    "emailAddress": "info@hualink.co.tz",
+    "aboutDesc": "Kuonesha pia mishtari kwa bidhaa inayotumwa, usimamizi wa hifadhi uliojikwa, na mtandao wa uwasilishaji mikoa wa mwilini."
+  },
+  "hero": {
+    "slide1": {
+      "title": "Kituo cha Utoaji wa Membe ya Hualink",
+      "subtitle": "HIFADHI ILIOANGALIWA & UWAZISHAJI WA MOJA KWA MKOA",
+      "description": "Kuwezesha biashara kote Tanzania kwa utoaji wa moja, hifadhi ilioangaliwa, na malipo ya kuuza wengi iliyosababisha.",
+      "buttonText": "Angalia Barua"
+    },
+    "slide2": {
+      "title": "TeKeL Graphics & Brand Design",
+      "subtitle": "SOLUSIONI ZA KUSANII & KUPIGA",
+      "description": "Ubunifu bora ya kampuni, mpango wa grafiki ya asili, na paketi za kupiga za uangalizaji biashara.",
+      "buttonText": "Tafakari Huduma"
+    },
+    "slide3": {
+      "title": "IT & Hardware Distribution",
+      "subtitle": "VYUMBE VYAJI & UHIFADHI WA MTANDAO",
+      "description": "Sasamu bora, mipango ya mtandao wa usalama, na mifaa ya ofisi ya kampuni.",
+      "buttonText": "Jua Zaidi"
+    }
+  },
+  "steps": {
+    "title": "Anza Safari Yako katika",
+    "titleHighlight": "Hatua Tatu Rahisi",
+    "subtitle": "Kupitia kuangalia hifhadhi hadi kutuma moja — Hualink hufanya mafuniko ya mikoa iwe rahisi.",
+    "step1": {
+      "title": "Funga Akaunti Yako",
+      "description": "Jisajili dakika chache kuingia mipango ya uwasilishaji mkoa, mapato hifadhi na huduma za TeKeL.",
+      "linkText": "Anza Hapa",
+      "linkUrl": "/register"
+    },
+    "step2": {
+      "title": "Tafuta na Chagua",
+      "description": "Tafakari sasamu ilioangaliwa, nyumba ya asili, au ombi TeKeL za ubumi mikoa kote Tanzania.",
+      "linkText": "Tafakari Barua",
+      "linkUrl": "/shop"
+    },
+    "step3": {
+      "title": "Order & Pokea",
+      "description": "Place malipo au bidhaa asilia na zifuate utumishi wa mwilini wa mwakasa kutoka kituoni chako cha mkoa.",
+      "linkText": "Zifuate Order",
+      "linkUrl": "/orders"
+    }
+  },
+  "whyChoose": {
+    "title": "Chagua",
+    "titleBrand": "HUALINK DISTRIBUTION",
+    "features": [
+      {
+        "title": "Duka 100% Ziliojikwa",
+        "description": "Bidhaa zisizo sahihi au wauza hawajaki mtandao wetu wa uwasilishaji."
+      },
+      {
+        "title": "Zifuate Njia ya Sasa",
+        "description": "Taarifa za hali za sasa kutoka kituoni hadi nyumbani kwako."
+      },
+      {
+        "title": "Makazi ya Hifadhi ya Mkoa",
+        "description": "Viwanda vya hifadhi vya mwilini vya kutuma haraka kote Tanzania."
+      },
+      {
+        "title": "Malipo Salama moja kwa moja",
+        "description": "Malipo yaliyochafuwa, fedha ya simu, na invoi wazi."
+      }
+    ]
+  },
+  "categoryDrawer": {
+    "header": "Aina za ajili yako",
+    "apparel": "Nguo na Viatu",
+    "consumerElectronics": "Vifaa vya Elektroniki",
+    "printingDesign": "Uchapishaji na Ubunifu",
+    "hardwareTools": "Sasamu na Vifaa",
+    "packaging": "Bao"
+  },
+  "landing": {
+    "topBanner": "Tafuta bidhaa populi kutoka wauza waliochaguliwa",
+    "topBannerButton": "Mtengenezwa sasa →",
+    "tabAI": "Mfumo wa AI",
+    "tabProducts": "Bidhaa",
+    "tabManufacturers": "Wauza",
+    "tabWorldwide": "Dunia yote",
+    "searchPlaceholder": "Tafuta bidhaa, wauza au huduma...",
+    "imageSearch": "Pata kwa Picha",
+    "searchWithFile": "Pata kwa Faili",
+    "searchButton": "Tafuta",
+    "welcomeText": "Karibu Hualink Distribution",
+    "requestQuote": "Omba Nukuu ya Bei",
+    "topRanking": "Bidhaa Zinazoongoza",
+    "fastCustomization": "Uboreshaji wa Haraka",
+    "browsingHistory": "Bidhaa Ulizotazama",
+    "frequentlySearched": "Zinazotafutwa Sana",
+    "vehiclesMachinery": "Gari na Mashine",
+    "electronicsGear": "Vifaa vya Elektroniki",
+    "topSuppliers": "Wauza Mawala",
+    "supplierLeaderboard": "Wauzaji Bora",
+    "sourceNow": "Mtengenezwa sasa",
+    "smartphones": "Simu za Mkononi",
+    "chargersPower": "Chaja na Betri",
+    "consumerElectronics": "Vifaa vya Elektroniki",
+    "more": "Zaidi",
+    "appDownload": "Pakete App",
+    "freeDelivery": "Pepea bure ya mikoa kwa malipo kubwa ya viumbe vyaji na simu za kore."
+  },
+  "quickCards": {
+    "frequentlySearched": {
+      "title": "Zinazotafutwa Sana",
+      "item1": "Viumbe vyaji",
+      "item2": "Nguo",
+      "item3": "Vya Nyumba",
+      "item4": "Huduma za Kupiga",
+      "item5": "Sasamu"
+    },
+    "verifiedSuppliers": {
+      "title": "Wauzaji Yaliyothibitishwa",
+      "item1": "Makazi ya Dar es Salaam",
+      "item2": "Shamba la Arusha",
+      "item3": "Nyumba ya Kupiga Mwanza",
+      "item4": "Vifaa vya Ofisi Dodoma"
+    },
+    "trendingTech": {
+      "title": "Teknolojia ya Sasa",
+      "item1": "Kompyuta",
+      "item2": "Vifaa vya Mtandao",
+      "item3": "Mifaa ya POS",
+      "item4": "Kiti cha Jua",
+      "item5": "Kamera za CCTV"
+    }
+  }
+}

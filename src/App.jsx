@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate, Link } from 'react-router-dom';
+import { I18nextProvider } from 'react-i18next';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
+import i18n from './i18n';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import MobileBottomNav from './components/MobileBottomNav';
@@ -331,8 +333,9 @@ function AppContent() {
   };
 
   return (
-    <Router>
-      <AppLayout 
+    <I18nextProvider i18n={i18n}>
+      <Router>
+        <AppLayout 
         cartItems={cartItems}
         handleUpdateQuantity={handleUpdateQuantity}
         handleRemoveItem={handleRemoveItem}
@@ -340,7 +343,8 @@ function AppContent() {
         handleAddToCart={handleAddToCart}
         user={user}
       />
-    </Router>
+      </Router>
+    </I18nextProvider>
   );
 }
 

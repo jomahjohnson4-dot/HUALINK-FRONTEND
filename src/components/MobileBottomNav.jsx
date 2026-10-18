@@ -1,12 +1,15 @@
 import React from 'react';
-import { Store, Building2, Cog, Compass } from 'lucide-react';
+import { Store, Building2, Settings, Compass } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const MobileBottomNav = ({ activeTab, setActiveTab }) => {
+  const { t } = useTranslation();
+
   const navItems = [
-    { id: 'marketplace', label: 'market_place', icon: Store },
-    { id: 'shops', label: 'shops', icon: Building2 },
-    { id: 'services', label: 'services', icon: Cog },
-    { id: 'explore', label: 'explore', icon: Compass },
+    { id: 'marketplace', labelKey: 'common.marketplace', icon: Store },
+    { id: 'shops', labelKey: 'common.shops', icon: Building2 },
+    { id: 'services', labelKey: 'common.services', icon: Settings },
+    { id: 'explore', labelKey: 'common.explore', icon: Compass },
   ];
 
   return (
@@ -20,11 +23,14 @@ export const MobileBottomNav = ({ activeTab, setActiveTab }) => {
               key={item.id}
               onClick={() => setActiveTab && setActiveTab(item.id)}
               className={`flex flex-col items-center gap-1 transition-colors ${
-                isActive ? 'text-red-600 font-bold' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                isActive ? 'text-brand-red font-bold' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
               }`}
+              aria-label={t(item.labelKey)}
             >
               <Icon size={20} />
-              <span className="text-[10px] font-medium tracking-tight">{item.label}</span>
+              <span className="text-[10px] font-medium tracking-tight">
+                {t(item.labelKey)}
+              </span>
             </button>
           );
         })}

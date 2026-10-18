@@ -1,0 +1,178 @@
+export const GRID_PRODUCTS = [
+  {
+    id: 'gp1',
+    title: 'Door to Door Shipping',
+    price: '$0.39/kg',
+    moq: 'MOQ: 1 kg',
+    sold: '1,519 sold',
+    image:
+      'https://images.unsplash.com/photo-1522479414042-ce83109596b3?auto=format&fit=crop&q=80&w=400',
+    badge: 'Verified',
+    location: 'TZ',
+  },
+  {
+    id: 'gp2',
+    title: '5G Smartphones',
+    price: 'TSh 177,332 - 223,711',
+    moq: 'MOQ: 1 piece',
+    sold: '1,519 sold',
+    image:
+      'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=400',
+    badge: 'Verified',
+    location: 'TZ',
+  },
+  {
+    id: 'gp3',
+    title: 'S25 Ultra Smartphones',
+    price: 'TSh 117,858 - 277,456',
+    moq: 'MOQ: 1 piece',
+    sold: '2,040 sold',
+    image:
+      'https://images.unsplash.com/photo-1510557880182-7e24a831c424?auto=format&fit=crop&q=80&w=400',
+    badge: 'Verified',
+    location: 'TZ',
+  },
+  {
+    id: 'gp4',
+    title: 'Smart TVs 55 inch 4K',
+    price: 'TSh 98,215 - 150,050',
+    moq: 'MOQ: 1 piece',
+    sold: '890 sold',
+    image:
+      'https://images.unsplash.com/photo-1593358292147-4eb18bcf2333?auto=format&fit=crop&q=80&w=400',
+    badge: 'Verified',
+    location: 'TZ',
+  },
+  {
+    id: 'gp5',
+    title: 'Customizable 85-inch TVs',
+    price: 'TSh 98,215 - 136,409',
+    moq: 'MOQ: 1 piece',
+    sold: '450 sold',
+    image:
+      'https://images.unsplash.com/photo-1618020590283-cefdd5a9d675?auto=format&fit=crop&q=80&w=400',
+    badge: 'Verified',
+    location: 'TZ',
+  },
+  {
+    id: 'gp6',
+    title: 'Fast Chargers & Tech Gear',
+    price: 'TSh 15,000 - 35,000',
+    moq: 'MOQ: 5 pieces',
+    sold: '3,210 sold',
+    image:
+      'https://images.unsplash.com/photo-1603746380946-1a67c3e28115?auto=format&fit=crop&q=80&w=400',
+    badge: 'Verified',
+    location: 'TZ',
+  },
+  {
+    id: 'gp7',
+    title: 'Laptops & Notebooks',
+    price: 'TSh 450,000 - 1,200,000',
+    moq: 'MOQ: 1 piece',
+    sold: '1,100 sold',
+    image:
+      'https://images.unsplash.com/photo-1496181143251-58c6f493ca6b?auto=format&fit=crop&q=80&w=400',
+    badge: 'Verified',
+    location: 'TZ',
+  },
+  {
+    id: 'gp8',
+    title: 'Office Furniture Sets',
+    price: 'TSh 120,000 - 450,000',
+    moq: 'MOQ: 1 set',
+    sold: '380 sold',
+    image:
+      'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&q=80&w=400',
+    badge: 'Verified',
+    location: 'TZ',
+  },
+  {
+    id: 'gp9',
+    title: 'CCTV Security Camera Kits',
+    price: 'TSh 85,000 - 220,000',
+    moq: 'MOQ: 1 kit',
+    sold: '760 sold',
+    image:
+      'https://images.unsplash.com/photo-1557838777-7d51f9b96e33?auto=format&fit=crop&q=80&w=400',
+    badge: 'Verified',
+    location: 'TZ',
+  },
+  {
+    id: 'gp10',
+    title: 'Networking Gear & Routers',
+    price: 'TSh 25,000 - 85,000',
+    moq: 'MOQ: 1 piece',
+    sold: '1,950 sold',
+    image:
+      'https://images.unsplash.com/photo-1544214317-750e233a7181?auto=format&fit=crop&q=80&w=400',
+    badge: 'Verified',
+    location: 'TZ',
+  },
+  {
+    id: 'gp11',
+    title: 'Solar Power Kits',
+    price: 'TSh 120,000 - 350,000',
+    moq: 'MOQ: 1 set',
+    sold: '620 sold',
+    image:
+      'https://images.unsplash.com/photo-1509388746237-5fa4620067f0?auto=format&fit=crop&q=80&w=400',
+    badge: 'Verified',
+    location: 'TZ',
+  },
+  {
+    id: 'gp12',
+    title: 'Printing & Branding Services',
+    price: 'TSh 50,000 - 200,000',
+    moq: 'MOQ: 1 order',
+    sold: '880 sold',
+    image:
+      'https://images.unsplash.com/photo-1492074373747-9997039802ca?auto=format&fit=crop&q=80&w=400',
+    badge: 'Verified',
+    location: 'TZ',
+  },
+  {
+    id: 'gp13',
+    title: 'Automotive & Motorcycle Parts',
+    price: 'TSh 10,000 - 150,000',
+    moq: 'MOQ: 1 piece',
+    sold: '2,100 sold',
+    image:
+      'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&q=80&w=400',
+    badge: 'Verified',
+    location: 'TZ',
+  },
+  {
+    id: 'gp14',
+    title: 'Packaging & Shipping Supplies',
+    price: 'TSh 5,000 - 45,000',
+    moq: 'MOQ: 10 pieces',
+    sold: '1,400 sold',
+    image:
+      'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=400',
+    badge: 'Verified',
+    location: 'TZ',
+  },
+  {
+    id: 'gp15',
+    title: 'Consumer Electronics Accessories',
+    price: 'TSh 8,000 - 60,000',
+    moq: 'MOQ: 1 piece',
+    sold: '2,750 sold',
+    image:
+      'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=400',
+    badge: 'Verified',
+    location: 'TZ',
+  },
+  {
+    id: 'gp16',
+    title: 'Apparel & Fashion Items',
+    price: 'TSh 12,000 - 85,000',
+    moq: 'MOQ: 1 piece',
+    sold: '3,010 sold',
+    image:
+      'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=400',
+    badge: 'Verified',
+    location: 'TZ',
+  },
+];
