@@ -124,6 +124,12 @@ export default function ProductDetails() {
     [catalogProduct]
   );
 
+  // The related shelf falls back to other catalogue items when a category only
+  // holds a single product, so the heading only names a category when every
+  // card really belongs to it.
+  const relatedIsSameCategory =
+    related.length > 0 && related.every((item) => item.categorySlug === product?.categorySlug);
+
   const paymentAmount = useMemo(
     () => parseAmount(product?.price) * (quantity || 1),
     [product, quantity]
@@ -555,7 +561,9 @@ export default function ProductDetails() {
         <section className="max-w-7xl mx-auto mt-16">
           <div className="flex items-center gap-2 mb-5">
             <Layers size={18} className="text-[#E50914]" />
-            <h2 className="text-lg font-bold text-gray-800">More in {product.category}</h2>
+            <h2 className="text-lg font-bold text-gray-800">
+              {relatedIsSameCategory ? `More in ${product.category}` : 'More from Hualink Distribution'}
+            </h2>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

@@ -1,15 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import { ArrowRight, UserCheck, Search, PackageCheck, Target, Trophy, Wrench } from 'lucide-react';
+import { ArrowRight, UserCheck, Search, PackageCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import SearchHero from '../components/SearchHero';
-import CategoryDrawer from '../components/CategoryDrawer';
-import BrowsingHistoryCard from '../components/BrowsingHistoryCard';
-import FrequentlySearchedCard from '../components/FrequentlySearchedCard';
 import SupplierLeaderboardCard from '../components/SupplierLeaderboardCard';
 import FloatingToolbar from '../components/FloatingToolbar';
 import ProductGrid from '../components/ProductGrid';
+import WelcomeShowcase from '../components/WelcomeShowcase';
 
 const STEP_ICONS = {
   step1: UserCheck,
@@ -35,80 +33,16 @@ export default function Landing() {
       {/* ================= 2. CENTERED FLOATING SEARCH HERO ================= */}
       <SearchHero className="mt-10 mb-8" />
 
-      {/* ================= 4. ACTION SUB-BAR (Full-Width Seamless Strip) ================= */}
-      <div className="w-full bg-[#F7F7F7] border-t border-b border-gray-200/70 py-3.5 px-6 md:px-12">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-gray-900 font-extrabold text-base md:text-lg tracking-tight">
-              Welcome to Hualink Distribution
-            </span>
-          </div>
+      {/* ================= 4. WELCOME SHOWCASE (Welcome bar, categories, showcase cards) ================= */}
+      <WelcomeShowcase />
 
-          <div className="flex items-center gap-0">
-            {/* Tab 1: Request for Quotation */}
-            <button
-              onClick={() => navigate('/rfq')}
-              className="flex items-center gap-2 font-bold text-sm text-gray-800 hover:text-[#E50914] cursor-pointer group transition-colors"
-            >
-              <Target className="w-5 h-5 text-gray-900 group-hover:text-[#E50914] transition-colors" />
-              <span>Request for Quotation</span>
-            </button>
+      {/* ================= 5. BOTTOM PRODUCT GRID (Alibaba 6-Column Grid) ================= */}
+      <ProductGrid />
 
-            {/* Vertical Divider 1 */}
-            <div className="h-4 w-[1px] bg-gray-300 mx-4 md:mx-6" />
-
-            {/* Tab 2: Top Ranking */}
-            <button
-              onClick={() => navigate('/top-ranking')}
-              className="flex items-center gap-2 font-bold text-sm text-gray-800 hover:text-[#E50914] cursor-pointer group transition-colors"
-            >
-              <Trophy className="w-5 h-5 text-gray-900 group-hover:text-[#E50914] transition-colors" />
-              <span>Top Ranking</span>
-            </button>
-
-            {/* Vertical Divider 2 */}
-            <div className="h-4 w-[1px] bg-gray-300 mx-4 md:mx-6" />
-
-            {/* Tab 3: Fast Customization */}
-            <button
-              onClick={() => navigate('/customization')}
-              className="flex items-center gap-2 font-bold text-sm text-gray-800 hover:text-[#E50914] cursor-pointer group transition-colors"
-            >
-              <Wrench className="w-5 h-5 text-gray-900 group-hover:text-[#E50914] transition-colors" />
-              <span>Fast Customization</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ================= 5. MAIN 5-CARD HORIZONTAL GRID ================= */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 max-w-7xl mx-auto mt-16 mb-16">
-        {/* Col 1: Category Drawer */}
-        <CategoryDrawer />
-
-        {/* Col 2: Browsing History */}
-        <BrowsingHistoryCard />
-
-        {/* Col 3: Frequently Searched - Vehicles & Machinery */}
-        <FrequentlySearchedCard
-          subtitleKey="landing.vehiclesMachinery"
-          imageUrl="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&q=80&w=600"
-          altText="Electric vehicle machinery"
-        />
-
-        {/* Col 4: Frequently Searched - Electronics & Gear */}
-        <FrequentlySearchedCard
-          subtitleKey="landing.electronicsGear"
-          imageUrl="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=600"
-          altText="Camera electronics gadget"
-        />
-
-        {/* Col 5: Supplier Leaderboard Promo Card */}
+      {/* ================= 6. SUPPLIER LEADERBOARD PROMO ================= */}
+      <div className="max-w-4xl mx-auto w-full">
         <SupplierLeaderboardCard />
       </div>
-
-      {/* ================= 6. BOTTOM PRODUCT GRID (Alibaba 6-Column Grid) ================= */}
-      <ProductGrid />
 
       {/* ================= 7. HOW IT WORKS ================= */}
       <section className="py-20 bg-white my-6">

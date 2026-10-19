@@ -1,0 +1,224 @@
+{
+  "common": {
+    "home": "Accueil",
+    "marketplace": "Place de marché",
+    "shops": "Boutiques",
+    "services": "Services",
+    "explore": "Explorer",
+    "helpCenter": "Centre d'aide",
+    "trackOrders": "Suivre les commandes",
+    "sellOnHualink": "Vendre sur Hualink",
+    "language": "Langue",
+    "cart": "Panier",
+    "wishlist": "Favoris",
+    "welcome": "Bienvenue",
+    "signIn": "Se connecter",
+    "register": "S'inscrire",
+    "myAccount": "Mon compte",
+    "signOut": "Se déconnecter",
+    "myDashboard": "Mon tableau de bord",
+    "orderHistory": "Historique des commandes",
+    "supplierPortal": "Portail fournisseur",
+    "adminConsole": "Console d'administration",
+    "userManagement": "Gestion des utilisateurs",
+    "regionCurrency": "TZ / TZS",
+    "deliverTo": "Livrer à",
+    "verifiedManufacturers": "Fabricants vérifiés",
+    "hualinkServices": "Services Hualink",
+    "createAccount": "Créer un compte",
+    "searchPlaceholder": "Rechercher smartphones, chargeurs, services d'impression...",
+    "imageSearch": "Recherche par image",
+    "search": "Rechercher",
+    "allCategories": "Toutes les catégories",
+    "superDeals": "Super promotions",
+    "verifiedSuppliers": "Fournisseurs vérifiés",
+    "printingDesign": "Impression & design",
+    "electronics": "Électronique",
+    "soldCount": "{{count}} vendus",
+    "soldCountShort": "Plus de 1 000 vendus",
+    "freeShipping": "Livraison gratuite",
+    "requestQuote": "Demander un devis",
+    "requestQuoteDesc": "Obtenez des tarifs de gros auprès de fournisseurs vérifiés en quelques minutes.",
+    "quickCart": "Panier rapide",
+    "liveChat": "Discussion en direct",
+    "backToTop": "Retour en haut",
+    "categoriesForYou": "Catégories pour vous",
+    "frequentlySearched": "Recherches fréquentes",
+    "trendingTech": "Technologies tendance",
+    "todayDeals": "Promotions du jour",
+    "bundleDeals": "Offres groupées",
+    "discount": "-{{percent}} %",
+    "upTo": "Jusqu'à {{percent}} % de réduction",
+    "verified": "Vérifié",
+    "new": "Nouveau",
+    "hot": "Populaire",
+    "loading": "Chargement...",
+    "viewAll": "Tout voir",
+    "readMore": "En savoir plus",
+    "copyright": "Tous droits réservés. © 2026 HUALINK DISTRIBUTION."
+  },
+  "auth": {
+    "signInOrCreateAccount": "Connectez-vous ou créez un compte",
+    "continueWithGoogle": "Continuer avec Google",
+    "emailAddress": "ADRESSE E-MAIL",
+    "emailPlaceholder": "Saisissez votre adresse e-mail",
+    "continue": "Continuer",
+    "signInWithQR": "Se connecter avec un code QR",
+    "topSellingSuppliers": "Fournisseurs les plus vendus",
+    "freeShipping": "Livraison GRATUITE",
+    "moneyBackGuarantee": "Garantie de remboursement"
+  },
+  "footer": {
+    "quickLinks": "Liens rapides",
+    "marketplaceCatalog": "Catalogue de la place de marché",
+    "regionalDepots": "Dépôts et points de vente régionaux",
+    "servicesTeKel": "Services et graphisme TeKeL",
+    "exploreNetwork": "Explorer le réseau",
+    "termsConditions": "Conditions générales",
+    "supplyScope": "Gamme de fournitures Hualink",
+    "electronicsHardware": "Stock d'électronique et de matériel",
+    "teKelGraphics": "Graphisme TeKeL et design de marque",
+    "officeFurniture": "Mobilier de bureau et maison sur mesure",
+    "computersNetworking": "Ordinateurs et maintenance réseau",
+    "bulkCargo": "Expédition de cargaisons en gros",
+    "contactInfo": "Coordonnées",
+    "mainAddress": "Adresse principale",
+    "darEsSalaam": "Dar es Salaam, Tanzanie",
+    "directHotline": "Ligne directe",
+    "hotlineNumber": "+255 760 706 872",
+    "officialEmail": "E-mail officiel",
+    "emailAddress": "info@hualink.co.tz",
+    "aboutDesc": "Redéfinir la distribution directe grâce à un stock contrôlé, une gestion de l'inventaire vérifiée et un réseau d'approvisionnement régional unifié."
+  },
+  "hero": {
+    "slide1": {
+      "title": "Hub de distribution directe Hualink",
+      "subtitle": "STOCK VÉRIFIÉ & APPROVISIONNEMENT RÉGIONAL DIRECT",
+      "description": "Au service des entreprises de Tanzanie avec une distribution directe, un inventaire vérifié et des commandes en gros simplifiées.",
+      "buttonText": "Parcourir le catalogue"
+    },
+    "slide2": {
+      "title": "TeKeL Graphics & Design de marque",
+      "subtitle": "SOLUTIONS CRÉATIVES & IMPRESSION",
+      "description": "Branding d'entreprise haut de gamme, création de graphismes sur mesure et packages d'impression promotionnelle.",
+      "buttonText": "Découvrir les services"
+    },
+    "slide3": {
+      "title": "Distribution IT & matériel",
+      "subtitle": "ÉLECTRONIQUE & MAINTENANCE RÉSEAU",
+      "description": "Stock de matériel de qualité, installation de maintenance réseau et solutions de mobilier de bureau pour les entreprises.",
+      "buttonText": "En savoir plus"
+    }
+  },
+  "steps": {
+    "title": "Commencez votre parcours en",
+    "titleHighlight": "Trois étapes simples",
+    "subtitle": "De la consultation du stock à l'expédition directe, Hualink fluidifie la livraison régionale.",
+    "step1": {
+      "title": "Créez votre compte",
+      "description": "Inscrivez-vous en quelques minutes pour accéder aux tarifs de distribution régionale, au suivi du stock et aux services TeKeL.",
+      "linkText": "Commencer",
+      "linkUrl": "/register"
+    },
+    "step2": {
+      "title": "Parcourez & choisissez",
+      "description": "Explorez le matériel vérifié, le mobilier sur mesure ou demandez une création de marque TeKeL partout en Tanzanie.",
+      "linkText": "Explorer le catalogue",
+      "linkUrl": "/shop"
+    },
+    "step3": {
+      "title": "Commandez & recevez",
+      "description": "Passez des commandes en gros ou à l'unité et suivez l'expédition régionale rapide jusqu'à votre dépôt.",
+      "linkText": "Suivre la commande",
+      "linkUrl": "/orders"
+    }
+  },
+  "whyChoose": {
+    "title": "Pourquoi choisir",
+    "titleBrand": "HUALINK DISTRIBUTION",
+    "features": [
+      {
+        "title": "Des points de vente 100 % vérifiés",
+        "description": "Aucune contrefaçon ni fournisseur non audité dans notre réseau de distribution."
+      },
+      {
+        "title": "Suivi des itinéraires en direct",
+        "description": "Statuts mis à jour en temps réel, de l'entrepôt jusqu'à votre porte."
+      },
+      {
+        "title": "Hubs de stock régionaux",
+        "description": "Des centres d'inventory localisés pour des livraisons régionales plus rapides en Tanzanie."
+      },
+      {
+        "title": "Paiement direct sécurisé",
+        "description": "Transactions chiffrées, intégration du mobile money et factures transparentes."
+      }
+    ]
+  },
+  "categoryDrawer": {
+    "header": "Catégories pour vous",
+    "apparel": "Vêtements & accessoires",
+    "consumerElectronics": "Électronique grand public",
+    "printingDesign": "Impression & design",
+    "hardwareTools": "Outillage & quincaillerie",
+    "packaging": "Emballage"
+  },
+  "landing": {
+    "topBanner": "Explorez les produits populaires de nos fournisseurs sélectionnés",
+    "topBannerButton": "S'approvisionner →",
+    "tabAI": "Mode IA",
+    "tabProducts": "Produits",
+    "tabShops": "Boutiques",
+    "tabServices": "Services",
+    "tabWorldwide": "Mondial",
+    "searchPlaceholder": "Rechercher produits, fournisseurs ou services...",
+    "imageSearch": "Recherche par image",
+    "searchWithFile": "Rechercher avec un fichier",
+    "searchButton": "Rechercher",
+    "welcomeText": "Bienvenue chez Hualink Distribution",
+    "welcomeSubtitle": "Plateforme directe de produits électroniques et de biens grand public vérifiés",
+    "trendingProducts": "Produits tendance",
+    "certifiedWholesaleStock": "Stock de gros certifié",
+    "requestQuote": "Demander un devis",
+    "topRanking": "Top classement",
+    "fastCustomization": "Personnalisation rapide",
+    "browsingHistory": "Historique de navigation",
+    "frequentlySearched": "Recherches fréquentes",
+    "vehiclesMachinery": "Véhicules & machinerie",
+    "electronicsGear": "Électronique & équipement",
+    "topSuppliers": "Meilleurs fournisseurs",
+    "supplierLeaderboard": "Classement des fournisseurs",
+    "sourceNow": "S'approvisionner",
+    "smartphones": "Smartphones",
+    "chargersPower": "Chargeurs & alimentation",
+    "consumerElectronics": "Électronique grand public",
+    "more": "Plus",
+    "appDownload": "Télécharger l'application",
+    "freeDelivery": "Livraison régionale gratuite sur les commandes groupées vérifiées d'électroniques et de smartphones."
+  },
+  "quickCards": {
+    "frequentlySearched": {
+      "title": "Recherches fréquentes",
+      "item1": "Électronique",
+      "item2": "Vêtements",
+      "item3": "Mobilier",
+      "item4": "Services d'impression",
+      "item5": "Matériel"
+    },
+    "verifiedSuppliers": {
+      "title": "Fournisseurs vérifiés",
+      "item1": "Dépôt de Dar es Salaam",
+      "item2": "Arusha Hardware Co.",
+      "item3": "Mwanza Print House",
+      "item4": "Dodoma Office Supply"
+    },
+    "trendingTech": {
+      "title": "Technologies tendance",
+      "item1": "Ordinateurs portables",
+      "item2": "Équipement réseau",
+      "item3": "Systèmes de caisse",
+      "item4": "Kits solaires",
+      "item5": "Caméras CCTV"
+    }
+  }
+}

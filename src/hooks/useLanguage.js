@@ -22,4 +22,5 @@ export const LANGUAGES = [
   { code: 'en', label: 'English', flag: '🇬🇧' },
   { code: 'sw', label: 'Kiswahili', flag: '🇹🇿' },
   { code: 'zh', label: '中文', flag: '🇨🇳' },
+  { code: 'fr', label: 'Français (French)', flag: '🇫🇷' },
 ];

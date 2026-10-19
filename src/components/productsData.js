@@ -19,7 +19,16 @@ import { productsCatalog } from '../data/productsCatalog';
 export const CATEGORY_CONFIG = [
   { slug: 'smartphones', label: 'Smartphones', pattern: /smartphone|iphone|galaxy|smart ?watch/i },
   { slug: 'tvs', label: 'TVs & Displays', pattern: /\btv|television|\binch\b|display|monitor/i },
-  { slug: 'audio', label: 'Audio & Speakers', pattern: /speaker|audio|jbl|headphone|bluetooth/i },
+  {
+    slug: 'accessories',
+    label: 'Accessories',
+    pattern: /accessor|selfie|tripod|phone ?holder|phone ?mount|remote/i,
+  },
+  {
+    slug: 'audio',
+    label: 'Audio & Sound',
+    pattern: /speaker|audio|jbl|headphone|earbuds?|airpods?|radio|bluetooth/i,
+  },
   { slug: 'laptops', label: 'Laptops & Notebooks', pattern: /laptop|notebook|macbook/i },
   { slug: 'networking', label: 'Networking', pattern: /network|router|switch|wifi|wi-fi|access point|ethernet/i },
   { slug: 'security', label: 'Security & CCTV', pattern: /cctv|camera|security|surveillance|dvr/i },
@@ -31,6 +40,11 @@ export const CATEGORY_CONFIG = [
   { slug: 'packaging', label: 'Packaging & Supplies', pattern: /packaging|supplies/i },
   { slug: 'apparel', label: 'Apparel & Fashion', pattern: /apparel|fashion|clothing/i },
   { slug: 'logistics', label: 'Logistics & Shipping', pattern: /door to door|logistics|courier|freight|delivery/i },
+  {
+    slug: 'chargers-cables',
+    label: 'Chargers & Cables',
+    pattern: /charger|charging|cable|adapter|\busb\b|flash ?drive|power ?bank|\bgan\b/i,
+  },
   {
     slug: 'home-appliances',
     label: 'Home Appliances',
@@ -171,10 +185,11 @@ export const PRODUCTS = productsCatalog.map(normalizeProduct);
 /** Filter chips rendered above the grid. */
 export const GRID_FILTERS = [
   { id: 'all', label: 'All Categories' },
+  { id: 'chargers-cables', label: 'Chargers & Cables' },
+  { id: 'audio', label: 'Audio & Sound' },
+  { id: 'accessories', label: 'Accessories' },
   { id: 'smartphones', label: 'Smartphones' },
   { id: 'home-appliances', label: 'Home Appliances' },
-  { id: 'electronics', label: 'Electronics & Tech' },
-  { id: 'automobile', label: 'Automobile' },
 ];
 
 export default PRODUCTS;

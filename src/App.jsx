@@ -10,6 +10,7 @@ import MobileBottomNav from './components/MobileBottomNav';
 
 import Landing from './pages/Landing';
 import Products from './pages/Products';
+import Marketplace from './pages/Marketplace';
 import ProductDetail from './pages/ProductDetail';
 import Orders from './pages/Orders';
 import Users from './pages/Users';
@@ -169,12 +170,16 @@ const AppLayout = ({ cartItems, handleUpdateQuantity, handleRemoveItem, handleCl
           
           {/* Products & Marketplace Routes */}
           <Route path="/shop" element={<Products onAddToCart={handleAddToCart} />} />
-          <Route path="/marketplace" element={<Products onAddToCart={handleAddToCart} />} />
+          <Route path="/marketplace" element={<Marketplace onAddToCart={handleAddToCart} />} />
           <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="/top-ranking" element={<TopRankingPage />} />
           <Route path="/shops" element={<ShopsPage />} />
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/ai-mode" element={<AiSearchModePage />} />
+
+          {/* Quotation & Customization Requests (home page welcome actions) */}
+          <Route path="/rfq" element={<ServicesPage />} />
+          <Route path="/customization" element={<ServicesPage />} />
           
           {/* Network & Service Routes */}
           <Route path="/outlets" element={<Outlets />} />

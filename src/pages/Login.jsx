@@ -18,6 +18,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import Logo from '../components/Logo';
 import api from '../api/axios';
 import { useTranslation } from 'react-i18next';
+import { LANGUAGES } from '../hooks/useLanguage';
 
 export default function Login({ onLoginSuccess }) {
   // ------------------------------------------------------------------
@@ -260,30 +261,28 @@ export default function Login({ onLoginSuccess }) {
               >
                 <Globe size={14} className="text-gray-500" />
                 <span className="font-bold">
-                  {i18n.language === 'en' ? 'English' : i18n.language === 'sw' ? 'Kiswahili' : '中文'}
+                  {LANGUAGES.find((lang) => lang.code === i18n.language)?.label || 'English'}
                 </span>
               </button>
 
               {isLangOpen && (
-                <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 shadow-lg py-2 z-50 rounded-lg">
-                  <button
-                    onClick={() => handleLanguageChange('en')}
-                    className="w-full text-left px-3 py-2 text-xs font-semibold flex items-center gap-2 hover:bg-gray-50 transition-colors"
-                  >
-                    <span className={i18n.language === 'en' ? 'text-[#E50914] font-bold' : 'text-gray-600'}>English</span>
-                  </button>
-                  <button
-                    onClick={() => handleLanguageChange('sw')}
-                    className="w-full text-left px-3 py-2 text-xs font-semibold flex items-center gap-2 hover:bg-gray-50 transition-colors"
-                  >
-                    <span className={i18n.language === 'sw' ? 'text-[#E50914] font-bold' : 'text-gray-600'}>Kiswahili</span>
-                  </button>
-                  <button
-                    onClick={() => handleLanguageChange('zh')}
-                    className="w-full text-left px-3 py-2 text-xs font-semibold flex items-center gap-2 hover:bg-gray-50 transition-colors"
-                  >
-                    <span className={i18n.language === 'zh' ? 'text-[#E50914] font-bold' : 'text-gray-600'}>中文</span>
-                  </button>
+                <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 shadow-lg py-2 z-50 rounded-lg">
+                  {LANGUAGES.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => handleLanguageChange(lang.code)}
+                      className="w-full text-left px-3 py-2 text-xs font-semibold flex items-center gap-2 hover:bg-gray-50 transition-colors"
+                    >
+                      <span>{lang.flag}</span>
+                      <span
+                        className={
+                          i18n.language === lang.code ? 'text-[#E50914] font-bold' : 'text-gray-600'
+                        }
+                      >
+                        {lang.label}
+                      </span>
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
