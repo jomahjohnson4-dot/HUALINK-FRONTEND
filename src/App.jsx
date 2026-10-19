@@ -23,7 +23,7 @@ import Explore from './pages/Explore';
 import TopRankingPage from './pages/TopRankingPage';
 import ShopsPage from './pages/ShopsPage';
 import ServicesPage from './pages/ServicesPage';
-import AiSearchModePage from './pages/AiSearchModePage';
+import AISearchMode from './pages/AISearchMode';
 import ProductDetails from './pages/ProductDetails';
 import Checkout from './pages/Checkout'; 
 import Documentation from './pages/Documentation';
@@ -175,7 +175,7 @@ const AppLayout = ({ cartItems, handleUpdateQuantity, handleRemoveItem, handleCl
           <Route path="/top-ranking" element={<TopRankingPage />} />
           <Route path="/shops" element={<ShopsPage />} />
           <Route path="/services" element={<ServicesPage />} />
-          <Route path="/ai-mode" element={<AiSearchModePage />} />
+          <Route path="/ai-mode" element={<AISearchMode />} />
 
           {/* Quotation & Customization Requests (home page welcome actions) */}
           <Route path="/rfq" element={<ServicesPage />} />
