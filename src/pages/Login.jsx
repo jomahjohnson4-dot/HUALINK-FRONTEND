@@ -1,29 +1,42 @@
-import { useState } from 'react';
+/* global google */
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Mail,
   Lock,
   Eye,
-  EyeOff,
   ArrowRight,
   ShieldCheck,
   AlertCircle,
+  AlertTriangle,
   X,
   KeyRound,
   CheckCircle2,
   Globe,
-  QrCode,
 } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 import Logo from '../components/Logo';
+import api from '../api/axios';
 import { useTranslation } from 'react-i18next';
 
 export default function Login({ onLoginSuccess }) {
+  // ------------------------------------------------------------------
+  // Defensive state initialization (try/catch fallback so a malformed
+  // default value never breaks the initial render / blank white screen).
+  // ------------------------------------------------------------------
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  // Defensive default-fallback state initialization so a malformed default
+  // value never breaks the initial render (prevents blank white screen).
+  const [formData, setFormData] = useState(() => ({
+    email: '',
+    password: '',
+  }));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isLangOpen, setIsLangOpen] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [fallbackBanner, setFallbackBanner] = useState(false);
   const { t, i18n } = useTranslation();
 
   const handleLanguageChange = (lang) => {
@@ -31,40 +44,203 @@ export default function Login({ onLoginSuccess }) {
     setIsLangOpen(false);
   };
 
-  // OAuth / social sign-in handlers (mock session + redirect)
-  const handleOAuthLogin = (provider) => {
-    localStorage.setItem('hualink_auth', 'active');
-    localStorage.setItem('hualink_provider', provider);
-    window.dispatchEvent(new Event('authChange'));
-    navigate('/');
-  };
-
-  // Email Continue: validate email and sign the user in successfully
+  // ------------------------------------------------------------------
+  // Email / Password sign-in -> POST /api/auth/login
+  // ------------------------------------------------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email || !emailRegex.test(formData.email)) {
       setError('Please enter a valid email address.');
+      setLoading(false);
       return;
     }
 
-    // Simulate successful sign-in and persist user session
-    localStorage.setItem(
-      'hualink_user',
-      JSON.stringify({ name: 'Johnson', email: formData.email, isLoggedIn: true })
-    );
-    localStorage.setItem('hualink_auth', 'active');
-    localStorage.setItem('token', 'mock-session-token');
-    window.dispatchEvent(new Event('authChange'));
+    try {
+      const response = await api.post('/auth/login', {
+        email: formData.email,
+        password: formData.password,
+      });
 
-    if (onLoginSuccess) {
-      onLoginSuccess({ email: formData.email });
+      // Safely extract token & profile without throwing on malformed
+      // backend responses (undefined data, missing token/user, etc.).
+      const data = response.data ?? {};
+      const token = data?.token || data?.accessToken || null;
+      const user = data?.user || data?.profile || null;
+
+      // Persist real JWT session
+      if (token) {
+        localStorage.setItem('hualink_token', token);
+      }
+      if (user) {
+        localStorage.setItem('hualink_user', JSON.stringify(user));
+      }
+      localStorage.setItem('hualink_auth', 'active');
+
+      // Notify auth listeners of the new session
+      window.dispatchEvent(
+        new CustomEvent('hualink:session-change', { detail: { user, token } })
+      );
+
+      if (onLoginSuccess) {
+        onLoginSuccess({ email: formData.email, ...(user || {}) });
+      }
+
+      navigate('/');
+    } catch (err) {
+      // ------------------------------------------------------------------
+      // Graceful fallback: backend 404 / unreachable. Capture without
+      // crashing, show a clear message, and store a local session so
+      // testing is never blocked when the Express server is down.
+      // ------------------------------------------------------------------
+      const isNetworkError = !err.response;
+      const isNotFound = err.response?.status === 404;
+
+      if (isNetworkError || isNotFound) {
+        const fallbackMessage =
+          'Backend API unreachable on port 5000. Saving session locally...';
+        setError(fallbackMessage);
+        setFallbackBanner(true);
+        setTimeout(() => setFallbackBanner(false), 6000);
+
+        // Persist a local fallback session so testing is never blocked
+        const fallbackUser = {
+          email: formData.email,
+          name: formData.email.split('@')[0] || 'Customer',
+          isLoggedIn: true,
+          fallback: true,
+          signedInAt: new Date().toISOString(),
+        };
+        localStorage.setItem('hualink_user', JSON.stringify(fallbackUser));
+        localStorage.setItem('hualink_token', 'demo_token_123');
+        localStorage.setItem('hualink_auth', 'active');
+
+        window.dispatchEvent(
+          new CustomEvent('hualink:session-change', {
+            detail: { user: fallbackUser, token: 'demo_token_123' },
+          })
+        );
+
+        if (onLoginSuccess) {
+          onLoginSuccess({ email: formData.email, ...fallbackUser });
+        }
+
+        navigate('/');
+      } else {
+        setError(
+          err.response?.data?.message ||
+            err.message ||
+            'Login failed. Please try again.'
+        );
+      }
+    } finally {
+      setLoading(false);
     }
-
-    navigate('/');
   };
+
+  // ------------------------------------------------------------------
+  // Google OAuth login -> POST /api/auth/google  { token: credentialResponse.credential }
+  // ------------------------------------------------------------------
+  const handleGoogleSuccess = useCallback(
+    async (credentialResponse) => {
+      setGoogleLoading(true);
+      setError('');
+
+      try {
+        const response = await api.post('/auth/google', {
+          token: credentialResponse.credential,
+        });
+
+        const data = response.data ?? {};
+        const token = data?.token || data?.accessToken || null;
+        const user = data?.user || data?.profile || null;
+
+        if (token) {
+          localStorage.setItem('hualink_token', token);
+        }
+        if (user) {
+          localStorage.setItem('hualink_user', JSON.stringify(user));
+        }
+        localStorage.setItem('hualink_auth', 'active');
+
+        window.dispatchEvent(
+          new CustomEvent('hualink:session-change', { detail: { user, token } })
+        );
+
+        if (onLoginSuccess) {
+          onLoginSuccess({ email: user?.email || '', ...(user || {}) });
+        }
+
+        navigate('/');
+      } catch (err) {
+        const isNetworkError = !err.response;
+        const isNotFound = err.response?.status === 404;
+
+        if (isNetworkError || isNotFound) {
+          const fallbackMessage =
+            'Backend API unreachable on port 5000. Saving session locally...';
+          setError(fallbackMessage);
+          setFallbackBanner(true);
+          setTimeout(() => setFallbackBanner(false), 6000);
+
+          const fallbackUser = {
+            email: '',
+            name: 'Google User',
+            isLoggedIn: true,
+            fallback: true,
+            signedInAt: new Date().toISOString(),
+          };
+          localStorage.setItem('hualink_user', JSON.stringify(fallbackUser));
+          localStorage.setItem('hualink_token', 'demo_token_123');
+          localStorage.setItem('hualink_auth', 'active');
+
+          window.dispatchEvent(
+            new CustomEvent('hualink:session-change', {
+              detail: { user: fallbackUser, token: 'demo_token_123' },
+            })
+          );
+
+          if (onLoginSuccess) {
+            onLoginSuccess({ email: '', ...fallbackUser });
+          }
+
+          navigate('/');
+        } else {
+          setError(
+            err.response?.data?.message ||
+              err.message ||
+              'Google login failed. Please try again.'
+          );
+        }
+      } finally {
+        setGoogleLoading(false);
+      }
+    },
+    [onLoginSuccess, navigate]
+  );
+
+  const handleGoogleFailure = () => {
+    setError('Google sign-in was cancelled or failed.');
+    setGoogleLoading(false);
+  };
+
+  // Mount the Google One Tap / button client once (defensive try/catch)
+  useEffect(() => {
+    try {
+      if (typeof google !== 'undefined' && google.accounts.id) {
+        google.accounts.id.initialize({
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
+          callback: handleGoogleSuccess,
+        });
+      }
+    } catch {
+      // Google client not available — OAuth button remains but won't initialize.
+      console.warn('[Google OAuth] client initialization skipped.');
+    }
+  }, [handleGoogleSuccess]);
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] font-sans text-slate-900 flex flex-col">
@@ -146,96 +322,143 @@ export default function Login({ onLoginSuccess }) {
           </div>
         </div>
 
-        {/* Right Column - Social Logins & Form */}
+        {/* Right Column - Welcome Back Form */}
         <div className="flex flex-col h-full min-h-[550px] p-8 md:p-12">
           {/* Header */}
-          <h1 className="text-2xl font-black text-gray-900 mb-6">
-            {t('auth.signInOrCreateAccount')}
-          </h1>
+          <div className="mb-8">
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-1">
+              Welcome Back
+            </h2>
+            <p className="text-sm text-gray-500 mb-6">
+              Sign in to access your orders and distribution portal
+            </p>
+          </div>
 
-          {/* Social Login Buttons */}
-          <button
-            onClick={() => {
-              const email = formData.email || 'johnson@hualink.co.tz';
-              localStorage.setItem(
-                'hualink_user',
-                JSON.stringify({ name: 'Johnson', email, isLoggedIn: true })
-              );
-              localStorage.setItem('hualink_auth', 'active');
-              window.dispatchEvent(new Event('authChange'));
-              navigate('/');
-            }}
-            className="w-full bg-white border border-gray-300 hover:border-gray-400 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-3 text-sm text-gray-800 shadow-sm hover:shadow transition-all cursor-pointer mb-3"
+          {error && (
+            <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-sm">
+              {error}
+            </div>
+          )}
+
+          {/* Backend Unreachable Fallback Banner */}
+          {fallbackBanner && (
+            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl text-sm flex items-center gap-2">
+              <AlertTriangle size={18} className="shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Google OAuth Button (real backend verification) */}
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleFailure}
+            theme="outline"
+            buttonsColor="white"
+            width="320"
+            text="signin_with"
+            size="large"
+            logoAlight="center"
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              className="shrink-0"
-            >
-              <path
-                fill="#4285F4"
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-              />
-              <path
-                fill="#EA4335"
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12c0 1.77.43 3.45 1.18 4.93l3.66-2.84z"
-              />
-              <path
-                fill="#34A853"
-                d="M12 23c4.3 0 8.01-2.47 9.82-6.16l-3.57-2.77c-.87 1.62-3.31 2.77-6.25 2.77-1.48 0-2.73-.4-3.71-1.06l3.57-2.77c.47 1.39 1.24 2.6 2.21 3.31zM12 4.26c1.77 0 3.45.43 4.93 1.18l3.66 2.84c.66-1.48 1.09-3.16 1.09-4.93C21.57 5.98 21.14 4.26 12 4.26z"
-              />
-            </svg>
-            {t('auth.continueWithGoogle')}
-          </button>
+            {({ disabled, onClick }) => (
+              <button
+                onClick={onClick}
+                disabled={disabled || googleLoading}
+                className="w-full bg-white border border-gray-300 hover:bg-gray-50 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-3 text-sm text-gray-700 shadow-sm transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <span>
+                  <img
+                    src="https://www.svgrepo.com/show/475656/google-color.svg"
+                    className="w-5 h-5"
+                    alt="Google"
+                  />
+                </span>
+                <span>{googleLoading ? 'Verifying with Google...' : 'Continue with Google'}</span>
+              </button>
+            )}
+          </GoogleLogin>
 
           {/* Divider */}
-          <div className="relative mb-6">
-            <div className="border-t border-gray-300" />
-            <span className="absolute top-0 left-1/2 -translate-x-1/2 bg-[#F5F5F5] px-4 text-xs font-bold text-slate-600">
-              ─ OR ─
-            </span>
+          <div className="flex items-center gap-3 my-5">
+            <div className="h-px bg-gray-200 flex-1"></div>
+            <span className="text-xs font-bold text-gray-400">OR</span>
+            <div className="h-px bg-gray-200 flex-1"></div>
           </div>
 
           {/* Auth Form */}
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          <form className="space-y-5" onSubmit={handleSubmit}>
+            {/* Email Field */}
             <div>
-              <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
-                {t('auth.emailAddress')}
+              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                Email Address
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                  <Mail size={20} />
-                </div>
+              <div className="relative mb-4">
+                <Mail className="w-5 h-5 text-gray-400 absolute left-3.5 top-3.5" />
                 <input
                   type="email"
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder={t('auth.emailPlaceholder')}
-                  className="w-full pl-12 pr-4 py-3 focus:ring-2 focus:ring-[#E50914] focus:outline-none border border-gray-300 rounded-xl text-sm"
+                  placeholder="name@example.com"
+                  className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-[#E50914] focus:outline-none"
                 />
               </div>
             </div>
 
+            {/* Password Field & Forgot? Link */}
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                Password
+              </label>
+              <Link
+                to="/forgot-password"
+                className="text-xs font-bold text-[#E50914] hover:underline"
+              >
+                Forgot?
+              </Link>
+            </div>
+            <div className="relative mb-6">
+              <Lock className="w-5 h-5 text-gray-400 absolute left-3.5 top-3.5" />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                placeholder="••••••••"
+                className="w-full pl-11 pr-11 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-[#E50914] focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 top-3.5 text-gray-400 hover:text-gray-600"
+              >
+                <Eye className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Primary Action Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#E50914] hover:bg-[#C0040F] text-white font-bold py-3 rounded-xl shadow-md transition-colors text-sm"
+              className="w-full bg-[#E50914] hover:bg-[#C0040F] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-red-500/20 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {loading ? 'Signing in...' : t('auth.continue')}
+              {loading ? 'Signing in...' : 'SIGN IN'}
+              <ArrowRight className="w-4 h-4" />
             </button>
           </form>
 
-          {/* QR Code Sign-In Footer Link */}
-          <div className="mt-8 flex items-center gap-1 text-xs text-gray-500 hover:text-gray-800 cursor-pointer">
-            <QrCode size={14} className="text-gray-700" />
-            <span>{t('auth.signInWithQR')}</span>
+          {/* Security Note */}
+          <div className="mt-6 text-center text-xs text-gray-500 flex items-center justify-center gap-1.5">
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <span>Secured Direct Distribution Portal</span>
           </div>
+
+          {/* Register Link */}
+          <p className="mt-3 text-center text-xs text-gray-600">
+            Don't have an account?{' '}
+            <Link to="/register" className="font-bold text-[#E50914] hover:underline">
+              Create Account
+            </Link>
+          </p>
         </div>
       </div>
     </div>

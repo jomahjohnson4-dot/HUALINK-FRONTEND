@@ -1,7 +1,6 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import API from '../api/axios';
-
-const AuthContext = createContext(null);
+import { AuthContext } from './auth-context';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -10,7 +9,7 @@ export const AuthProvider = ({ children }) => {
   // Check token and initialize user state on app mount
   useEffect(() => {
     const initializeAuth = async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('hualink_token');
       if (token) {
         try {
           // Hits your backend auth validation endpoint
@@ -18,7 +17,8 @@ export const AuthProvider = ({ children }) => {
           setUser(response.data.user || response.data);
         } catch (error) {
           console.error('Session expired or invalid token:', error);
-          localStorage.removeItem('token');
+          localStorage.removeItem('hualink_token');
+          localStorage.removeItem('hualink_user');
           setUser(null);
         }
       }
@@ -34,7 +34,8 @@ export const AuthProvider = ({ children }) => {
     const { token, user: userData } = response.data;
 
     if (token) {
-      localStorage.setItem('token', token);
+      localStorage.setItem('hualink_token', token);
+      localStorage.setItem('hualink_user', JSON.stringify(userData));
       setUser(userData);
     }
     return response.data;
@@ -46,7 +47,8 @@ export const AuthProvider = ({ children }) => {
     const { token, user: userData } = response.data;
 
     if (token) {
-      localStorage.setItem('token', token);
+      localStorage.setItem('hualink_token', token);
+      localStorage.setItem('hualink_user', JSON.stringify(userData));
       setUser(userData);
     }
     return response.data;
@@ -54,7 +56,8 @@ export const AuthProvider = ({ children }) => {
 
   // Logout handler
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('hualink_token');
+    localStorage.removeItem('hualink_user');
     setUser(null);
   };
 

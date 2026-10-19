@@ -17,6 +17,33 @@
   scrollbar-width: none;
 }
 
+/* Scroll entrance animation ------------------------------------------------- */
+/* Cards fade and slide up as they enter the page, staggered by index. */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  /* `both` keeps the card hidden during its stagger delay, so a delayed card
+     fades in smoothly instead of flashing visible and then restarting. */
+  animation: fadeInUp 0.4s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @layer base {
   body {
     font-family: 'Plus Jakarta Sans', sans-serif;

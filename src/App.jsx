@@ -15,6 +15,7 @@ import Orders from './pages/Orders';
 import Users from './pages/Users';
 import Register from './pages/Register';
 import Login from './pages/Login';
+import ForgotPassword from './pages/ForgotPassword';
 import Outlets from './pages/Outlets';
 import Services from './pages/Services';
 import Explore from './pages/Explore';
@@ -22,7 +23,7 @@ import TopRankingPage from './pages/TopRankingPage';
 import ShopsPage from './pages/ShopsPage';
 import ServicesPage from './pages/ServicesPage';
 import AiSearchModePage from './pages/AiSearchModePage';
-import ProductDetailsPage from './pages/ProductDetailsPage';
+import ProductDetails from './pages/ProductDetails';
 import Checkout from './pages/Checkout'; 
 import Documentation from './pages/Documentation';
 import HelpCenter from './pages/HelpCenter';
@@ -155,7 +156,7 @@ const AppLayout = ({ cartItems, handleUpdateQuantity, handleRemoveItem, handleCl
     <div className="min-h-screen bg-white text-gray-900 flex flex-col justify-between pb-16 md:pb-0 relative font-sans">
       <div>
         {/* Hide the full navigation bar on auth pages so only the clean minimal auth header remains */}
-        {location.pathname !== '/login' && location.pathname !== '/register' && (
+        {location.pathname !== '/login' && location.pathname !== '/register' && location.pathname !== '/forgot-password' && (
           <Navbar 
             cartItems={cartItems} 
             onUpdateQuantity={handleUpdateQuantity} 
@@ -169,7 +170,7 @@ const AppLayout = ({ cartItems, handleUpdateQuantity, handleRemoveItem, handleCl
           {/* Products & Marketplace Routes */}
           <Route path="/shop" element={<Products onAddToCart={handleAddToCart} />} />
           <Route path="/marketplace" element={<Products onAddToCart={handleAddToCart} />} />
-          <Route path="/product/:id" element={<ProductDetailsPage />} />
+          <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="/top-ranking" element={<TopRankingPage />} />
           <Route path="/shops" element={<ShopsPage />} />
           <Route path="/services" element={<ServicesPage />} />
@@ -205,6 +206,7 @@ const AppLayout = ({ cartItems, handleUpdateQuantity, handleRemoveItem, handleCl
           {/* Auth & Access Control Routes */}
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/unauthorized" element={<UnauthorizedView />} />
 
           {/* Central Dashboard Redirect Router */}
