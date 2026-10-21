@@ -74,4 +74,83 @@ export const matchesShopCategory = (product, categoryId) => {
   return definition.keywords?.some((keyword) => haystack.includes(keyword)) ?? false;
 };
 
+/**
+ * Sub-category filters for header mega-menu deep links (/shop?category=<slug>).
+ *
+ * Each entry narrows the /shop grid to ONLY the items belonging to that
+ * sub-category (the sidebar shelf merely highlights afterwards — `shelf`
+ * records which sidebar shelf to highlight for a given slug). Matchers use the
+ * product's name, category and categorySlug so they stay precise even when a
+ * shared slug (e.g. `audio`) covers several physical products.
+ */
+const subcategoryHaystack = (product) =>
+  [
+    product.name || product.title || '',
+    product.category || '',
+    product.categorySlug || '',
+  ]
+    .join(' ')
+    .toLowerCase();
+
+const subcategorySlug = (product) =>
+  String(product.categorySlug || '').toLowerCase().trim();
+
+export const SHOP_SUBCATEGORIES = [
+  {
+    slug: 'smartphones',
+    shelf: 'smartphones',
+    matches: (product) => /smartphone|iphone|galaxy|android|\bphone\b/.test(subcategoryHaystack(product)),
+  },
+  {
+    slug: 'chargers',
+    shelf: 'electronics',
+    matches: (product) =>
+      subcategorySlug(product) === 'chargers-cables' ||
+      /charger|charging|power bank|adapter/.test(subcategoryHaystack(product)),
+  },
+  {
+    // Shared `audio` slug: keep personal audio only — radios and speakers have
+    // their own sub-categories below.
+    slug: 'audio',
+    shelf: 'electronics',
+    matches: (product) =>
+      subcategorySlug(product) === 'audio' &&
+      !/radio|speaker|cassette|walkman/.test(subcategoryHaystack(product)),
+  },
+  {
+    slug: 'radios',
+    shelf: 'electronics',
+    matches: (product) => /radio|cassette|walkman|\bplayer\b/.test(subcategoryHaystack(product)),
+  },
+  {
+    slug: 'accessories',
+    shelf: 'electronics',
+    matches: (product) =>
+      subcategorySlug(product) === 'accessories' ||
+      /selfie|tripod|flash drive|memory card|stylus/.test(subcategoryHaystack(product)),
+  },
+  {
+    slug: 'kettles',
+    shelf: 'home',
+    matches: (product) => /kettle|teapot/.test(subcategoryHaystack(product)),
+  },
+  {
+    slug: 'irons',
+    shelf: 'home',
+    matches: (product) => /steam iron|flat iron|\biron\b/.test(subcategoryHaystack(product)),
+  },
+  {
+    slug: 'speakers',
+    shelf: 'home',
+    matches: (product) => /speaker|jbl|soundbar|subwoofer/.test(subcategoryHaystack(product)),
+  },
+];
+
+/** Resolves a ?category= deep-link value to its filter entry (null if unknown). */
+export const findShopSubcategory = (slug) => {
+  const normalized = String(slug || '').toLowerCase().trim();
+  if (!normalized) return null;
+  return SHOP_SUBCATEGORIES.find((entry) => entry.slug === normalized) || null;
+};
+
 export default SHOP_CATEGORIES;

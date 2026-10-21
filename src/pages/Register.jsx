@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { requestSignupOtp, verifyOtp } from '../api/verificationService';
+import OtpVerificationModal from '../components/modals/OtpVerificationModal';
 import {
   User,
   Mail,
@@ -23,6 +25,14 @@ export default function Register({ onRegisterSuccess }) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Verification code session — opened once the code has been requested.
+  const [otpOpen, setOtpOpen] = useState(false);
+  const [otpSession, setOtpSession] = useState(null);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpResendLoading, setOtpResendLoading] = useState(false);
+  // The payload captured when the code was requested, replayed on verify.
+  const [pendingPayload, setPendingPayload] = useState(null);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -80,9 +90,49 @@ export default function Register({ onRegisterSuccess }) {
       companyName: accountType === 'wholesale' ? formData.companyName : '',
     };
 
+    // Step 1 — request the 6-digit verification code.
+    setLoading(true);
+    try {
+      const session = await requestSignupOtp({
+        email: formData.email,
+        phone: formData.phone,
+      });
+
+      setPendingPayload(payload);
+      setOtpSession(session);
+      setOtpOpen(true);
+    } catch (err) {
+      const isNetworkError = !err.response;
+      const isNotFound = err.response?.status === 404;
+
+      if (isNetworkError || isNotFound) {
+        // The verification service is unreachable — fall back to the direct
+        // registration path so the customer is never hard-blocked.
+        await completeRegistration(payload);
+        return;
+      }
+
+      setError(
+        err.response?.data?.message || err.message || 'Could not send the verification code.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Step 2 — the code was confirmed, so the account can be created.
+   *
+   * @param {object} payload  the captured sign-up payload
+   * @param {string} [verificationId] the verified code record
+   */
+  const completeRegistration = async (payload, verificationId) => {
     try {
       setLoading(true);
-      const response = await api.post('/auth/register', payload);
+      const response = await api.post('/auth/register', {
+        ...payload,
+        ...(verificationId ? { verificationId } : {}),
+      });
 
       const { token, user } = response.data;
 
@@ -100,6 +150,7 @@ export default function Register({ onRegisterSuccess }) {
       }
 
       // Auto login & redirect to landing marketplace
+      setOtpOpen(false);
       navigate('/');
     } catch (err) {
       const isNetworkError = !err.response;
@@ -150,14 +201,70 @@ export default function Register({ onRegisterSuccess }) {
         }
 
         // Auto login & redirect to landing marketplace
+        setOtpOpen(false);
         navigate('/');
       } else {
         setError(
           err.response?.data?.message || err.message || 'Registration failed. Please try again.'
         );
+        // Re-thrown so the verification modal can surface the failure.
+        throw err;
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  /**
+   * Confirms the code the customer typed. The backend stores the verified
+   * status in PostgreSQL and hands back the id of the verification record,
+   * which is then attached to the sign-up request.
+   */
+  const handleVerifyOtp = async (code) => {
+    setOtpLoading(true);
+    setError('');
+
+    try {
+      const result = await verifyOtp({
+        code,
+        purpose: 'SIGNUP',
+        email: formData.email,
+        phone: formData.phone,
+      });
+
+      if (!result.success) {
+        throw new Error(result.message || 'The verification code is incorrect.');
+      }
+
+      await completeRegistration(pendingPayload, result.verificationId);
+    } catch (err) {
+      // The modal renders the failure, but the banner keeps the form context.
+      if (err?.response) {
+        setError(err.response?.data?.message || 'The verification code is incorrect.');
+      }
+      throw err;
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  /** Requests a fresh code for the same account details. */
+  const handleResendOtp = async () => {
+    setOtpResendLoading(true);
+    setError('');
+
+    try {
+      const session = await requestSignupOtp({
+        email: formData.email,
+        phone: formData.phone,
+      });
+      setOtpSession(session);
+    } catch (err) {
+      setError(
+        err.response?.data?.message || err.message || 'Could not resend the verification code.'
+      );
+    } finally {
+      setOtpResendLoading(false);
     }
   };
 
@@ -425,9 +532,14 @@ export default function Register({ onRegisterSuccess }) {
               className="w-full mt-2 bg-[#E50914] text-white font-bold py-3.5 rounded-xl hover:bg-[#C0040F] transition-all flex items-center justify-center gap-2 cursor-pointer"
               disabled={loading}
             >
-              {loading ? 'Creating account...' : 'CREATE ACCOUNT'}
+              {loading ? 'Sending verification code...' : 'CREATE ACCOUNT'}
               <ArrowRight size={18} />
             </button>
+
+            <p className="text-[10px] font-semibold text-slate-400 text-center leading-relaxed">
+              A 6-digit verification code will be sent to your email address and phone
+              number to confirm your account.
+            </p>
           </form>
 
           {/* Footer Info */}
@@ -450,6 +562,23 @@ export default function Register({ onRegisterSuccess }) {
           </div>
         </div>
       </div>
+
+      {/* Verification Code Modal */}
+      <OtpVerificationModal
+        isOpen={otpOpen}
+        onClose={() => setOtpOpen(false)}
+        onVerify={handleVerifyOtp}
+        onResend={handleResendOtp}
+        title="Verify Your Account"
+        subtitle="Enter the 6-digit verification code we sent to your email address and phone number to confirm your identity."
+        length={otpSession?.length || 6}
+        demoCode={otpSession?.demoCode || null}
+        isDemo={Boolean(otpSession?.isDemo)}
+        destination={formData.email}
+        loading={otpLoading}
+        resendLoading={otpResendLoading}
+        expiresAt={otpSession?.expiresAt || null}
+      />
     </div>
   );
 }

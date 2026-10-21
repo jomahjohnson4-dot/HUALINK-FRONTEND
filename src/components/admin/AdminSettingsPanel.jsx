@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Plus,
   Trash2,
@@ -6,11 +6,14 @@ import {
   ChevronDown,
   MessageSquareText,
   SlidersHorizontal,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import en from '../../locales/en.json';
 import sw from '../../locales/sw.json';
 import zh from '../../locales/zh.json';
 import fr from '../../locales/fr.json';
+import { getFaqs, createFaq, updateFaq, deleteFaq } from '../../api/faqService';
 
 const LANGS = [
   { key: 'en', label: 'EN', locale: en },
@@ -44,22 +47,45 @@ const TOGGLE_DEFS = [
 
 const NEW_FAQ = { question: '', answers: { en: '', sw: '', zh: '', fr: '' } };
 
-export default function AdminSettingsPanel({ onToast }) {
-  // The FAQ list is seeded from the English locale, the canonical source.
-  const [faqs, setFaqs] = useState(() =>
-    (en.faq?.items || []).map((item, index) => ({
-      id: `faq-${index}`,
-      question: item.question,
-      answers: LANGS.reduce(
-        (acc, { key, locale }) => {
-          const match = locale.faq?.items?.[index];
-          acc[key] = match?.answer || '';
-          return acc;
-        },
-        { en: item.answer }
-      ),
-    }))
+/** The API always returns a complete translation map. */
+const normaliseFaq = (faq) => ({
+  id: faq.id,
+  question: faq.question || '',
+  answers: LANGS.reduce((acc, { key }) => {
+    acc[key] = faq.answers?.[key] || '';
+    return acc;
+  }, {}),
+  sortOrder: faq.sortOrder ?? 0,
+});
+
+/**
+ * The shipped locale files are the seed content. On the very first load the
+ * database is still empty, so the existing copy is pushed across once and the
+ * panel then works purely against the database from that point on.
+ */
+const seedFromLocales = async () => {
+  const source = en.faq?.items || [];
+
+  await Promise.all(
+    source.map(async (item, index) => {
+      const answers = LANGS.reduce((acc, { key, locale }) => {
+        acc[key] = locale.faq?.items?.[index]?.answer || '';
+        return acc;
+      }, {});
+
+      await createFaq({ question: item.question, answers, sortOrder: index });
+    })
   );
+
+  return getFaqs();
+};
+
+export default function AdminSettingsPanel({ onToast }) {
+  const [faqs, setFaqs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
 
   const [draft, setDraft] = useState(null);
   const [openId, setOpenId] = useState(null);
@@ -70,15 +96,51 @@ export default function AdminSettingsPanel({ onToast }) {
     maintenanceNotice: false,
   });
 
+  const load = async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      let list = await getFaqs();
+
+      // First run — move the shipped copy into the database.
+      if (!list.length) {
+        list = await seedFromLocales();
+      }
+
+      setFaqs(list.map(normaliseFaq));
+      setDirty(false);
+    } catch (err) {
+      console.error('Failed to load FAQs:', err);
+      setFaqs([]);
+      setLoadError('Could not reach the FAQ service. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
   const handleToggle = (key) => {
     setToggles((current) => ({ ...current, [key]: !current[key] }));
     onToast?.(`${TOGGLE_DEFS.find((t) => t.key === key)?.label} updated.`);
   };
 
-  const handleRemove = (id) => {
-    setFaqs((current) => current.filter((faq) => faq.id !== id));
-    if (openId === id) setOpenId(null);
-    onToast?.('FAQ removed.');
+  /** Removes the FAQ from the database, then from the local list. */
+  const handleRemove = async (id) => {
+    try {
+      await deleteFaq(id);
+      setFaqs((current) => current.filter((faq) => faq.id !== id));
+      if (openId === id) setOpenId(null);
+      onToast?.('FAQ removed.');
+    } catch (err) {
+      console.error('FAQ delete failed:', err);
+      onToast?.(
+        err?.response?.data?.message || 'Could not remove the FAQ. Please try again.',
+        'error'
+      );
+    }
   };
 
   const handleDraftChange = (field, value) => {
@@ -92,23 +154,70 @@ export default function AdminSettingsPanel({ onToast }) {
     }));
   };
 
-  const handleAdd = () => {
+  /** Edits an answer in place and flags the list as needing a save. */
+  const handleAnswerChange = (id, lang, value) => {
+    setFaqs((current) =>
+      current.map((faq) =>
+        faq.id === id
+          ? { ...faq, answers: { ...faq.answers, [lang]: value } }
+          : faq
+      )
+    );
+    setDirty(true);
+  };
+
+  const handleQuestionChange = (id, value) => {
+    setFaqs((current) =>
+      current.map((faq) => (faq.id === id ? { ...faq, question: value } : faq))
+    );
+    setDirty(true);
+  };
+
+  const handleAdd = async () => {
     if (!draft.question.trim()) {
       onToast?.('FAQ question is required.', 'error');
       return;
     }
-    setFaqs((current) => [
-      ...current,
-      { ...draft, id: `faq-${Date.now()}` },
-    ]);
-    setDraft(null);
-    onToast?.('FAQ Added Successfully!');
+
+    try {
+      const created = await createFaq({
+        question: draft.question.trim(),
+        answers: draft.answers,
+        sortOrder: faqs.length,
+      });
+      setFaqs((current) => [...current, normaliseFaq(created)]);
+      setDraft(null);
+      onToast?.('FAQ Added Successfully!');
+    } catch (err) {
+      console.error('FAQ create failed:', err);
+      onToast?.(
+        err?.response?.data?.message || 'Could not add the FAQ. Please try again.',
+        'error'
+      );
+    }
   };
 
-  const handleSave = () => {
-    // Persisted FAQ editing would need a settings endpoint; the panel keeps the
-    // structure identical to the locale files so it can be wired up directly.
-    onToast?.('FAQ Changes Saved Successfully!');
+  /** Writes every FAQ back to the database so edits survive a reload. */
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const saved = await Promise.all(
+        faqs.map((faq) =>
+          updateFaq(faq.id, { question: faq.question, answers: faq.answers })
+        )
+      );
+      setFaqs(saved.map(normaliseFaq));
+      setDirty(false);
+      onToast?.('FAQ Changes Saved Successfully!');
+    } catch (err) {
+      console.error('FAQ save failed:', err);
+      onToast?.(
+        err?.response?.data?.message || 'Could not save the FAQ changes. Please try again.',
+        'error'
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -177,68 +286,95 @@ export default function AdminSettingsPanel({ onToast }) {
           </button>
         </div>
 
-        <div className="space-y-3">
-          {faqs.map((faq) => {
-            const isOpen = openId === faq.id;
-            return (
-              <div
-                key={faq.id}
-                className="bg-slate-900/50 border border-slate-700/60 rounded-xl overflow-hidden"
-              >
-                <div className="flex items-center gap-2 px-4 py-3">
-                  <button
-                    type="button"
-                    onClick={() => setOpenId(isOpen ? null : faq.id)}
-                    aria-expanded={isOpen}
-                    className="flex-1 flex items-center justify-between gap-3 text-left cursor-pointer"
-                  >
-                    <span className="text-xs font-bold text-white leading-snug">
-                      {faq.question}
-                    </span>
-                    <ChevronDown
-                      size={16}
-                      className={`shrink-0 text-slate-400 transition-transform ${
-                        isOpen ? 'rotate-180' : ''
-                      }`}
-                    />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleRemove(faq.id)}
-                    aria-label={`Remove FAQ: ${faq.question}`}
-                    className="h-8 w-8 shrink-0 rounded-lg border border-slate-700 flex items-center justify-center text-slate-400 hover:text-red-400 hover:border-red-500 transition-colors cursor-pointer"
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                </div>
+        {loadError ? (
+          <p className="flex items-center gap-2 text-[11px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-2.5 mb-4">
+            <AlertCircle size={14} />
+            {loadError}
+          </p>
+        ) : null}
 
-                {isOpen ? (
-                  <div className="px-4 pb-4 space-y-3 border-t border-slate-800 pt-3">
-                    {LANGS.map(({ key, label }) => (
-                      <div key={key}>
-                        <label className="flex items-center gap-2 text-[10px] font-bold text-slate-400 mb-1">
-                          <span className="bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5">
-                            {label}
-                          </span>
-                          Answer
+        <div className="space-y-3">
+          {loading ? (
+            <div className="py-8 flex items-center justify-center gap-2 text-slate-400">
+              <Loader2 size={16} className="animate-spin text-orange-500" />
+              <span className="text-xs font-bold">Loading FAQs from the database...</span>
+            </div>
+          ) : null}
+
+          {!loading &&
+            faqs.map((faq) => {
+              const isOpen = openId === faq.id;
+              return (
+                <div
+                  key={faq.id}
+                  className="bg-slate-900/50 border border-slate-700/60 rounded-xl overflow-hidden"
+                >
+                  <div className="flex items-center gap-2 px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => setOpenId(isOpen ? null : faq.id)}
+                      aria-expanded={isOpen}
+                      className="flex-1 flex items-center justify-between gap-3 text-left cursor-pointer"
+                    >
+                      <span className="text-xs font-bold text-white leading-snug">
+                        {faq.question}
+                      </span>
+                      <ChevronDown
+                        size={16}
+                        className={`shrink-0 text-slate-400 transition-transform ${
+                          isOpen ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRemove(faq.id)}
+                      aria-label={`Remove FAQ: ${faq.question}`}
+                      className="h-8 w-8 shrink-0 rounded-lg border border-slate-700 flex items-center justify-center text-slate-400 hover:text-red-400 hover:border-red-500 transition-colors cursor-pointer"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+
+                  {isOpen ? (
+                    <div className="px-4 pb-4 space-y-3 border-t border-slate-800 pt-3">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 mb-1">
+                          Question
                         </label>
-                        <textarea
-                          rows={3}
-                          defaultValue={faq.answers[key]}
-                          onChange={(e) => {
-                            faq.answers[key] = e.target.value;
-                          }}
-                          className="admin-input resize-none"
+                        <input
+                          type="text"
+                          value={faq.question}
+                          onChange={(e) => handleQuestionChange(faq.id, e.target.value)}
+                          className="admin-input"
                         />
                       </div>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            );
-          })}
 
-          {!faqs.length ? (
+                      {LANGS.map(({ key, label }) => (
+                        <div key={key}>
+                          <label className="flex items-center gap-2 text-[10px] font-bold text-slate-400 mb-1">
+                            <span className="bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5">
+                              {label}
+                            </span>
+                            Answer
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={faq.answers[key]}
+                            onChange={(e) =>
+                              handleAnswerChange(faq.id, key, e.target.value)
+                            }
+                            className="admin-input resize-none"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+
+          {!loading && !faqs.length ? (
             <p className="text-center text-xs font-bold text-slate-400 py-8">
               No FAQs configured. Add one to get started.
             </p>
@@ -248,10 +384,20 @@ export default function AdminSettingsPanel({ onToast }) {
         <button
           type="button"
           onClick={handleSave}
-          className="mt-5 flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl transition-colors cursor-pointer"
+          disabled={saving || !faqs.length}
+          className="mt-5 flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
         >
-          <Save size={14} />
-          <span>Save FAQ Changes</span>
+          {saving ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            <Save size={14} />
+          )}
+          <span>{saving ? 'Saving...' : 'Save FAQ Changes'}</span>
+          {dirty && !saving ? (
+            <span className="ml-1 text-[10px] font-bold text-orange-400 uppercase">
+              Unsaved
+            </span>
+          ) : null}
         </button>
       </div>
 

@@ -6,9 +6,9 @@ import AdminProductsPanel from '../../components/admin/AdminProductsPanel';
 import AdminWholesaleOrdersPanel from '../../components/admin/AdminWholesaleOrdersPanel';
 import AdminOverviewPanel from '../../components/admin/AdminOverviewPanel';
 import AdminSettingsPanel from '../../components/admin/AdminSettingsPanel';
-import { ToastStack } from '../../components/admin/ToastStack';
-import { useToasts } from '../../components/admin/useToasts';
-import { BarChart3, ShoppingBag, MessageSquare, LayoutDashboard, Package, SlidersHorizontal } from 'lucide-react';
+import AdminNotificationAuditLog from '../../components/admin/AdminNotificationAuditLog';
+import { useToast } from '../../context/ToastContext';
+import { BarChart3, ShoppingBag, MessageSquare, LayoutDashboard, Package, SlidersHorizontal, BellRing } from 'lucide-react';
 
 // Dynamic Component Resolvers for Robust Export Compatibility
 const AnalyticsDashboard = AnalyticsDashboardImport || AnalyticsDashboardNamed;
@@ -21,6 +21,7 @@ const TABS = [
   { id: 'wholesale', label: 'Orders', Icon: ShoppingBag },
   { id: 'analytics', label: 'Analytics Engine', Icon: BarChart3 },
   { id: 'orders', label: 'Service Orders', Icon: ShoppingBag },
+  { id: 'audit', label: 'Notifications & Audit Log', Icon: BellRing },
   { id: 'messages', label: 'Live Chat Inbox', Icon: MessageSquare },
   { id: 'settings', label: 'Settings', Icon: SlidersHorizontal },
 ];
@@ -28,7 +29,9 @@ const TABS = [
 export const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedBooking, setSelectedBooking] = useState(null);
-  const { toasts, push, dismiss } = useToasts();
+  // The toast queue is global (see ToastContext) so alerts raised here also
+  // render when the admin is browsing elsewhere in the app.
+  const { push } = useToast();
 
   // Fallback sample booking if none selected from orders
   const activeBookingData = selectedBooking || {
@@ -91,6 +94,8 @@ export const AdminDashboard = () => {
           />
         )}
 
+        {activeTab === 'audit' && <AdminNotificationAuditLog />}
+
         {activeTab === 'messages' && ProviderChatPanel && (
           <div className="flex justify-center items-center py-4">
             <ProviderChatPanel 
@@ -100,8 +105,6 @@ export const AdminDashboard = () => {
           </div>
         )}
       </div>
-
-      <ToastStack toasts={toasts} onDismiss={dismiss} />
     </div>
   );
 };

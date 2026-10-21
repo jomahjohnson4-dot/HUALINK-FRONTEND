@@ -1,8 +1,19 @@
 import { X, ShoppingBag, Trash2, ArrowRight, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 
-export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQuantity, onRemoveItem }) {
-  if (!isOpen) return null;
+export default function CartDrawer() {
+  const {
+    cartItems,
+    totalItems,
+    subtotal,
+    isCartOpen,
+    closeCart,
+    updateQuantity,
+    removeItem,
+  } = useCart();
+
+  if (!isCartOpen) return null;
 
   // Safe numeric parser to prevent NaN TZS errors
   const parsePrice = (item) => {
@@ -11,17 +22,11 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
     return isNaN(numeric) ? 0 : numeric;
   };
 
-  const subtotal = cartItems.reduce((sum, item) => {
-    const itemPrice = parsePrice(item);
-    const itemQty = Number(item.quantity) || 1;
-    return sum + itemPrice * itemQty;
-  }, 0);
-
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
+    <div className="fixed inset-0 z-[85] overflow-hidden">
       {/* Backdrop */}
       <div 
-        onClick={onClose} 
+        onClick={closeCart} 
         className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" 
       />
 
@@ -34,11 +39,11 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
               <ShoppingBag size={20} className="text-red-600" />
               <h2 className="text-lg font-black text-slate-900">Your Order Cart</h2>
               <span className="bg-red-50 text-red-600 text-xs font-bold px-2 py-0.5 rounded-full border border-red-200">
-                {cartItems.length}
+                {totalItems}
               </span>
             </div>
             <button 
-              onClick={onClose}
+              onClick={closeCart}
               className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all cursor-pointer"
             >
               <X size={18} />
@@ -55,7 +60,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
                 <p className="text-sm font-bold text-slate-700">Your cart is empty</p>
                 <p className="text-xs text-slate-400 max-w-xs">Explore our regional catalog or TeKeL branding packages to add items.</p>
                 <button 
-                  onClick={onClose}
+                  onClick={closeCart}
                   className="mt-2 text-xs font-bold text-red-600 hover:underline"
                 >
                   Browse Catalog
@@ -88,14 +93,14 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
                       <div className="flex items-center gap-2 pt-1">
                         <div className="flex items-center border border-slate-200 rounded-lg bg-white px-2 py-0.5 text-xs font-bold text-slate-800">
                           <button 
-                            onClick={() => onUpdateQuantity(item.id || item.productId, itemQty - 1)}
+                            onClick={() => updateQuantity(item.id || item.productId, itemQty - 1)}
                             className="hover:text-red-600 px-1 cursor-pointer"
                           >
                             -
                           </button>
                           <span className="px-2">{itemQty}</span>
                           <button 
-                            onClick={() => onUpdateQuantity(item.id || item.productId, itemQty + 1)}
+                            onClick={() => updateQuantity(item.id || item.productId, itemQty + 1)}
                             className="hover:text-red-600 px-1 cursor-pointer"
                           >
                             +
@@ -105,7 +110,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
                     </div>
 
                     <button 
-                      onClick={() => onRemoveItem(item.id || item.productId)}
+                      onClick={() => removeItem(item.id || item.productId)}
                       className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
                     >
                       <Trash2 size={16} />
@@ -137,7 +142,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
               <div className="space-y-2">
                 <Link
                   to="/checkout"
-                  onClick={onClose}
+                  onClick={closeCart}
                   className="w-full py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-red-600/20 transition-all"
                 >
                   <span>Proceed to Checkout</span>

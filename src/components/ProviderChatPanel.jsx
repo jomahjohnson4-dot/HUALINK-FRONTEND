@@ -73,9 +73,9 @@ export const ProviderChatPanel = ({ providerId = 'hualink_admin', selectedBookin
   return (
     <div className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl flex flex-col h-[550px] overflow-hidden font-sans">
       {/* Header */}
-      <div className="p-4 bg-slate-800/90 border-b border-slate-700/60 flex items-center justify-between">
+      <div className="p-4 bg-slate-900 border-b border-gray-800 border-t-2 border-t-red-600 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-orange-500/10 border border-orange-500/30 rounded-xl flex items-center justify-center text-orange-400 font-bold">
+          <div className="w-10 h-10 bg-red-600/10 border border-red-600/30 rounded-xl flex items-center justify-center text-red-500 font-bold">
             <MessageSquare size={18} />
           </div>
           <div>
@@ -86,15 +86,15 @@ export const ProviderChatPanel = ({ providerId = 'hualink_admin', selectedBookin
               </span>
             </div>
             <p className="text-[11px] text-slate-400 mt-0.5">
-              Ref ID: <span className="text-orange-400 font-mono">{selectedBooking?.id || 'General Session'}</span>
+              Ref ID: <span className="text-red-500 font-mono">{selectedBooking?.id || 'General Session'}</span>
               {selectedBooking?.serviceTitle && ` | Service: ${selectedBooking.serviceTitle}`}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Message Feed */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-950/40">
+      {/* Message Feed — dark slate canvas */}
+      <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-[#0F172A]">
         {messages.length === 0 ? (
           <div className="h-full flex items-center justify-center text-slate-500 text-xs font-medium">
             No message history available for this thread yet.
@@ -107,8 +107,8 @@ export const ProviderChatPanel = ({ providerId = 'hualink_admin', selectedBookin
                 <div
                   className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-xs font-medium leading-relaxed ${
                     isProvider
-                      ? 'bg-orange-500 text-slate-950 font-semibold rounded-br-none'
-                      : 'bg-slate-800 text-slate-100 border border-slate-700/60 rounded-bl-none'
+                      ? 'bg-red-600 text-white font-semibold rounded-br-none shadow-md shadow-red-600/20'
+                      : 'bg-slate-800 text-slate-100 border border-gray-700/60 rounded-bl-none'
                   }`}
                 >
                   {msg.content || msg.text}
@@ -126,18 +126,18 @@ export const ProviderChatPanel = ({ providerId = 'hualink_admin', selectedBookin
       </div>
 
       {/* Reply Input Bar */}
-      <form onSubmit={sendReply} className="p-3 bg-slate-800/80 border-t border-slate-700/60 flex items-center gap-2">
+      <form onSubmit={sendReply} className="p-3 bg-slate-900 border-t border-gray-800 flex items-center gap-2">
         <input
           type="text"
           value={replyText}
           onChange={(e) => setReplyText(e.target.value)}
           placeholder="Type live dispatch response..."
-          className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 transition-colors"
+          className="flex-1 bg-slate-800 border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-red-500 transition-colors"
         />
         <button
           type="submit"
           disabled={!selectedBooking?.id}
-          className="bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span>Send</span>
           <Send size={13} />

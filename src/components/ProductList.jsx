@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { RefreshCw, WifiOff } from 'lucide-react';
 import { getProducts } from '../api/productService';
-import ProductCard, { ProductQuickView, ViewToggle } from './ProductCard';
+import ProductCard, { ViewToggle } from './ProductCard';
+import { ProductQuickView } from './ProductModal';
 import { PRODUCTS, normalizeProduct } from './productsData';
 
 /**
@@ -15,7 +16,7 @@ import { PRODUCTS, normalizeProduct } from './productsData';
  * Both the grid and the list view render the same ProductCard, so the hover
  * scale animation and the #E50914 brand accents survive a view toggle.
  */
-export default function ProductList({ products: productsProp, onAddToCart, onInquiry }) {
+export default function ProductList({ products: productsProp, onInquiry }) {
   const [remoteProducts, setRemoteProducts] = useState([]);
   const [remoteStatus, setRemoteStatus] = useState(productsProp ? 'ready' : 'loading');
   const [remoteError, setRemoteError] = useState(null);
@@ -70,12 +71,12 @@ export default function ProductList({ products: productsProp, onAddToCart, onInq
     });
   };
 
+  // Inquiry items are routed to the sales desk; every other product is added
+  // to the shared cart by the card / quick view themselves.
   const handleAction = (product) => {
-    if (product.action === 'inquiry') {
-      onInquiry?.(product);
-    } else {
-      onAddToCart?.(product, 1);
-    }
+    if (product.action !== 'inquiry') return;
+
+    onInquiry?.(product);
 
     setFeedbackId(product.id);
     if (feedbackTimer.current) clearTimeout(feedbackTimer.current);

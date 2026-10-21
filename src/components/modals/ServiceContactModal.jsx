@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { MessageSquare, MessageCircle, Send, X } from 'lucide-react';
 import { io } from 'socket.io-client';
+import { createInquiry } from '../../api/inquiryService';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const socket = io(API_BASE_URL);
@@ -86,6 +87,18 @@ export default function ServiceContactModal({ booking, providerPhone, currentUse
       body: JSON.stringify(msgData),
     }).catch((err) => console.error('Error saving message:', err));
 
+    // 4. File the message as a lead so it shows up in the admin inquiries feed
+    createInquiry({
+      customerName: currentUser?.name || contactName || 'Guest',
+      customerContact:
+        currentUser?.phone ||
+        booking?.clientPhone ||
+        (currentUserId && currentUserId !== 'guest-visitor' ? currentUserId : 'guest-visitor'),
+      productOrService: booking?.serviceTitle || contactName || contactLabel || 'General Inquiry',
+      message: input.trim(),
+      timestamp: new Date().toISOString(),
+    }).catch((err) => console.error('Error saving inquiry:', err));
+
     setInput('');
   };
 
@@ -99,8 +112,8 @@ export default function ServiceContactModal({ booking, providerPhone, currentUse
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl overflow-hidden flex flex-col h-[500px]">
         
-        {/* Modal Header */}
-        <div className="p-4 bg-slate-800/80 border-b border-slate-700 flex justify-between items-center">
+        {/* Modal Header — dark slate canvas with a subtle red accent rule */}
+        <div className="p-4 bg-slate-900 border-b border-gray-800 border-t-2 border-t-red-600 flex justify-between items-center">
           <div>
             <h3 className="text-sm font-bold text-white">
               {contactName || 'Contact Service Provider'}
@@ -116,11 +129,13 @@ export default function ServiceContactModal({ booking, providerPhone, currentUse
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex border-b border-slate-800 bg-slate-950/50 p-2 gap-2">
+        <div className="flex border-b border-gray-800 bg-slate-950/60 p-2 gap-2">
           <button
             onClick={() => setChatMode('internal')}
-            className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer ${
-              chatMode === 'internal' ? 'bg-orange-500 text-slate-950' : 'text-slate-400 hover:bg-slate-800'
+            className={`flex-1 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer ${
+              chatMode === 'internal'
+                ? 'bg-red-600 text-white shadow-md shadow-red-600/25'
+                : 'bg-slate-800/60 text-gray-300 hover:text-white'
             }`}
           >
             <MessageSquare size={14} />
@@ -129,8 +144,10 @@ export default function ServiceContactModal({ booking, providerPhone, currentUse
           
           <button
             onClick={() => setChatMode('whatsapp')}
-            className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer ${
-              chatMode === 'whatsapp' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-slate-800'
+            className={`flex-1 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer ${
+              chatMode === 'whatsapp'
+                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25'
+                : 'bg-slate-800/60 text-gray-300 hover:text-white'
             }`}
           >
             <MessageCircle size={14} />
@@ -138,8 +155,8 @@ export default function ServiceContactModal({ booking, providerPhone, currentUse
           </button>
         </div>
 
-        {/* Dynamic Body */}
-        <div className="flex-1 p-4 overflow-y-auto space-y-3">
+        {/* Dynamic Body — dark slate chat canvas */}
+        <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-[#0F172A]">
           {chatMode === 'internal' ? (
             messages.length === 0 ? (
               <p className="text-xs text-slate-500 text-center py-12">No messages yet. Send a message to start live chat.</p>
@@ -155,8 +172,8 @@ export default function ServiceContactModal({ booking, providerPhone, currentUse
                     <div
                       className={`p-3 rounded-xl max-w-[80%] text-xs ${
                         isMe
-                          ? 'bg-orange-500 text-slate-950 font-medium rounded-br-none'
-                          : 'bg-slate-800 text-slate-200 rounded-bl-none'
+                          ? 'bg-red-600 text-white font-medium rounded-br-none shadow-md shadow-red-600/20'
+                          : 'bg-slate-800 text-slate-100 border border-gray-700/60 rounded-bl-none'
                       }`}
                     >
                       {messageText}
@@ -187,18 +204,19 @@ export default function ServiceContactModal({ booking, providerPhone, currentUse
 
         {/* Input Bar for Internal Chat */}
         {chatMode === 'internal' && (
-          <div className="p-3 bg-slate-800/50 border-t border-slate-800 flex gap-2">
+          <div className="p-3 bg-slate-900 border-t border-gray-800 flex gap-2">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
               placeholder="Type your message..."
-              className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500"
+              className="flex-1 bg-slate-800 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-red-500 transition-colors"
             />
             <button
               onClick={sendMessage}
-              className="bg-orange-500 hover:bg-orange-400 text-slate-950 p-2 rounded-xl cursor-pointer font-bold"
+              aria-label="Send message"
+              className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-xl cursor-pointer font-bold transition-colors"
             >
               <Send size={16} />
             </button>

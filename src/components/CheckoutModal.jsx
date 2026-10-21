@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { Loader2, AlertCircle, X, ShieldCheck, CheckCircle2, PhoneCall } from 'lucide-react';
 
@@ -14,7 +15,20 @@ const PAYMENT_PROVIDERS = [
   { id: 'MIXX-BY-YAS', label: 'Mixx by Yas (Tigo)', badge: 'TIGO', color: 'border-blue-500/40 text-blue-400' },
 ];
 
-export const CheckoutModal = ({ cartItems = [], totalAmount = 0, isOpen, onClose, onOrderSuccess }) => {
+/**
+ * Express mobile-money checkout.
+ *
+ * The modal is rendered through a portal so it always stacks above the
+ * surface that opened it (the product details modal included).
+ */
+export const CheckoutModal = ({
+  cartItems = [],
+  totalAmount = 0,
+  isOpen,
+  onClose,
+  onOrderSuccess,
+  zIndex = 'z-50',
+}) => {
   const [formData, setFormData] = useState({
     customerName: '',
     customerPhone: '',
@@ -149,8 +163,8 @@ export const CheckoutModal = ({ cartItems = [], totalAmount = 0, isOpen, onClose
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 transition-all">
+  const modal = (
+    <div className={`fixed inset-0 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center ${zIndex} p-0 sm:p-4 transition-all`}>
       <div className="bg-slate-900 text-slate-100 rounded-t-3xl sm:rounded-2xl max-w-lg md:max-w-xl w-full p-5 sm:p-6 border border-slate-800 shadow-2xl relative max-h-[92vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
         
         {/* Header */}
@@ -362,6 +376,13 @@ export const CheckoutModal = ({ cartItems = [], totalAmount = 0, isOpen, onClose
       </div>
     </div>
   );
+
+  // Portals keep the checkout above the surface that opened it (the product
+  // details modal included). The inline fallback keeps server rendering and
+  // markup tests working, where no DOM body exists.
+  if (typeof document === 'undefined') return modal;
+
+  return createPortal(modal, document.body);
 };
 
 export default CheckoutModal;

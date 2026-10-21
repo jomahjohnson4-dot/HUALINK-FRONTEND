@@ -9,7 +9,9 @@ import {
 } from 'lucide-react';
 import API from '../api/axios';
 import { productsCatalog } from '../data/productsCatalog';
-import ProductCard, { ProductQuickView } from '../components/ProductCard';
+import { useAuth } from '../context/AuthContext';
+import ProductCard from '../components/ProductCard';
+import { ProductQuickView } from '../components/ProductModal';
 import HorizontalProductShowcase from '../components/HorizontalProductShowcase';
 
 /** Category pills — they mirror the catalogue's category values exactly. */
@@ -22,11 +24,11 @@ const CATEGORIES = [
   'Accessories',
 ];
 
-/** Numeric price resolved from the display string ("TSh 25,000" -> 25000). */
-const numericPrice = (product) =>
-  Number(String(product.price ?? product.originalPrice ?? '').replace(/[^0-9]/g, '')) || 10000;
+export default function Marketplace() {
+  // The signed-in shopper is passed to the chat widget so inquiries carry a
+  // real name instead of a generic guest label.
+  const { user } = useAuth();
 
-export default function Marketplace({ onAddToCart }) {
   // The verified local catalogue is the guaranteed default state, so the
   // marketplace renders every inventory item immediately.
   const [products, setProducts] = useState(() => productsCatalog);
@@ -71,21 +73,12 @@ export default function Marketplace({ onAddToCart }) {
     });
   };
 
+  // Inquiry items are the only ones that need a page-level handler — cart
+  // actions go through the shared cart context.
   const handleQuickAction = (product) => {
-    if (!onAddToCart) return;
-    const price = numericPrice(product);
-    onAddToCart(
-      {
-        ...product,
-        id: product.id,
-        productId: product.id,
-        name: product.name || product.title || 'Inventory Item',
-        price,
-        unitPrice: price,
-      },
-      1
-    );
-    setQuickView(null);
+    if (product.action === 'inquiry') {
+      setQuickView(null);
+    }
   };
 
   // Category + search filtering: "All Categories" always shows everything.
@@ -238,6 +231,7 @@ export default function Marketplace({ onAddToCart }) {
                     isWishlisted={wishlist.has(product.id)}
                     onToggleWishlist={toggleWishlist}
                     onQuickView={setQuickView}
+                    onAction={handleQuickAction}
                   />
                 ))}
               </div>
@@ -253,6 +247,7 @@ export default function Marketplace({ onAddToCart }) {
         product={quickView}
         onClose={() => setQuickView(null)}
         onAction={handleQuickAction}
+        currentUser={user}
       />
     </div>
   );

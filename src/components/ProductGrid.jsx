@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { Filter, Grid, LayoutGrid } from 'lucide-react';
-import ProductCard, { ProductQuickView, ViewToggle } from './ProductCard';
+import ProductCard, { ViewToggle } from './ProductCard';
+import { ProductQuickView } from './ProductModal';
 import { PRODUCTS, GRID_FILTERS } from './productsData';
 
-export default function ProductGrid({ onAddToCart, onInquiry }) {
+export default function ProductGrid({ onInquiry }) {
   const [viewMode, setViewMode] = useState('grid');
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
@@ -55,12 +56,12 @@ export default function ProductGrid({ onAddToCart, onInquiry }) {
     });
   };
 
+  // Inquiry items are routed to the sales desk; every other product is added
+  // to the shared cart by the card / quick view themselves.
   const handleAction = (product) => {
-    if (product.action === 'inquiry') {
-      onInquiry?.(product);
-    } else {
-      onAddToCart?.(product, 1);
-    }
+    if (product.action !== 'inquiry') return;
+
+    onInquiry?.(product);
 
     setFeedbackId(product.id);
     if (feedbackTimer.current) clearTimeout(feedbackTimer.current);

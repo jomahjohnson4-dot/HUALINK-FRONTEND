@@ -9,7 +9,11 @@ const RAW_API_URL =
   import.meta.env.VITE_API_BASE_URL ||
   'http://localhost:5000';
 
-const API_BASE_URL = `${RAW_API_URL.replace(/\/+$/, '')}/api`;
+// Strip trailing slashes and a trailing "/api" segment so the prefix is not
+// duplicated (http://host:5000/api/api) when the env var already carries it.
+const API_HOST = String(RAW_API_URL).trim().replace(/\/+$/, '').replace(/\/api$/, '');
+
+const API_BASE_URL = `${API_HOST}/api`;
 
 const API = axios.create({
   baseURL: API_BASE_URL,

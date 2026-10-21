@@ -10,21 +10,26 @@ import {
   Package,
   AlertCircle,
 } from 'lucide-react';
-import { productsCatalog } from '../../data/productsCatalog';
 import {
   getProducts,
   createProduct,
   updateProduct,
   deleteProduct,
   toggleProductAvailability,
+  normaliseProduct,
 } from '../../api/productService';
 
+/** Categories offered in the product form. */
 const CATEGORIES = [
   'Chargers & Cables',
   'Audio & Sound',
   'Smartphones',
   'Home Appliances',
   'Accessories',
+  'Networking Maintenance',
+  'Office Furniture',
+  'TeKeL Branding & Print',
+  'Power Banks',
 ];
 
 const LANGS = [
@@ -45,23 +50,6 @@ const EMPTY_FORM = {
   description: { en: '', sw: '', zh: '', fr: '' },
 };
 
-/** Catalogue rows are shaped differently from API rows — normalise both. */
-function normalizeRow(raw, index) {
-  const price = raw.price ?? raw.basePrice ?? raw.base_price ?? raw.unitPrice ?? 0;
-  const stock = Number(raw.stock ?? raw.quantity ?? raw.stockQuantity ?? 0);
-  return {
-    id: raw.id || raw.productId || raw._id || `row-${index}`,
-    name: raw.name || raw.title || 'Untitled product',
-    category: raw.category || 'Uncategorised',
-    price,
-    originalPrice: raw.originalPrice || raw.basePrice || null,
-    stock,
-    rating: raw.rating ?? 4.8,
-    image: raw.image || raw.imageUrl || raw.thumbnail || (raw.thumbnails || [])[0] || '',
-    isAvailable: raw.isAvailable !== false,
-  };
-}
-
 function stockStatus(stock) {
   if (stock <= 0) return { label: 'Out of Stock', className: 'bg-red-500/15 text-red-400 border-red-500/30' };
   if (stock <= 10) return { label: 'Low Stock', className: 'bg-amber-500/15 text-amber-400 border-amber-500/30' };
@@ -69,9 +57,9 @@ function stockStatus(stock) {
 }
 
 export default function AdminProductsPanel({ onToast }) {
-  const [rows, setRows] = useState(() => productsCatalog.map(normalizeRow));
+  const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [usingFallback, setUsingFallback] = useState(false);
+  const [loadError, setLoadError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState(null);
 
@@ -82,32 +70,32 @@ export default function AdminProductsPanel({ onToast }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
 
+  const load = async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      // `includeUnavailable` keeps hidden products visible to the admin.
+      const { products } = await getProducts({ includeUnavailable: true, limit: 200 });
+      setRows(products);
+    } catch (err) {
+      console.error('Failed to load inventory:', err);
+      setRows([]);
+      setLoadError('Could not reach the inventory service. Changes cannot be saved right now.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let isMounted = true;
-
-    const load = async () => {
-      try {
-        const data = await getProducts();
-        const list = data?.products || data?.data || data;
-        if (isMounted && Array.isArray(list) && list.length) {
-          setRows(list.map(normalizeRow));
-          setUsingFallback(false);
-        } else if (isMounted) {
-          setUsingFallback(true);
-        }
-      } catch {
-        // Backend unavailable — the bundled catalogue keeps the panel usable.
-        if (isMounted) setUsingFallback(true);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
     load();
-    return () => {
-      isMounted = false;
-    };
   }, []);
+
+  /** Category pills follow whatever is actually stored in the database. */
+  const categoryOptions = useMemo(() => {
+    const fromDb = rows.map((row) => row.category).filter(Boolean);
+    const unique = Array.from(new Set([...fromDb, ...CATEGORIES]));
+    return ['All Categories', ...unique];
+  }, [rows]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -139,7 +127,12 @@ export default function AdminProductsPanel({ onToast }) {
       stock: String(row.stock ?? ''),
       rating: String(row.rating ?? ''),
       image: row.image || '',
-      description: { en: '', sw: '', zh: '', fr: '' },
+      description: {
+        en: row.descriptions?.en || row.description || '',
+        sw: row.descriptions?.sw || '',
+        zh: row.descriptions?.zh || '',
+        fr: row.descriptions?.fr || '',
+      },
     });
     setErrors({});
     setFormOpen(true);
@@ -173,37 +166,24 @@ export default function AdminProductsPanel({ onToast }) {
 
     try {
       if (editingId) {
+        // The server response is the source of truth for the updated row.
         const saved = await updateProduct(editingId, payload);
-        const updated = normalizeRow(saved?.product || saved || { ...payload, id: editingId });
         setRows((current) =>
-          current.map((row) => (row.id === editingId ? { ...row, ...updated, id: editingId } : row))
+          current.map((row) => (row.id === editingId ? { ...row, ...normaliseProduct(saved) } : row))
         );
         onToast?.('Product Updated Successfully!');
       } else {
-        const saved = await createProduct(payload);
-        const created = normalizeRow(
-          saved?.product || saved || { ...payload, id: `local-${Date.now()}` }
-        );
-        setRows((current) => [created, ...current]);
+        const created = await createProduct(payload);
+        setRows((current) => [normaliseProduct(created), ...current]);
         onToast?.('Product Added Successfully!');
       }
       setFormOpen(false);
     } catch (err) {
-      // Optimistic local apply so the admin still sees the result when offline.
-      if (editingId) {
-        setRows((current) =>
-          current.map((row) => (row.id === editingId ? { ...row, ...payload } : row))
-        );
-        onToast?.('Saved locally — server unreachable.', 'error');
-      } else {
-        setRows((current) => [
-          normalizeRow({ ...payload, id: `local-${Date.now()}` }),
-          ...current,
-        ]);
-        onToast?.('Added locally — server unreachable.', 'error');
-      }
       console.error('Product save failed:', err);
-      setFormOpen(false);
+      onToast?.(
+        err?.response?.data?.message || 'Could not save the product. Please try again.',
+        'error'
+      );
     } finally {
       setSaving(false);
     }
@@ -218,8 +198,10 @@ export default function AdminProductsPanel({ onToast }) {
       onToast?.('Product Deleted Successfully!');
     } catch (err) {
       console.error('Delete failed:', err);
-      setRows((current) => current.filter((item) => item.id !== row.id));
-      onToast?.('Removed locally — server unreachable.', 'error');
+      onToast?.(
+        err?.response?.data?.message || 'Could not delete the product. Please try again.',
+        'error'
+      );
     } finally {
       setBusyId(null);
     }
@@ -230,16 +212,19 @@ export default function AdminProductsPanel({ onToast }) {
     const nextAvailable = !row.isAvailable;
     try {
       await toggleProductAvailability(row.id, nextAvailable);
-      onToast?.(`${row.name} marked ${nextAvailable ? 'Available' : 'Unavailable'}.`);
-    } catch (err) {
-      console.error('Availability toggle failed:', err);
-      onToast?.('Availability updated locally — server unreachable.', 'error');
-    } finally {
       setRows((current) =>
         current.map((item) =>
           item.id === row.id ? { ...item, isAvailable: nextAvailable } : item
         )
       );
+      onToast?.(`${row.name} marked ${nextAvailable ? 'Available' : 'Unavailable'}.`);
+    } catch (err) {
+      console.error('Availability toggle failed:', err);
+      onToast?.(
+        err?.response?.data?.message || 'Could not update availability. Please try again.',
+        'error'
+      );
+    } finally {
       setBusyId(null);
     }
   };
@@ -264,7 +249,7 @@ export default function AdminProductsPanel({ onToast }) {
           onChange={(e) => setCategoryFilter(e.target.value)}
           className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-xs font-bold text-white focus:outline-none focus:border-orange-500 transition-colors cursor-pointer"
         >
-          {['All Categories', ...CATEGORIES].map((cat) => (
+          {categoryOptions.map((cat) => (
             <option key={cat} value={cat}>
               {cat}
             </option>
@@ -281,10 +266,10 @@ export default function AdminProductsPanel({ onToast }) {
         </button>
       </div>
 
-      {usingFallback ? (
+      {loadError ? (
         <p className="flex items-center gap-2 text-[11px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-2.5">
           <AlertCircle size={14} />
-          Showing the bundled catalog — live inventory server is unreachable.
+          {loadError}
         </p>
       ) : null}
 

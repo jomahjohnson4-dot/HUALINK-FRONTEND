@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Search,
   SlidersHorizontal,
@@ -11,17 +12,20 @@ import {
 } from 'lucide-react';
 import API from '../api/axios';
 import { productsCatalog } from '../data/productsCatalog';
-import ProductCard, { ProductQuickView } from '../components/ProductCard';
+import { useAuth } from '../context/AuthContext';
+import ProductCard from '../components/ProductCard';
+import { ProductQuickView } from '../components/ProductModal';
 import {
   SHOP_CATEGORIES as CATEGORIES,
   matchesShopCategory as matchesCategory,
 } from '../data/shopCategories';
+import { getMegaMenuFilter } from '../data/megaMenuFilters';
 
-/** Numeric price resolved from the display string ("TSh 25,000" -> 25000). */
-const numericPrice = (product) =>
-  Number(String(product.price ?? product.originalPrice ?? '').replace(/[^0-9]/g, '')) || 10000;
+export default function Products() {
+  // The signed-in shopper is passed to the chat widget so inquiries carry a
+  // real name instead of a generic guest label.
+  const { user } = useAuth();
 
-export default function Products({ onAddToCart }) {
   // The verified local catalogue is the guaranteed default state, so /shop
   // shows every inventory item immediately — never "No Inventory Items found".
   const [products, setProducts] = useState(() => productsCatalog);
@@ -30,6 +34,19 @@ export default function Products({ onAddToCart }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [wishlist, setWishlist] = useState(() => new Set());
   const [quickView, setQuickView] = useState(null);
+
+  // Deep-link from "All Categories" mega-menu: /shop?category=<slug>
+  const [searchParams, setSearchParams] = useSearchParams();
+  const megaFilter = getMegaMenuFilter(searchParams.get('category'));
+  const activeSidebar = megaFilter ? megaFilter.shelfId : selectedCategory;
+
+  const handleSidebarSelect = (categoryId) => {
+    setSelectedCategory(categoryId);
+    // Clicking a sidebar category clears any mega-menu deep link
+    if (searchParams.get('category')) {
+      setSearchParams({}, { replace: true });
+    }
+  };
 
   // Enhance the local catalogue with the live feed when the Express server is
   // reachable. Any failure only flags the feed as offline — the full local
@@ -67,28 +84,22 @@ export default function Products({ onAddToCart }) {
     });
   };
 
-  // Quick-view action still feeds the shared cart without adding any
-  // "Add to Cart" button to the resting card design.
+  // Inquiry items are the only ones that need a page-level handler — cart
+  // actions go through the shared cart context.
   const handleQuickAction = (product) => {
-    if (!onAddToCart) return;
-    const price = numericPrice(product);
-    onAddToCart(
-      {
-        ...product,
-        id: product.id,
-        productId: product.id,
-        name: product.name || product.title || 'Inventory Item',
-        price,
-        unitPrice: price,
-      },
-      1
-    );
-    setQuickView(null);
+    if (product.action === 'inquiry') {
+      setQuickView(null);
+    }
   };
 
   // Robust category & search filtering (case/space tolerant, "All" is total).
+  // A mega-menu sub-category deep link wins and shows ONLY that sub-category.
   const filteredProducts = products.filter((product) => {
-    if (!matchesCategory(product, selectedCategory)) return false;
+    if (megaFilter) {
+      if (!megaFilter.match(product)) return false;
+    } else {
+      if (!matchesCategory(product, activeSidebar)) return false;
+    }
 
     const query = searchQuery.trim().toLowerCase();
     if (!query) return true;
@@ -143,12 +154,12 @@ export default function Products({ onAddToCart }) {
               <div className="space-y-1">
                 {CATEGORIES.map((category) => {
                   const Icon = category.icon;
-                  const isActive = selectedCategory === category.id;
+                  const isActive = activeSidebar === category.id;
                   return (
                     <button
                       key={category.id}
                       type="button"
-                      onClick={() => setSelectedCategory(category.id)}
+                      onClick={() => handleSidebarSelect(category.id)}
                       className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         isActive
                           ? 'bg-[#E50914] text-white shadow-md shadow-[#E50914]/25'
@@ -240,6 +251,7 @@ export default function Products({ onAddToCart }) {
                     isWishlisted={wishlist.has(product.id)}
                     onToggleWishlist={toggleWishlist}
                     onQuickView={setQuickView}
+                    onAction={handleQuickAction}
                   />
                 ))}
               </div>
@@ -253,6 +265,7 @@ export default function Products({ onAddToCart }) {
         product={quickView}
         onClose={() => setQuickView(null)}
         onAction={handleQuickAction}
+        currentUser={user}
       />
     </div>
   );

@@ -8,7 +8,7 @@ import {
   Package,
   Inbox,
 } from 'lucide-react';
-import API from '../../api/axios';
+import { getAdminOrders, updateOrderStatus } from '../../api/orderService';
 
 /** Wholesale lifecycle. Order matters — it drives the progress steps. */
 const STATUSES = ['Pending', 'Processing', 'Dispatched', 'Delivered'];
@@ -18,40 +18,37 @@ const STATUS_STYLES = {
   processing: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
   dispatched: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30',
   delivered: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+  cancelled: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
+};
+
+/**
+ * Maps the database status enum onto the lifecycle labels used by the panel.
+ */
+const DB_STATUS_LABELS = {
+  PENDING: 'Pending',
+  CONFIRMED: 'Pending',
+  PROCESSING: 'Processing',
+  SHIPPED: 'Dispatched',
+  OUT_FOR_DELIVERY: 'Dispatched',
+  DELIVERED: 'Delivered',
+  PAID: 'Delivered',
+  CANCELLED: 'Cancelled',
+  FAILED: 'Cancelled',
 };
 
 function normalizeStatus(raw) {
-  const value = String(raw || 'Pending').toLowerCase();
-  return STATUSES.find((status) => status.toLowerCase() === value) || 'Pending';
+  const value = String(raw || 'PENDING').toUpperCase();
+  return DB_STATUS_LABELS[value] || 'Pending';
 }
 
-/** Demo rows so the panel is meaningful before any real order exists. */
-const SAMPLE_ORDERS = [
-  {
-    id: 'ORD-1042',
-    clientName: 'Mbeya Electronics Ltd',
-    destination: 'Mbeya Hub',
-    items: 12,
-    total: 486000,
-    status: 'Pending',
-  },
-  {
-    id: 'ORD-1041',
-    clientName: 'Kariakoo Traders',
-    destination: 'Dar es Salaam',
-    items: 40,
-    total: 1720000,
-    status: 'Processing',
-  },
-  {
-    id: 'ORD-1039',
-    clientName: 'Arusha Sound House',
-    destination: 'Arusha',
-    items: 8,
-    total: 296000,
-    status: 'Dispatched',
-  },
-];
+/** Counts every unit on the order, whatever shape the payload uses. */
+function countItems(raw) {
+  if (Array.isArray(raw.items)) {
+    return raw.items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+  }
+  const direct = Number(raw.quantity ?? raw.itemCount ?? 0);
+  return direct > 0 ? direct : 1;
+}
 
 function normalizeOrder(raw, index) {
   const total =
@@ -61,9 +58,10 @@ function normalizeOrder(raw, index) {
     Number(raw.price || 0) * Number(raw.quantity || 1);
   return {
     id: raw.id || raw._id || raw.orderId || `ORD-${1000 + index}`,
-    clientName: raw.clientName || raw.customerName || raw.name || 'Walk-in client',
-    destination: raw.destination || raw.location || raw.warehouseLocation || 'Dar es Salaam Hub',
-    items: Number(raw.items ?? raw.quantity ?? 1),
+    clientName: raw.customerName || raw.clientName || raw.name || 'Walk-in client',
+    destination:
+      raw.region || raw.destination || raw.location || raw.warehouseLocation || 'Dar es Salaam Hub',
+    items: countItems(raw),
     total: Number(total) || 0,
     status: normalizeStatus(raw.status),
   };
@@ -72,68 +70,51 @@ function normalizeOrder(raw, index) {
 export default function AdminWholesaleOrdersPanel({ onToast }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [usingFallback, setUsingFallback] = useState(false);
+  const [loadError, setLoadError] = useState(null);
   const [busyId, setBusyId] = useState(null);
   const [search, setSearch] = useState('');
 
   const load = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
-      const response = await API.get('/admin/orders');
-      const data = response.data?.orders || response.data?.data || response.data;
-      const list = Array.isArray(data) ? data : [];
-      setOrders(list.length ? list.map(normalizeOrder) : SAMPLE_ORDERS);
-      setUsingFallback(list.length === 0);
+      const list = await getAdminOrders();
+      setOrders(list.map(normalizeOrder));
     } catch (err) {
       console.error('Failed to load wholesale orders:', err);
-      setOrders(SAMPLE_ORDERS);
-      setUsingFallback(true);
+      setOrders([]);
+      setLoadError('Could not reach the order service. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    let isMounted = true;
-
-    const loadInitial = async () => {
-      try {
-        const response = await API.get('/admin/orders');
-        const data = response.data?.orders || response.data?.data || response.data;
-        const list = Array.isArray(data) ? data : [];
-        if (isMounted) {
-          setOrders(list.length ? list.map(normalizeOrder) : SAMPLE_ORDERS);
-          setUsingFallback(list.length === 0);
-        }
-      } catch (err) {
-        console.error('Failed to load wholesale orders:', err);
-        if (isMounted) {
-          setOrders(SAMPLE_ORDERS);
-          setUsingFallback(true);
-        }
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
-    loadInitial();
-    return () => {
-      isMounted = false;
-    };
+    load();
   }, []);
 
+  /**
+   * Persists the new stage to the database. The backend broadcasts the change
+   * to every client watching live route tracking, so the buyer's view updates
+   * straight away.
+   */
   const updateStatus = async (order, status) => {
     setBusyId(order.id);
     try {
-      await API.patch(`/admin/orders/${order.id}`, { status });
+      const saved = await updateOrderStatus(order.id, status);
+      setOrders((current) =>
+        current.map((item) =>
+          item.id === order.id ? { ...item, status: normalizeStatus(saved?.status || status) } : item
+        )
+      );
       onToast?.(`Order ${order.id} marked ${status}.`);
     } catch (err) {
       console.error('Order status update failed:', err);
-      onToast?.('Status updated locally — server unreachable.', 'error');
-    } finally {
-      setOrders((current) =>
-        current.map((item) => (item.id === order.id ? { ...item, status } : item))
+      onToast?.(
+        err?.response?.data?.message || 'Could not update the order status. Please try again.',
+        'error'
       );
+    } finally {
       setBusyId(null);
     }
   };
@@ -149,20 +130,25 @@ export default function AdminWholesaleOrdersPanel({ onToast }) {
     );
   }, [orders, search]);
 
+  const summaryStatuses = useMemo(() => {
+    const extra = orders.some((order) => order.status === 'Cancelled') ? ['Cancelled'] : [];
+    return [...STATUSES, ...extra];
+  }, [orders]);
+
   const counts = useMemo(
     () =>
-      STATUSES.reduce((acc, status) => {
+      summaryStatuses.reduce((acc, status) => {
         acc[status] = orders.filter((order) => order.status === status).length;
         return acc;
       }, {}),
-    [orders]
+    [orders, summaryStatuses]
   );
 
   return (
     <div className="space-y-6">
       {/* Status summary */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {STATUSES.map((status) => (
+        {summaryStatuses.map((status) => (
           <div
             key={status}
             className="bg-slate-800/60 border border-slate-700/60 rounded-2xl px-4 py-3"
@@ -199,10 +185,10 @@ export default function AdminWholesaleOrdersPanel({ onToast }) {
         </button>
       </div>
 
-      {usingFallback ? (
+      {loadError ? (
         <p className="flex items-center gap-2 text-[11px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-2.5">
           <AlertCircle size={14} />
-          Showing sample orders — no live wholesale orders returned by the server.
+          {loadError}
         </p>
       ) : null}
 

@@ -52,7 +52,14 @@ export const AuthProvider = ({ children }) => {
         // state / blank screen).
         const response = await API.get('/auth/me', { timeout: 8000 });
         if (!cancelled) {
-          setUser(response.data?.user || response.data || storedUser);
+          // The endpoint answers with `{ success, data: profile }`, so the
+          // profile lives under `data`. Reading the wrong level would leave
+          // `user.role` undefined and break every role-guarded route.
+          const profile = response.data?.user || response.data?.data || storedUser;
+
+          if (profile && typeof profile === 'object') {
+            setUser({ ...profile, fullName: profile.fullName || profile.name });
+          }
         }
       } catch (error) {
         const status = error.response?.status;

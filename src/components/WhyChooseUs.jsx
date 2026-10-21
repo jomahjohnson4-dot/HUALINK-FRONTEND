@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ShieldCheck, Truck, Warehouse, Lock, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { getFaqs } from '../api/faqService';
 
 /**
  * Icon + accent tone per highlight. The order matches the
@@ -41,10 +42,40 @@ const FEATURES = [
 ];
 
 export default function WhyChooseUs() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const features = t('whyChoose.features', { returnObjects: true });
-  const faqs = t('faq.items', { returnObjects: true });
+  const localeFaqs = t('faq.items', { returnObjects: true });
+  const [dbFaqs, setDbFaqs] = useState(null);
   const [openFaq, setOpenFaq] = useState(0);
+
+  /**
+   * FAQ copy is owned by the admin settings panel and lives in the database.
+   * The locale files stay as the fallback for when the API cannot be reached.
+   */
+  useEffect(() => {
+    let isMounted = true;
+
+    const load = async () => {
+      try {
+        const lang = String(i18n.language || 'en').split('-')[0];
+        const list = await getFaqs({ lang });
+        if (isMounted && Array.isArray(list) && list.length) {
+          setDbFaqs(
+            list.map((faq) => ({ question: faq.question, answer: faq.answer || '' }))
+          );
+        }
+      } catch (error) {
+        console.error('Failed to load FAQs from the API:', error);
+      }
+    };
+
+    load();
+    return () => {
+      isMounted = false;
+    };
+  }, [i18n.language]);
+
+  const faqs = Array.isArray(dbFaqs) && dbFaqs.length ? dbFaqs : localeFaqs;
 
   const toggleFaq = (index) => {
     setOpenFaq((current) => (current === index ? null : index));

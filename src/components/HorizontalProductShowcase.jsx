@@ -32,55 +32,65 @@ function ShowcaseCard({ product, index }) {
 
   return (
     <div
-      className="animate-fade-in-up min-w-[260px] max-w-[280px] shrink-0 bg-white border border-gray-200 rounded-2xl p-3.5 shadow-sm hover:shadow-xl hover:-translate-y-1.5 hover:scale-[1.03] transition-all duration-300 ease-out cursor-pointer group relative"
+      className="animate-fade-in-up min-w-[260px] max-w-[280px] shrink-0 bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1.5 hover:scale-[1.03] transition-all duration-300 ease-out cursor-pointer group relative flex flex-col"
       style={{ animationDelay: `${(index % 8) * 60}ms` }}
     >
-      {/* Top-Left Badge: bright blue discount takes priority over brand badge */}
-      {discountPercent > 0 ? (
-        <span className="absolute top-5 left-5 z-10 bg-[#0070DC] text-white text-[10px] font-black px-2 py-1 rounded shadow-sm uppercase tracking-wide pointer-events-none">
-          {discountPercent}% OFF
-        </span>
-      ) : product.badge ? (
-        <span className="absolute top-5 left-5 z-10 bg-[#E50914] text-white text-[10px] font-black px-2 py-1 rounded shadow-sm uppercase tracking-wide pointer-events-none">
-          {product.badge}
-        </span>
-      ) : null}
-
-      {/* Clean Borderless Product Image — subject isolated on the card canvas */}
-      <div className="relative h-52 bg-white rounded-xl overflow-hidden mb-3 flex items-center justify-center p-3">
+      {/* Edge-to-edge image canvas: full square, zero inner padding */}
+      <div className="relative w-full aspect-square overflow-hidden bg-gray-50 rounded-t-2xl">
         <img
           src={product.image || product.thumbnail || product.thumbnails?.[0] || FALLBACK_IMAGE}
           alt={product.name}
           loading="lazy"
-          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 ease-out"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ease-out"
           onError={(e) => {
             e.target.src = FALLBACK_IMAGE;
           }}
         />
-      </div>
 
-      {/* Product Details */}
-      <h3 className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug mb-2 min-h-[2.5rem] group-hover:text-[#0070DC] transition-colors">
-        {product.name}
-      </h3>
+        {/* Badges pinned over the top-left corner of the image */}
+        <div className="absolute top-2 left-2 z-10 flex items-center gap-1 pointer-events-none">
+          {discountPercent > 0 ? (
+            <span className="bg-[#DC2626] text-white text-[11px] font-bold px-2 py-0.5 rounded shadow-md">
+              {discountPercent}% OFF
+            </span>
+          ) : product.badge ? (
+            <span className="bg-[#0070DC] text-white text-[11px] font-bold px-2 py-0.5 rounded shadow-md">
+              {product.badge}
+            </span>
+          ) : null}
 
-      {/* Price Layout: "From TSh ..." */}
-      <div className="flex items-baseline gap-1.5 mb-1.5 flex-wrap">
-        <span className="text-xs font-extrabold text-gray-900 tracking-tight">
-          From {product.price}
-        </span>
-        {product.originalPrice && (
-          <span className="text-[10px] font-medium text-gray-400 line-through">
-            {product.originalPrice}
+          <span className="bg-emerald-600 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded shadow-md">
+            Local Stock
           </span>
-        )}
+        </div>
       </div>
 
-      {/* Yellow Star Rating */}
-      <div className="flex items-center gap-1 text-[11px] text-gray-500">
-        <Star size={12} className="text-amber-400 fill-amber-400" />
-        <span className="font-bold text-gray-800">{product.rating || '4.7'}</span>
-        <span className="text-gray-400">({product.reviewsCount || '412'})</span>
+      {/* Card content below the image */}
+      <div className="flex-1 flex flex-col justify-between p-3">
+        <h3 className="text-sm font-medium text-gray-800 line-clamp-2 leading-snug group-hover:text-red-600 transition-colors">
+          {product.name}
+        </h3>
+
+        <div className="mt-2">
+          <div className="flex items-baseline gap-1.5 flex-wrap">
+            <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400">
+              From
+            </span>
+            <span className="text-base font-bold text-red-600">{product.price}</span>
+            {product.originalPrice && (
+              <span className="text-xs text-gray-400 line-through">{product.originalPrice}</span>
+            )}
+          </div>
+
+          {/* Star rating + sold count */}
+          <div className="flex items-center gap-1 text-[11px] text-gray-500 mt-1">
+            <Star size={12} className="text-amber-400 fill-amber-400" />
+            <span className="font-bold text-gray-800">{product.rating || '4.7'}</span>
+            <span className="text-gray-400">
+              ({product.reviewsCount ? `${product.reviewsCount}+ sold` : '1.2k+ sold'})
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -19,6 +19,7 @@ import { normalizeProduct } from '../components/productsData';
 import PaymentMethodsPanel from '../components/PaymentMethodsPanel';
 import PaymentModal from '../components/modals/PaymentModal';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import {
   createOrderService,
   initiatePaymentService,
@@ -64,6 +65,7 @@ export default function ProductDetails() {
   const { id } = useParams();
   const catalogProduct = getCatalogProduct(id);
   const { user, isAuthenticated } = useAuth();
+  const { addToCart, openCart } = useCart();
 
   const [apiState, setApiState] = useState({ id: null, product: null, checked: false });
   const [quantity, setQuantity] = useState(1);
@@ -298,10 +300,11 @@ export default function ProductDetails() {
 
   const breadcrumbItems = ['Home', product.category, product.name];
 
+  // Adds the product to the shared cart and opens the drawer so the updated
+  // basket count is visible straight away.
   const handleAddToCart = () => {
-    window.location.href = `/shop?add=${product.id}&qty=${quantity}${
-      activeColor ? `&color=${activeColor}` : ''
-    }`;
+    addToCart(product, quantity);
+    openCart();
   };
 
   return (

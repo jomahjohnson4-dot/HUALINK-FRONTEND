@@ -1,10 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Filter, ShoppingCart, Eye, RefreshCw, Check } from 'lucide-react';
+import { Search, Filter, ShoppingCart, Eye, RefreshCw, Check, AlertCircle } from 'lucide-react';
+import { getProducts } from '../api/productService';
+import { useCart } from '../context/CartContext';
 
-export default function Shop({ onAddToCart }) {
+export default function Shop() {
+  const { addToCart, openCart } = useCart();
+
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [addedId, setAddedId] = useState(null);
@@ -18,46 +23,43 @@ export default function Shop({ onAddToCart }) {
     'TeKeL Branding & Print'
   ];
 
-  // Fetch products from Express Backend
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/products');
-        if (response.ok) {
-          const data = await response.json();
-          setProducts(data);
-        } else {
-          // Fallback mock data if backend API is offline during UI testing
-          setProducts(mockProducts);
-        }
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        setProducts(mockProducts);
-      } finally {
-        setLoading(false);
-      }
-    };
+  /**
+   * Fetch live inventory straight from the backend. Category and search are
+   * pushed to the server so the results always reflect the database.
+   */
+  const fetchProducts = useCallback(async (category, search) => {
+    setLoading(true);
+    setError(null);
 
-    fetchProducts();
+    try {
+      const { products: list } = await getProducts({
+        category: category && category !== 'All' ? category : undefined,
+        search: search?.trim() || undefined,
+        availableOnly: true,
+        limit: 200,
+      });
+      setProducts(list);
+    } catch (err) {
+      console.error('Error fetching products:', err);
+      setProducts([]);
+      setError('Could not reach the inventory service. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  // Initial load
+  useEffect(() => {
+    fetchProducts(selectedCategory, searchQuery);
+  }, [fetchProducts, selectedCategory, searchQuery]);
 
   // Handle Add To Cart with button feedback
   const handleAddClick = (product) => {
-    if (onAddToCart) {
-      onAddToCart(product, 1);
-    }
+    addToCart(product, 1);
+    openCart();
     setAddedId(product.id);
     setTimeout(() => setAddedId(null), 1500);
   };
-
-  // Filter products by category and search term
-  const filteredProducts = products.filter((product) => {
-    const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          product.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
 
   return (
     <div className="bg-slate-50 min-h-screen font-sans text-slate-900 py-10">
@@ -117,13 +119,26 @@ export default function Shop({ onAddToCart }) {
             <RefreshCw size={28} className="animate-spin text-red-600" />
             <p className="text-xs font-bold text-slate-500">Loading inventory from server...</p>
           </div>
-        ) : filteredProducts.length === 0 ? (
+        ) : error ? (
+          <div className="py-20 text-center bg-white rounded-3xl border border-slate-200 space-y-3">
+            <AlertCircle size={32} className="mx-auto text-rose-500" />
+            <p className="text-sm font-bold text-slate-700">{error}</p>
+            <button
+              type="button"
+              onClick={() => fetchProducts(selectedCategory, searchQuery)}
+              className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-colors cursor-pointer"
+            >
+              <RefreshCw size={13} />
+              <span>Retry</span>
+            </button>
+          </div>
+        ) : products.length === 0 ? (
           <div className="py-20 text-center bg-white rounded-3xl border border-slate-200">
             <p className="text-sm font-bold text-slate-600">No products found matching your search criteria.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
+            {products.map((product) => (
               <div 
                 key={product.id}
                 className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-xs hover:shadow-xl hover:border-red-500/30 transition-all duration-300 flex flex-col justify-between group"
@@ -158,7 +173,7 @@ export default function Shop({ onAddToCart }) {
                     <div>
                       <span className="text-[10px] font-bold uppercase text-slate-400 block">Price</span>
                       <span className="text-base font-black text-slate-900">
-                        {Number(product.price || 10000).toLocaleString()} TZS
+                        {Number(product.price || 0).toLocaleString()} TZS
                       </span>
                     </div>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -212,43 +227,3 @@ export default function Shop({ onAddToCart }) {
     </div>
   );
 }
-
-// Temporary Mock Data for testing before API connection
-const mockProducts = [
-  {
-    id: "1",
-    name: "Enterprise Ethernet Router Switch",
-    category: "Networking Maintenance",
-    price: 450000,
-    stock: 12,
-    description: "High-speed multi-port rackmount switch for corporate network configurations.",
-    image: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: "2",
-    name: "TeKeL Corporate Identity Package",
-    category: "TeKeL Branding & Print",
-    price: 250000,
-    stock: 50,
-    description: "Custom logo design, stationery suites, promotional flyer graphics, and brand book.",
-    image: "https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: "3",
-    name: "Ergonomic Office Executive Desk",
-    category: "Office Furniture",
-    price: 850000,
-    stock: 5,
-    description: "Heavy-duty wooden desk with cable management routes for executive offices.",
-    image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: "4",
-    name: "Cisco Compatible Cat6 Patch Panel",
-    category: "Networking Maintenance",
-    price: 120000,
-    stock: 24,
-    description: "24-Port rackmount Ethernet patch panel with grounding wire.",
-    image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=800"
-  }
-];

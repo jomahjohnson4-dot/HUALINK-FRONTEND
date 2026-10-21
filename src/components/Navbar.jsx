@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Store,
@@ -16,8 +16,12 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useLanguage, LANGUAGES } from '../hooks/useLanguage';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import CartDrawer from './CartDrawer';
+import CategoryMegaMenu from './CategoryMegaMenu';
+import NotificationBell from './NotificationBell';
 import Logo from './Logo';
+import { hualinkCategories } from '../data/categories';
 
 // Top sub-links under the logo (Alibaba style)
 const SUB_LINKS = [
@@ -26,18 +30,55 @@ const SUB_LINKS = [
   { id: 'hualinkServices', labelKey: 'common.hualinkServices', to: '/services' },
 ];
 
-export default function Navbar({ cartItems = [], onUpdateQuantity, onRemoveItem }) {
+export default function Navbar({ user: userProp }) {
   const { t } = useTranslation();
   const { currentLang, changeLanguage } = useLanguage();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user: authUser, isAuthenticated, logout } = useAuth();
+  const { totalItems, openCart } = useCart();
   const navigate = useNavigate();
 
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  const user = userProp ?? authUser;
+
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
 
-  // Calculate total item count in cart
-  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+  // ---- "All Categories" hover mega-flyout ----
+  const [isMegaOpen, setIsMegaOpen] = useState(false);
+  const [megaDepartment, setMegaDepartment] = useState(hualinkCategories[0].id);
+  const megaCloseTimer = useRef(null);
+
+  // Clear any pending close timer when the header unmounts.
+  useEffect(() => () => clearTimeout(megaCloseTimer.current), []);
+
+  // Open immediately on hover (and cancel a scheduled close while at it).
+  const openMegaMenu = () => {
+    clearTimeout(megaCloseTimer.current);
+    setIsMegaOpen(true);
+  };
+
+  // Leaving the trigger/menu schedules the close so the cursor can cross the
+  // small gap under the button without the menu flickering shut.
+  const scheduleMegaClose = () => {
+    clearTimeout(megaCloseTimer.current);
+    megaCloseTimer.current = setTimeout(() => setIsMegaOpen(false), 200);
+  };
+
+  // Click toggles the same menu for touch/keyboard users.
+  const toggleMegaMenu = () => {
+    clearTimeout(megaCloseTimer.current);
+    setIsMegaOpen((open) => !open);
+  };
+
+  // Sub-category pick: close the menu, then deep-link into the marketplace
+  // with the live filter applied (/shop?category=<slug>).
+  const handleMegaSubcategory = (subcategory) => {
+    clearTimeout(megaCloseTimer.current);
+    setIsMegaOpen(false);
+    navigate(`/shop?category=${encodeURIComponent(subcategory.slug)}`);
+  };
+
+  // Calculate total item count in cart — every unit counts, not every line.
+  const cartCount = totalItems;
 
   // Normalize user role
   const userRole = user?.role?.toUpperCase();
@@ -70,6 +111,49 @@ export default function Navbar({ cartItems = [], onUpdateQuantity, onRemoveItem 
             <div className="flex items-center gap-2 text-xs font-medium text-gray-700">
               {SUB_LINKS.map((link) => {
                 const Icon = link.icon;
+
+                // "All Categories" owns the floating mega-flyout menu.
+                if (link.id === 'allCategories') {
+                  return (
+                    <div
+                      key={link.id}
+                      className="relative"
+                      onMouseEnter={openMegaMenu}
+                      onMouseLeave={scheduleMegaClose}
+                    >
+                      <button
+                        type="button"
+                        onClick={toggleMegaMenu}
+                        aria-haspopup="menu"
+                        aria-expanded={isMegaOpen}
+                        className={`flex items-center gap-1.5 px-4 py-1.5 border rounded-full text-xs font-semibold transition-all cursor-pointer shrink-0 ${
+                          isMegaOpen
+                            ? 'border-[#E50914] bg-red-50 text-[#E50914]'
+                            : 'border-gray-200 bg-gray-100 text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        {Icon && <Icon size={14} />}
+                        <span>{t(link.labelKey)}</span>
+                        <ChevronDown
+                          size={12}
+                          className={`text-gray-400 transition-transform ${
+                            isMegaOpen ? 'rotate-180' : ''
+                          }`}
+                        />
+                      </button>
+
+                      {isMegaOpen && (
+                        <CategoryMegaMenu
+                          activeDepartmentId={megaDepartment}
+                          onDepartmentChange={setMegaDepartment}
+                          onActivateDepartment={setMegaDepartment}
+                          onSubcategorySelect={handleMegaSubcategory}
+                        />
+                      )}
+                    </div>
+                  );
+                }
+
                 return (
                   <button
                     key={link.id}
@@ -135,17 +219,20 @@ export default function Navbar({ cartItems = [], onUpdateQuantity, onRemoveItem 
 
             {/* Cart Icon */}
             <button
-              onClick={() => setIsCartOpen(true)}
+              onClick={openCart}
               className="relative w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center bg-gray-50 text-gray-900 hover:text-brand-red hover:bg-red-50 transition-all cursor-pointer"
               aria-label="Open Order Cart"
             >
               <ShoppingCart size={17} />
               {cartCount > 0 && (
-                <span className="absolute top-0 right-0 bg-brand-red text-white text-[10px] font-black w-3 h-3 rounded-full flex items-center justify-center shadow-xs">
-                  {cartCount}
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-brand-red text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-xs tabular-nums">
+                  {cartCount > 99 ? '99+' : cartCount}
                 </span>
               )}
             </button>
+
+            {/* System Activity Bell — live alerts for orders, inquiries, catalogue */}
+            <NotificationBell />
 
             {/* Sign In / Register */}
             {isAuthenticated ? (
@@ -267,13 +354,7 @@ export default function Navbar({ cartItems = [], onUpdateQuantity, onRemoveItem 
       </header>
 
       {/* Slide-over Cart Drawer Component */}
-      <CartDrawer
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        cartItems={cartItems}
-        onUpdateQuantity={onUpdateQuantity}
-        onRemoveItem={onRemoveItem}
-      />
+      <CartDrawer />
     </>
   );
 }

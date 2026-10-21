@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate, Link } from 'react-router-dom';
 import { I18nextProvider } from 'react-i18next';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
+import { CartProvider, useCart } from './context/CartContext';
 
 import i18n from './i18n';
 import Navbar from './components/Navbar';
@@ -13,6 +15,8 @@ import Products from './pages/Products';
 import Marketplace from './pages/Marketplace';
 import ProductDetail from './pages/ProductDetail';
 import Orders from './pages/Orders';
+import OrderTracking from './pages/OrderTracking';
+import MapPreview from './pages/__MapPreview';
 import Users from './pages/Users';
 import Register from './pages/Register';
 import Login from './pages/Login';
@@ -28,6 +32,7 @@ import ProductDetails from './pages/ProductDetails';
 import Checkout from './pages/Checkout'; 
 import Documentation from './pages/Documentation';
 import HelpCenter from './pages/HelpCenter';
+import Notifications from './pages/Notifications';
 
 // Dashboard Views with fallback resolvers for default & named exports
 import AdminDashboardImport, { AdminDashboard as AdminDashboardNamed } from './pages/dashboards/AdminDashboard';
@@ -123,9 +128,13 @@ const ProviderChatPage = ({ user }) => {
 };
 
 // Main App Layout Wrapper
-const AppLayout = ({ cartItems, handleUpdateQuantity, handleRemoveItem, handleClearCart, handleAddToCart, user }) => {
+const AppLayout = ({ user }) => {
   const location = useLocation();
   const navigate = useNavigate();
+
+  // The cart lives in the shared context so every surface (header badge,
+  // drawer, cards, quick view) reads and mutates the same basket.
+  const { cartItems, clearCart } = useCart();
 
   // Active tab state helper for MobileBottomNav matching current route
   const getActiveTab = () => {
@@ -161,19 +170,14 @@ const AppLayout = ({ cartItems, handleUpdateQuantity, handleRemoveItem, handleCl
       <div>
         {/* Hide the full navigation bar on auth pages so only the clean minimal auth header remains */}
         {location.pathname !== '/login' && location.pathname !== '/register' && location.pathname !== '/forgot-password' && (
-          <Navbar 
-            cartItems={cartItems} 
-            onUpdateQuantity={handleUpdateQuantity} 
-            onRemoveItem={handleRemoveItem}
-            user={user}
-          />
+          <Navbar user={user} />
         )}
         <Routes>
           <Route path="/" element={<Landing />} />
           
           {/* Products & Marketplace Routes */}
-          <Route path="/shop" element={<Products onAddToCart={handleAddToCart} />} />
-          <Route path="/marketplace" element={<Marketplace onAddToCart={handleAddToCart} />} />
+          <Route path="/shop" element={<Products />} />
+          <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="/top-ranking" element={<TopRankingPage />} />
           <Route path="/shops" element={<ShopsPage />} />
@@ -195,13 +199,20 @@ const AppLayout = ({ cartItems, handleUpdateQuantity, handleRemoveItem, handleCl
           {/* Orders & Checkout Routes */}
           <Route path="/orders" element={<Orders cartItems={cartItems} user={user} />} />
           <Route path="/cart" element={<Orders cartItems={cartItems} user={user} />} />
+
+          {/* TEMP preview route */}
+          <Route path="/__map-preview" element={<MapPreview />} />
+
+          {/* Live route tracking — the interactive Mapbox delivery view */}
+          <Route path="/tracking" element={<OrderTracking />} />
+          <Route path="/order/:id" element={<OrderTracking />} />
           <Route 
             path="/checkout" 
             element={
               <Checkout 
                 cartItems={cartItems} 
                 user={user} 
-                onClearCart={handleClearCart} 
+                onClearCart={clearCart} 
               />
             } 
           />
@@ -210,6 +221,9 @@ const AppLayout = ({ cartItems, handleUpdateQuantity, handleRemoveItem, handleCl
           <Route path="/docs" element={<Documentation />} />
           <Route path="/docs/help" element={<HelpCenter />} />
           <Route path="/help" element={<HelpCenter />} />
+
+          {/* Notification Centre — the full activity feed behind the header bell */}
+          <Route path="/notifications" element={<Notifications />} />
 
           {/* Auth & Access Control Routes */}
           <Route path="/register" element={<Register />} />
@@ -317,69 +331,14 @@ const AppLayout = ({ cartItems, handleUpdateQuantity, handleRemoveItem, handleCl
 function AppContent() {
   const { user } = useAuth();
 
-  // Lazy-initialize cart items from localStorage
-  const [cartItems, setCartItems] = useState(() => {
-    try {
-      const savedCart = localStorage.getItem('hualink_cart');
-      return savedCart ? JSON.parse(savedCart) : [];
-    } catch (err) {
-      console.error('Failed to parse cart items from local storage:', err);
-      return [];
-    }
-  });
-
-  // Sync state changes with localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('hualink_cart', JSON.stringify(cartItems));
-    } catch (err) {
-      console.error('Failed to save cart to local storage:', err);
-    }
-  }, [cartItems]);
-
-  const handleAddToCart = (product, quantity = 1) => {
-    setCartItems((prevItems) => {
-      const prodId = product.id || product._id;
-      const existingIndex = prevItems.findIndex((item) => (item.id || item._id) === prodId);
-      if (existingIndex > -1) {
-        const updated = [...prevItems];
-        updated[existingIndex].quantity += quantity;
-        return updated;
-      }
-      return [...prevItems, { ...product, id: prodId, quantity }];
-    });
-  };
-
-  const handleUpdateQuantity = (id, newQuantity) => {
-    if (newQuantity <= 0) {
-      handleRemoveItem(id);
-      return;
-    }
-    setCartItems((prevItems) =>
-      prevItems.map((item) => ((item.id || item._id) === id ? { ...item, quantity: newQuantity } : item))
-    );
-  };
-
-  const handleRemoveItem = (id) => {
-    setCartItems((prevItems) => prevItems.filter((item) => (item.id || item._id) !== id));
-  };
-
-  const handleClearCart = () => {
-    setCartItems([]);
-    localStorage.removeItem('hualink_cart');
-  };
-
   return (
     <I18nextProvider i18n={i18n}>
       <Router>
-        <AppLayout 
-        cartItems={cartItems}
-        handleUpdateQuantity={handleUpdateQuantity}
-        handleRemoveItem={handleRemoveItem}
-        handleClearCart={handleClearCart}
-        handleAddToCart={handleAddToCart}
-        user={user}
-      />
+        <ToastProvider>
+          <CartProvider>
+            <AppLayout user={user} />
+          </CartProvider>
+        </ToastProvider>
       </Router>
     </I18nextProvider>
   );
