@@ -155,6 +155,34 @@
       }
     ]
   },
+  "faq": {
+    "eyebrow": "支持",
+    "title": "常见",
+    "titleHighlight": "问题",
+    "subtitle": "关于通过 Hualink Distribution 下单、配送和付款所需了解的一切。",
+    "items": [
+      {
+        "question": "华联分销（Hualink Distribution）是什么？供应哪些产品？",
+        "answer": "华联分销是位于坦桑尼亚及东非地区的电子产品与消费品批发分销网络，主要供应充电器、音频设备、智能手机及家用电器。"
+      },
+      {
+        "question": "华联的区域仓储中心位于何处？",
+        "answer": "我们的核心仓储中心设在姆贝亚（Mbeya）和达累斯萨拉姆（Dar es Salaam），确保快捷发货至坦桑尼亚全境。"
+      },
+      {
+        "question": "从华联仓储中心发货需要多长时间？",
+        "answer": "从区域中心发出的订单，主要城市通常在 1–3 个工作日内送达，偏远地区为 3–5 个工作日；货物离开仓库后，我们会通过短信或电子邮件发送实时追踪链接。"
+      },
+      {
+        "question": "支持哪些付款方式？",
+        "answer": "我们支持安全的直接付款，包括本地移动支付转账（M-Pesa、Tigo Pesa、Airtel Money）、银行电汇以及经过验证的信函付款。"
+      },
+      {
+        "question": "所有电子产品都有保修吗？",
+        "answer": "是的，所有 100% 已验证的门店和产品均享有标准制造商保修，以及针对确认缺陷的保证换货政策。"
+      }
+    ]
+  },
   "categoryDrawer": {
     "header": "为你推荐分类",
     "apparel": "服装与配饰",
@@ -219,6 +247,58 @@
       "item3": "POS 系统",
       "item4": "太阳能套装",
       "item5": "监控摄像头"
+    }
+  },
+  "services": {
+    "eyebrow": "Hualink Distribution",
+    "title": "Hualink 服务与全球贸易",
+    "subtitle": "端到端的国际采购、清关、货运与仓储解决方案，连接中国、迪拜、亚洲和东非。",
+    "availableCount": "共 {{count}} 项服务",
+    "whatsapp": "通过 WhatsApp 咨询",
+    "chatInApp": "应用内聊天",
+    "badge": {
+      "global": "全球服务",
+      "regional": "区域中心"
+    },
+    "whatsappMessage": "您好，Hualink Distribution！我想咨询{{title}}，请分享详细信息和价格。",
+    "chatContext": "咨询：{{title}}",
+    "items": {
+      "freight": {
+        "title": "全球货运代理（空运与海运）",
+        "subtitle": "连接中国、迪拜、亚洲与东非（姆贝亚及达累斯萨拉姆）的快捷空运与海运物流。",
+        "features": [
+          "门到门派送",
+          "实时货物追踪",
+          "大宗货物与集装箱处理"
+        ]
+      },
+      "customs": {
+        "title": "清关与 TRA 关税咨询",
+        "subtitle": "为大批量进口提供快速 TRA 合规、关税估价与文件支持。",
+        "features": [
+          "TRA 合规与清关",
+          "准确的关税计算",
+          "单一窗口文件支持"
+        ]
+      },
+      "sourcing": {
+        "title": "采购与工厂质量检验",
+        "subtitle": "直接工厂验证、装运前检验及样品测试，覆盖经核实的中国及全球制造商。",
+        "features": [
+          "装运前质量审核",
+          "缺陷检查",
+          "经核实的工厂采购"
+        ]
+      },
+      "hub": {
+        "title": "区域库存中心配送（姆贝亚及达累斯萨拉姆）",
+        "subtitle": "覆盖坦桑尼亚及邻近东非地区的本地批发仓储与快速配送网络。",
+        "features": [
+          "当日发往区域中心",
+          "大宗库存存储",
+          "司机路线实时追踪"
+        ]
+      }
     }
   }
 }

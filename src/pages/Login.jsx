@@ -14,7 +14,7 @@ import {
   CheckCircle2,
   Globe,
 } from 'lucide-react';
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import Logo from '../components/Logo';
 import api from '../api/axios';
 import { useTranslation } from 'react-i18next';
@@ -40,9 +40,55 @@ export default function Login({ onLoginSuccess }) {
   const [fallbackBanner, setFallbackBanner] = useState(false);
   const { t, i18n } = useTranslation();
 
+  // Google OAuth must only render inside <GoogleOAuthProvider>. Rendering
+  // <GoogleLogin> without the provider throws during render, which unmounts
+  // the whole tree and produces the blank /login screen. It is also skipped
+  // when no client id has been configured.
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+
   const handleLanguageChange = (lang) => {
     i18n.changeLanguage(lang);
     setIsLangOpen(false);
+  };
+
+  // ------------------------------------------------------------------
+  // One-Click Demo Admin Login: no backend required. Writes the auth
+  // state (role: 'admin' + token) to localStorage, notifies the
+  // AuthContext listener and jumps straight to /admin.
+  // ------------------------------------------------------------------
+  const handleAdminLogin = () => {
+    const adminUser = {
+      id: 'demo_admin',
+      name: 'HUALINK Admin',
+      email: 'admin@hualink.local',
+      role: 'admin',
+      isLoggedIn: true,
+      demo: true,
+      signedInAt: new Date().toISOString(),
+    };
+    const adminToken = 'demo_admin_token';
+
+    try {
+      localStorage.setItem('hualink_token', adminToken);
+      localStorage.setItem('hualink_user', JSON.stringify(adminUser));
+      localStorage.setItem('hualink_auth', 'active');
+      // Pre-unlock the admin passcode layer so access is truly one-click.
+      localStorage.setItem('isHualinkAdmin', 'true');
+    } catch {
+      // Storage unavailable — the in-memory session still applies.
+    }
+
+    window.dispatchEvent(
+      new CustomEvent('hualink:session-change', {
+        detail: { user: adminUser, token: adminToken },
+      })
+    );
+
+    if (onLoginSuccess) {
+      onLoginSuccess(adminUser);
+    }
+
+    navigate('/admin', { replace: true });
   };
 
   // ------------------------------------------------------------------
@@ -324,7 +370,7 @@ export default function Login({ onLoginSuccess }) {
         {/* Right Column - Welcome Back Form */}
         <div className="flex flex-col h-full min-h-[550px] p-8 md:p-12">
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-5">
             <h2 className="text-3xl font-extrabold text-gray-900 mb-1">
               Welcome Back
             </h2>
@@ -333,9 +379,27 @@ export default function Login({ onLoginSuccess }) {
             </p>
           </div>
 
+          {/* One-Click Demo Admin Access (prominent, no backend needed) */}
+          <button
+            type="button"
+            onClick={handleAdminLogin}
+            className="w-full mb-5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg shadow-slate-900/20 border border-slate-700 flex items-center justify-center gap-2 text-sm tracking-wide transition-all cursor-pointer"
+          >
+            <ShieldCheck size={17} className="text-emerald-400" />
+            LOGIN AS ADMIN
+            <ArrowRight size={16} />
+          </button>
+
           {error && (
             <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-sm">
               {error}
+            </div>
+          )}
+
+          {googleLoading && (
+            <div className="mb-4 p-3 bg-slate-50 border border-slate-200 text-slate-600 rounded-xl text-sm flex items-center gap-2">
+              <span className="h-3.5 w-3.5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+              Verifying with Google...
             </div>
           )}
 
@@ -347,41 +411,33 @@ export default function Login({ onLoginSuccess }) {
             </div>
           )}
 
-          {/* Google OAuth Button (real backend verification) */}
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={handleGoogleFailure}
-            theme="outline"
-            buttonsColor="white"
-            width="320"
-            text="signin_with"
-            size="large"
-            logoAlight="center"
-          >
-            {({ disabled, onClick }) => (
-              <button
-                onClick={onClick}
-                disabled={disabled || googleLoading}
-                className="w-full bg-white border border-gray-300 hover:bg-gray-50 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-3 text-sm text-gray-700 shadow-sm transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                <span>
-                  <img
-                    src="https://www.svgrepo.com/show/475656/google-color.svg"
-                    className="w-5 h-5"
-                    alt="Google"
-                  />
-                </span>
-                <span>{googleLoading ? 'Verifying with Google...' : 'Continue with Google'}</span>
-              </button>
-            )}
-          </GoogleLogin>
+          {/* Google OAuth Button (real backend verification).
+              Only rendered when a client id is configured, and always inside
+              <GoogleOAuthProvider> — otherwise the component throws and the
+              page renders blank. */}
+          {googleClientId ? (
+            <GoogleOAuthProvider clientId={googleClientId}>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleFailure}
+                theme="outline"
+                buttonsColor="white"
+                width="320"
+                text="signin_with"
+                size="large"
+                logo_alignment="center"
+              />
+            </GoogleOAuthProvider>
+          ) : null}
 
           {/* Divider */}
-          <div className="flex items-center gap-3 my-5">
-            <div className="h-px bg-gray-200 flex-1"></div>
-            <span className="text-xs font-bold text-gray-400">OR</span>
-            <div className="h-px bg-gray-200 flex-1"></div>
-          </div>
+          {googleClientId ? (
+            <div className="flex items-center gap-3 my-5">
+              <div className="h-px bg-gray-200 flex-1"></div>
+              <span className="text-xs font-bold text-gray-400">OR</span>
+              <div className="h-px bg-gray-200 flex-1"></div>
+            </div>
+          ) : null}
 
           {/* Auth Form */}
           <form className="space-y-5" onSubmit={handleSubmit}>

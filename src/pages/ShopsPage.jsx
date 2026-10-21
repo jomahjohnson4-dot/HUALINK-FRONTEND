@@ -1,34 +1,67 @@
-import { Link } from 'react-router-dom';
-import { Store, ShieldCheck, Truck, RefreshCw } from 'lucide-react';
+import { useState } from 'react';
+import { Store, Star, RefreshCw, Truck, Package, MessageCircle, MessageSquare } from 'lucide-react';
+import ServiceContactModal from '../components/modals/ServiceContactModal';
+import {
+  VERIFIED_SUPPLIERS,
+  HUALINK_WHATSAPP,
+  buildSupplierWhatsAppUrl,
+  buildSupplierContactMessage,
+} from '../data/shopsCatalog';
 
-const SUPPLIERS = [
-  {
-    name: 'Shenzhen Tech Electronics Co., Ltd.',
-    location: 'Shenzhen, China',
-    rating: 4.9,
-    responseRate: 99,
-    badge: 'Verified Gold Supplier',
-    image: 'https://images.unsplash.com/photo-1556740734-9b8d24d2a693?auto=format&fit=crop&q=80&w=400',
-  },
-  {
-    name: 'Guangzhou Power & Charger Factory',
-    location: 'Guangzhou, China',
-    rating: 4.8,
-    responseRate: 97,
-    badge: 'OEM/ODM Specialized',
-    image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=400',
-  },
-  {
-    name: 'East Africa Regional Logistics & Packaging Ltd',
-    location: 'Dar es Salaam / Mbeya Hub',
-    rating: 4.7,
-    responseRate: 95,
-    badge: 'Regional Distribution Partner',
-    image: 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=400',
-  },
-];
+/**
+ * Banner image with a two-stage fallback: a failed primary URL swaps to the
+ * supplier's high-quality fallback photo (electronics/warehouse), and a
+ * failure of that too degrades to a neutral placeholder — never a broken img.
+ */
+function SupplierBanner({ src, fallbackSrc, alt }) {
+  const [imageSrc, setImageSrc] = useState(src);
+
+  const handleError = () => {
+    setImageSrc((prev) => (prev === fallbackSrc ? '' : fallbackSrc));
+  };
+
+  if (!imageSrc) {
+    return (
+      <div
+        role="img"
+        aria-label={alt}
+        className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200"
+      />
+    );
+  }
+
+  return (
+    <img
+      src={imageSrc}
+      alt={alt}
+      loading="lazy"
+      onError={handleError}
+      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+    />
+  );
+}
+
+/** Picks the metric icon that best matches the supplier statistic. */
+const metricIcon = (metric) => {
+  if (/response/i.test(metric)) return RefreshCw;
+  if (/delivery|dispatch|pickup/i.test(metric)) return Truck;
+  return Package;
+};
 
 export default function ShopsPage() {
+  const [activeChat, setActiveChat] = useState(null);
+
+  const openWhatsApp = (supplier) => {
+    window.open(buildSupplierWhatsAppUrl(supplier.name), '_blank', 'noopener,noreferrer');
+  };
+
+  const openInAppChat = (supplier) => {
+    setActiveChat({
+      supplier,
+      initialMessage: buildSupplierContactMessage(supplier.name),
+    });
+  };
+
   return (
     <div className="min-h-screen bg-[#F5F5F5] font-sans text-slate-900 py-8 px-4 md:px-12">
       <div className="max-w-7xl mx-auto">
@@ -43,63 +76,104 @@ export default function ShopsPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {SUPPLIERS.map((supplier) => (
-            <Link
-              key={supplier.name}
-              to="/supplier/storefront"
-              className="group block"
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          {VERIFIED_SUPPLIERS.map((supplier) => (
+            <article
+              key={supplier.key}
+              className="group bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-full hover:shadow-xl transition-all duration-200"
             >
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-full group hover:shadow-xl transition-all duration-200">
-                <div className="relative aspect-square overflow-hidden bg-gray-50 border-b border-gray-100">
-                  <img
-                    src={supplier.image}
-                    alt={supplier.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <span className="absolute top-2 left-2 z-10 bg-[#E50914] text-white text-[10px] font-bold px-2 py-1 rounded-full">
-                    {supplier.badge}
-                  </span>
+              {/* Reliable banner image — badge sits on the image, never over the title */}
+              <div className="relative h-48 bg-gray-100 overflow-hidden">
+                <SupplierBanner
+                  src={supplier.image}
+                  fallbackSrc={supplier.fallbackImage}
+                  alt={supplier.name}
+                />
+                <span className="absolute top-3 left-3 z-10 bg-[#E50914] text-white px-2.5 py-1 text-[11px] font-bold uppercase rounded-md shadow-sm">
+                  {supplier.badge}
+                </span>
+              </div>
+
+              <div className="p-5 flex flex-col flex-1">
+                <div className="flex items-start justify-between mb-2 gap-2">
+                  <div>
+                    <h3 className="text-lg font-black text-gray-900 leading-tight group-hover:text-[#E50914] transition-colors">
+                      {supplier.name}
+                    </h3>
+                    <p className="text-xs text-slate-500 font-medium">
+                      {supplier.location}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 mt-1 shrink-0">
+                    <Store size={14} className="text-[#E50914]" />
+                    <span className="text-xs font-bold text-[#E50914]">Verified</span>
+                  </div>
                 </div>
 
-                <div className="p-5 flex flex-col flex-1">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="text-lg font-black text-gray-900 leading-tight group-hover:text-[#E50914] transition-colors">
-                        {supplier.name}
-                      </h3>
-                      <p className="text-xs text-slate-500 font-medium">
-                        {supplier.location}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1 mt-1">
-                      <Store size={14} className="text-[#E50914]" />
-                      <span className="text-xs font-bold text-[#E50914]">Verified</span>
-                    </div>
-                  </div>
+                {/* Store metrics: rating + response rate + catalogue/service facts */}
+                <div className="flex flex-wrap items-center gap-2 mt-2 mb-4">
+                  <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 px-2 py-1 rounded-md text-[11px] font-bold">
+                    <Star size={11} className="fill-amber-400 text-amber-400" />
+                    {supplier.rating.toFixed(1)} Rating
+                  </span>
+                  {supplier.metrics.map((metric) => {
+                    const Icon = metricIcon(metric);
+                    return (
+                      <span
+                        key={metric}
+                        className="inline-flex items-center gap-1 bg-gray-50 text-slate-700 border border-gray-200 px-2 py-1 rounded-md text-[11px] font-semibold"
+                      >
+                        <Icon size={11} className="text-slate-400" />
+                        {metric}
+                      </span>
+                    );
+                  })}
+                </div>
 
-                  <div className="flex items-center justify-between mt-3 mb-4">
-                    <div className="flex items-center gap-1">
-                      <ShieldCheck size={16} className="text-[#E50914]" />
-                      <span className="text-xs font-bold text-gray-700">{supplier.rating}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-slate-600 font-medium">
-                      <RefreshCw size={14} className="text-slate-400" />
-                      <span>{supplier.responseRate}% Response</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-auto">
-                    <button className="w-full bg-[#E50914] hover:bg-[#C0040F] text-white rounded-full px-4 py-2 text-xs font-bold transition-colors shadow-sm shadow-[#E50914]/30">
-                      Contact Supplier
-                    </button>
-                  </div>
+                {/* Dual contact actions: WhatsApp + in-app chat */}
+                <div className="mt-auto flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => openWhatsApp(supplier)}
+                    title={`Contact Supplier via WhatsApp: ${supplier.name}`}
+                    aria-label={`Contact Supplier via WhatsApp: ${supplier.name}`}
+                    className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1EBE5B] text-white rounded-full px-4 py-2.5 text-xs font-bold transition-colors shadow-sm cursor-pointer"
+                  >
+                    <span className="flex items-center justify-center w-4 h-4 rounded-full bg-white/25">
+                      <MessageCircle size={12} />
+                    </span>
+                    Contact Supplier
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openInAppChat(supplier)}
+                    className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white rounded-full px-4 py-2.5 text-xs font-bold transition-colors shadow-sm cursor-pointer"
+                  >
+                    <MessageSquare size={13} />
+                    Chat in App
+                  </button>
                 </div>
               </div>
-            </Link>
+            </article>
           ))}
         </div>
       </div>
+
+      {/* In-app live chat widget targeted at the selected supplier */}
+      {activeChat && (
+        <ServiceContactModal
+          booking={{
+            id: `SUP-${activeChat.supplier.key.toUpperCase()}`,
+            userId: 'guest-visitor',
+          }}
+          providerPhone={HUALINK_WHATSAPP}
+          currentUser={{ id: 'guest-visitor', name: 'Guest' }}
+          contactName={activeChat.supplier.name}
+          contactLabel={activeChat.supplier.badge}
+          initialMessage={activeChat.initialMessage}
+          onClose={() => setActiveChat(null)}
+        />
+      )}
     </div>
   );
 }

@@ -6,7 +6,8 @@ import {
   Globe, 
   Share2, 
   MessageSquare, 
-  ArrowRight 
+  ArrowRight,
+  Lock
 } from 'lucide-react';
 
 export default function Footer() {
@@ -88,6 +89,16 @@ export default function Footer() {
                   <ArrowRight size={12} className="text-red-500" />
                   <span>Terms & Conditions</span>
                 </a>
+              </li>
+              <li>
+                <Link
+                  to="/admin"
+                  className="hover:text-white text-gray-500 transition-colors flex items-center gap-1.5"
+                  title="Hualink Admin Portal"
+                >
+                  <Lock size={11} className="text-gray-600" />
+                  <span>Admin Portal</span>
+                </Link>
               </li>
             </ul>
           </div>

@@ -129,12 +129,12 @@ export default function Shop({ onAddToCart }) {
                 className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-xs hover:shadow-xl hover:border-red-500/30 transition-all duration-300 flex flex-col justify-between group"
               >
                 <div>
-                  {/* Product Image */}
-                  <div className="relative h-48 bg-slate-100 overflow-hidden">
+                  {/* Product Image: clean borderless canvas, subject isolated */}
+                  <div className="relative h-52 bg-white overflow-hidden flex items-center justify-center p-3">
                     <img 
                       src={product.image} 
                       alt={product.name} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider">
                       {product.category}

@@ -329,7 +329,9 @@ export default function ProductDetails() {
         </ol>
       </nav>
 
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+      {/* Single bordered panel: gallery + image + product details */}
+      <div className="max-w-7xl mx-auto bg-white border border-gray-200 rounded-2xl p-4 sm:p-6 lg:p-8 shadow-sm">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column - Vertical Thumbnail Gallery */}
         <div className="lg:col-span-2 hidden lg:block">
           <div className="flex flex-col gap-2">
@@ -342,7 +344,7 @@ export default function ProductDetails() {
                 className={`w-16 h-16 cursor-pointer transition-all ${
                   activeImage === i
                     ? 'border-2 border-[#E50914] rounded-lg p-0.5'
-                    : 'border border-gray-200 hover:border-gray-400 rounded-lg overflow-hidden'
+                    : 'bg-gray-100 hover:bg-gray-200 rounded-lg overflow-hidden'
                 }`}
               >
                 <img
@@ -377,7 +379,7 @@ export default function ProductDetails() {
                   className={`w-16 h-16 shrink-0 cursor-pointer transition-all ${
                     activeImage === i
                       ? 'border-2 border-[#E50914] rounded-lg p-0.5'
-                      : 'border border-gray-200 hover:border-gray-400 rounded-lg overflow-hidden'
+                      : 'bg-gray-100 hover:bg-gray-200 rounded-lg overflow-hidden'
                   }`}
                 >
                   <img src={thumb} alt="" className="w-full h-full object-contain" />
@@ -461,7 +463,7 @@ export default function ProductDetails() {
             <span className="text-xs font-bold text-gray-700 uppercase tracking-wider block mb-3">
               Quantity
             </span>
-            <div className="inline-flex items-center border border-gray-300 rounded-xl overflow-hidden">
+            <div className="inline-flex items-center bg-gray-100 rounded-xl overflow-hidden">
               <button
                 type="button"
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -470,7 +472,7 @@ export default function ProductDetails() {
               >
                 <Minus size={14} />
               </button>
-              <span className="w-12 text-center text-sm font-bold text-gray-900 border-x border-gray-200">
+              <span className="w-12 text-center text-sm font-bold text-gray-900">
                 {quantity}
               </span>
               <button
@@ -507,11 +509,11 @@ export default function ProductDetails() {
               <h2 className="text-xs font-black uppercase tracking-wider text-slate-700 block mb-3">
                 Specifications
               </h2>
-              <dl className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+              <dl className="bg-gray-50 rounded-xl overflow-hidden">
                 {detailsEntries.map(([key, value]) => (
                   <div
                     key={key}
-                    className="flex items-start justify-between gap-4 px-4 py-3 text-sm even:bg-gray-50"
+                    className="flex items-start justify-between gap-4 px-4 py-3 text-sm even:bg-white"
                   >
                     <dt className="font-bold text-slate-600">{key}</dt>
                     <dd className="font-semibold text-slate-900 text-right">{value}</dd>
@@ -522,7 +524,7 @@ export default function ProductDetails() {
           ) : null}
 
           {/* Warranty & Returns */}
-          <div className="bg-gray-50 border border-gray-200 p-5 rounded-xl space-y-3 mb-6">
+          <div className="bg-gray-50 p-5 rounded-xl space-y-3 mb-6">
             {product.details?.Warranty ? (
               <div className="flex items-start gap-2">
                 <ShieldCheck size={16} className="text-[#E50914] shrink-0" />
@@ -554,6 +556,7 @@ export default function ProductDetails() {
             onSelectProvider={handleSelectProvider}
           />
         </div>
+        </div>
       </div>
 
       {/* Related products */}
@@ -573,12 +576,12 @@ export default function ProductDetails() {
                 to={`/product/${item.id}`}
                 className="group bg-white border border-gray-200/80 rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 flex flex-col"
               >
-                <div className="relative w-full h-44 bg-transparent overflow-hidden rounded-2xl mb-3 flex items-center justify-center">
+                <div className="relative w-full h-44 bg-white overflow-hidden mb-3 flex items-center justify-center p-3">
                   <img
                     src={item.image}
                     alt={item.name}
                     loading="lazy"
-                    className="w-full h-full object-cover rounded-2xl transition-transform duration-500 group-hover:scale-108"
+                    className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>
                 <h3 className="text-sm font-extrabold text-gray-900 line-clamp-2 mb-1.5 group-hover:text-[#E50914] transition-colors">

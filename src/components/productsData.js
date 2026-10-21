@@ -77,6 +77,18 @@ export const resolveCategory = (raw) => {
 /*  Pricing                                                                   */
 /* -------------------------------------------------------------------------- */
 
+const digitsOf = (value) => Number(String(value ?? '').replace(/[^0-9]/g, '')) || 0;
+
+/**
+ * Discount percentage derived from the display price strings
+ * ("TSh 25,000" vs "TSh 35,000"). Returns 0 when there is no real saving.
+ */
+export const deriveDiscount = (price, originalPrice) => {
+  const current = digitsOf(price);
+  const before = digitsOf(originalPrice);
+  return current > 0 && before > current ? Math.round((1 - current / before) * 100) : 0;
+};
+
 const CURRENCY_PATTERN = /^([A-Za-z$€£₹]{1,4})\s*/;
 
 const currencyOf = (value) => {
@@ -148,14 +160,21 @@ export const normalizeProduct = (raw, index = 0) => {
   const title = source.title || source.name || 'Untitled Product';
   const category = resolveCategory(source);
   const { price, originalPrice } = resolvePrice(source);
+  const explicitDiscount = Number(source.discount);
+  const discount =
+    Number.isFinite(explicitDiscount) && explicitDiscount > 0
+      ? Math.round(explicitDiscount)
+      : deriveDiscount(price, originalPrice);
 
   return {
     id: source.id ?? `product-${index}`,
+    name: title,
     title,
     category: source.category || category.label,
     categorySlug: source.categorySlug || category.slug,
     price,
     originalPrice: originalPrice ?? null,
+    discount,
     moq: formatMoq(source.moq),
     rating: source.rating ?? FALLBACK_RATINGS[index % FALLBACK_RATINGS.length],
     reviews:
@@ -163,8 +182,15 @@ export const normalizeProduct = (raw, index = 0) => {
       source.reviewCount ??
       source.reviewsCount ??
       FALLBACK_REVIEWS[index % FALLBACK_REVIEWS.length],
+    reviewsCount:
+      source.reviewsCount ?? source.reviews ?? source.reviewCount ?? undefined,
     sold: formatSold(source.sold),
     image: source.image || '',
+    thumbnail:
+      source.thumbnail ||
+      source.image ||
+      (Array.isArray(source.thumbnails) ? source.thumbnails[0] : '') ||
+      '',
     thumbnails: Array.isArray(source.thumbnails) ? source.thumbnails : [],
     specs: Array.isArray(source.specs) ? source.specs : [],
     details: source.details && typeof source.details === 'object' ? source.details : {},

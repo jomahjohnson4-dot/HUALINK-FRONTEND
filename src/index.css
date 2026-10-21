@@ -44,6 +44,36 @@
   }
 }
 
+/* Shared admin form control styling ---------------------------------------- */
+/* One class keeps the admin panel inputs, selects and textareas consistent
+   without repeating a long utility list at every call site. */
+@layer components {
+  .admin-input {
+    width: 100%;
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 0.75rem;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.75rem;
+    color: #ffffff;
+    transition: border-color 0.2s ease;
+  }
+
+  .admin-input::placeholder {
+    color: #64748b;
+  }
+
+  .admin-input:focus {
+    outline: none;
+    border-color: #f97316;
+  }
+
+  .admin-input option {
+    background-color: #1e293b;
+    color: #ffffff;
+  }
+}
+
 @layer base {
   body {
     font-family: 'Plus Jakarta Sans', sans-serif;

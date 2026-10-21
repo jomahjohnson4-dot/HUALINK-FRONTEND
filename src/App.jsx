@@ -35,12 +35,14 @@ import SellerDashboardImport, { SellerDashboard as SellerDashboardNamed } from '
 import CustomerDashboardImport, { CustomerDashboard as CustomerDashboardNamed } from './pages/dashboards/CustomerDashboard';
 
 import ProviderChatPanel from './components/ProviderChatPanel';
+import AdminPasscodeGate from './components/admin/AdminPasscodeGate';
 
 const AdminDashboard = AdminDashboardImport || AdminDashboardNamed;
 const SellerDashboard = SellerDashboardImport || SellerDashboardNamed;
 const CustomerDashboard = CustomerDashboardImport || CustomerDashboardNamed;
 
 // Role-Based Protected Route Guard Component
+// Never returns null: failed auth checks render the login form directly.
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { isAuthenticated, user, loading } = useAuth();
 
@@ -52,11 +54,12 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     );
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+  if (!isAuthenticated && !user) {
+    // Auth failed -> show the login form instead of a blank screen.
+    return <Login />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user?.role?.toUpperCase())) {
+  if (allowedRoles && !allowedRoles.includes(String(user?.role || '').toUpperCase())) {
     return <Navigate to="/unauthorized" replace />;
   }
 
@@ -245,11 +248,26 @@ const AppLayout = ({ cartItems, handleUpdateQuantity, handleRemoveItem, handleCl
           />
 
           {/* Admin System Management Dashboard View */}
+          {/* Two gates: ADMIN role (ProtectedRoute) then the admin passcode. */}
           <Route 
             path="/dashboard/admin" 
             element={
               <ProtectedRoute allowedRoles={['ADMIN']}>
-                <AdminDashboard />
+                <AdminPasscodeGate>
+                  <AdminDashboard />
+                </AdminPasscodeGate>
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Alias for the admin dashboard */}
+          <Route 
+            path="/admin" 
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <AdminPasscodeGate>
+                  <AdminDashboard />
+                </AdminPasscodeGate>
               </ProtectedRoute>
             } 
           />

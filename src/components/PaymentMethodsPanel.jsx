@@ -149,8 +149,8 @@ export default function PaymentMethodsPanel({
   const activeId = selectedProvider?.id;
 
   return (
-    <div className="mt-6 bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
-      <h3 className="text-sm font-extrabold text-gray-900 border-b border-gray-100 pb-2">
+    <div className="mt-6 bg-white rounded-2xl p-5 shadow-sm space-y-4">
+      <h3 className="text-sm font-extrabold text-gray-900 pb-2">
         Payment Methods & Security
       </h3>
 

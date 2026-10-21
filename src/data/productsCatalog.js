@@ -18,6 +18,7 @@ export const productsCatalog = [
     categorySlug: 'chargers-cables',
     price: 'TSh 25,000',
     originalPrice: 'TSh 35,000',
+    discount: 29,
     image: 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=600&q=80',
     thumbnails: [
       'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=600&q=80',
@@ -47,6 +48,7 @@ export const productsCatalog = [
     categorySlug: 'audio',
     price: 'TSh 30,000',
     originalPrice: 'TSh 45,000',
+    discount: 33,
     image:
       'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/ER210.jpg/960px-ER210.jpg',
     thumbnails: [
@@ -77,6 +79,7 @@ export const productsCatalog = [
     categorySlug: 'audio',
     price: 'TSh 55,000',
     originalPrice: 'TSh 80,000',
+    discount: 31,
     image: 'https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=600&q=80',
     thumbnails: [
       'https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=600&q=80',
@@ -106,6 +109,7 @@ export const productsCatalog = [
     categorySlug: 'accessories',
     price: 'TSh 20,000',
     originalPrice: 'TSh 30,000',
+    discount: 33,
     image:
       'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Completely_expanded_Selfie_Stick.jpg/960px-Completely_expanded_Selfie_Stick.jpg',
     thumbnails: [
@@ -136,6 +140,7 @@ export const productsCatalog = [
     categorySlug: 'smartphones',
     price: 'TSh 1,250,000',
     originalPrice: 'TSh 1,450,000',
+    discount: 14,
     image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600&q=80',
     thumbnails: [
       'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600&q=80',
@@ -165,6 +170,7 @@ export const productsCatalog = [
     categorySlug: 'chargers-cables',
     price: 'TSh 18,000',
     originalPrice: 'TSh 25,000',
+    discount: 28,
     image:
       'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Kingston_Technology_DataTraveler_G4_USB_flash_drive_USB_3.0_32_Gb.jpg/960px-Kingston_Technology_DataTraveler_G4_USB_flash_drive_USB_3.0_32_Gb.jpg',
     thumbnails: [
@@ -195,6 +201,7 @@ export const productsCatalog = [
     categorySlug: 'home-appliances',
     price: 'TSh 52,500',
     originalPrice: 'TSh 65,000',
+    discount: 19,
     image:
       'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/2023_Czajnik_elektryczny_Bosch_%281%29.jpg/960px-2023_Czajnik_elektryczny_Bosch_%281%29.jpg',
     thumbnails: [
@@ -225,6 +232,7 @@ export const productsCatalog = [
     categorySlug: 'audio',
     price: 'TSh 520,000',
     originalPrice: 'TSh 620,000',
+    discount: 16,
     image:
       'https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/JBL_Charge_4_1v2.jpg/960px-JBL_Charge_4_1v2.jpg',
     thumbnails: [
@@ -255,6 +263,7 @@ export const productsCatalog = [
     categorySlug: 'home-appliances',
     price: 'TSh 38,000',
     originalPrice: 'TSh 50,000',
+    discount: 24,
     image:
       'https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Philips_steam_iron_model_HD_1256_A.jpg/960px-Philips_steam_iron_model_HD_1256_A.jpg',
     thumbnails: [

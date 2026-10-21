@@ -155,6 +155,34 @@
       }
     ]
   },
+  "faq": {
+    "eyebrow": "Assistance",
+    "title": "Questions",
+    "titleHighlight": "fréquentes",
+    "subtitle": "Tout ce qu'il faut savoir sur les commandes, la livraison et les paiements avec Hualink Distribution.",
+    "items": [
+      {
+        "question": "Qu'est-ce que Hualink Distribution et quels produits fournissez-vous?",
+        "answer": "Hualink Distribution est un réseau majeur de distribution en gros d'équipements électroniques et de biens de consommation, fournissant chargeurs, appareils audio, smartphones et électroménagers en Tanzanie et en Afrique de l'Est."
+      },
+      {
+        "question": "Où sont situés les centres de stock régionaux de Hualink?",
+        "answer": "Nos principaux centres de stockage sont situés à Mbeya et Dar es Salaam, garantissant une expédition rapide dans toute la Tanzanie."
+      },
+      {
+        "question": "Combien de temps prend la livraison depuis les centres de stock Hualink?",
+        "answer": "Les commandes expédiées depuis nos centres régionaux arrivent généralement sous 1 à 3 jours ouvrés pour les grandes villes et 3 à 5 jours ouvrés pour les régions éloignées, avec un lien de suivi en direct envoyé par SMS ou e-mail dès que votre colis quitte l'entrepôt."
+      },
+      {
+        "question": "Quels moyens de paiement sont acceptés?",
+        "answer": "Nous acceptons des paiements directs sécurisés, notamment les transferts Mobile Money locaux (M-Pesa, Tigo Pesa, Airtel Money), les virements bancaires directs et les paiements par lettre vérifiée."
+      },
+      {
+        "question": "Tous les produits électroniques sont-ils sous garantie?",
+        "answer": "Oui, tous les points de vente et produits 100 % vérifiés bénéficient des garanties standard du fabricant et de politiques d'échange garanties pour les défauts constatés."
+      }
+    ]
+  },
   "categoryDrawer": {
     "header": "Catégories pour vous",
     "apparel": "Vêtements & accessoires",
@@ -219,6 +247,58 @@
       "item3": "Systèmes de caisse",
       "item4": "Kits solaires",
       "item5": "Caméras CCTV"
+    }
+  },
+  "services": {
+    "eyebrow": "Hualink Distribution",
+    "title": "Services Hualink & Commerce Mondial",
+    "subtitle": "Approvisionnement international, dédouanement, fret et solutions d'entreposage de bout en bout reliant la Chine, Dubaï, l'Asie et l'Afrique de l'Est.",
+    "availableCount": "{{count}} services disponibles",
+    "whatsapp": "Demander via WhatsApp",
+    "chatInApp": "Discuter dans l'app",
+    "badge": {
+      "global": "Service mondial",
+      "regional": "Hub régional"
+    },
+    "whatsappMessage": "Bonjour Hualink Distribution ! Je souhaite obtenir des informations sur {{title}}. Merci de me transmettre les détails et les tarifs.",
+    "chatContext": "Demande concernant {{title}}",
+    "items": {
+      "freight": {
+        "title": "Transports mondiaux – fret aérien & maritime",
+        "subtitle": "Fret aérien express et maritime reliant la Chine, Dubaï, l'Asie et l'Afrique de l'Est (Mbeya et Dar es Salaam).",
+        "features": [
+          "Livraison porte-à-porte",
+          "Suivi des envois en temps réel",
+          "Gestion des conteneurs et cargaisons en vrac"
+        ]
+      },
+      "customs": {
+        "title": "Dédouanement & conseil fiscal TRA",
+        "subtitle": "Conformité TRA accélérée, évaluation des droits et documentation pour les importations en vrac.",
+        "features": [
+          "Conformité et dédouanement TRA",
+          "Calcul précis des droits",
+          "Assistance documentaire guichet unique"
+        ]
+      },
+      "sourcing": {
+        "title": "Sourcing & contrôle qualité en usine",
+        "subtitle": "Vérification directe en usine, inspections avant expédition et tests d'échantillons chez des fabricants chinois et mondiaux vérifiés.",
+        "features": [
+          "Audits qualité avant expédition",
+          "Contrôle des défauts",
+          "Sourcing d'usines vérifiées"
+        ]
+      },
+      "hub": {
+        "title": "Distribution régionale via hubs (Mbeya & Dar es Salaam)",
+        "subtitle": "Entreposage de gros localisé et réseau d'expédition rapide en Tanzanie et dans les régions voisines d'Afrique de l'Est.",
+        "features": [
+          "Expédition le jour même vers les centres régionaux",
+          "Stockage d'inventaire en vrac",
+          "Suivi en direct des itinéraires des chauffeurs"
+        ]
+      }
     }
   }
 }

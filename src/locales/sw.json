@@ -155,6 +155,34 @@
       }
     ]
   },
+  "faq": {
+    "eyebrow": "Msaada",
+    "title": "Maswali",
+    "titleHighlight": "Yanayoulizwa Sana",
+    "subtitle": "Kila kitu unachohitaji kujua kuhusu kuagiza, usafirishaji, na malipo na Hualink Distribution.",
+    "items": [
+      {
+        "question": "Hualink Distribution ni nini na mnasambaza bidhaa gani?",
+        "answer": "Hualink Distribution ni mtandao mkuu wa usambazaji wa bidhaa za kielektroniki na bidhaa za matumizi kwa bei za jumla, ukisambaza chaja, vifaa vya sauti, simu janja, na vyombo vya nyumbani kote Tanzania na Afrika Mashariki."
+      },
+      {
+        "question": "Vituo vikuu vya usambazaji (Hubs) vya Hualink vinapatikana wapi?",
+        "answer": "Vituo vyetu vikuu vya kuhifadhi na kusambaza bidhaa vinapatikana Mbeya na Dar es Salaam, vikiwa na uwezo wa kufikisha mzigo popote nchini kwa haraka."
+      },
+      {
+        "question": "Inachukua muda gani kupokea mzigo wangu kutoka Hualink?",
+        "answer": "Oda zinazotumwa kutoka vituo vyetu vya kanda kwa kawaida hufika ndani ya siku 1–3 za kazi kwa miji mikubwa na siku 3–5 za kazi kwa maeneo ya mbali, huku kiungo cha ufuatiliaji wa moja kwa moja kikitumwa kupitia SMS au barua pepe mara mzigo wako unapoondoka ghalani."
+      },
+      {
+        "question": "Ni njia zipi za malipo zinazokubaliwa?",
+        "answer": "Tunakubali malipo salama ya moja kwa moja ikiwa ni pamoja na uhamisho wa Mobile Money wa ndani (M-Pesa, Tigo Pesa, Airtel Money), uhamisho wa benki moja kwa moja, na malipo ya barua yaliyothibitishwa."
+      },
+      {
+        "question": "Bidhaa zote za kielektroniki zina dhamana?",
+        "answer": "Ndiyo, maduka na bidhaa zote zilizothibitishwa 100% zinakuja na dhamana za kawaida za mtengenezaji na sera za kubadilisha zilizohakikishwa kwa kasoro zilizothibitishwa."
+      }
+    ]
+  },
   "categoryDrawer": {
     "header": "Aina za ajili yako",
     "apparel": "Nguo na Viatu",
@@ -219,6 +247,58 @@
       "item3": "Mifaa ya POS",
       "item4": "Kiti cha Jua",
       "item5": "Kamera za CCTV"
+    }
+  },
+  "services": {
+    "eyebrow": "Hualink Distribution",
+    "title": "Huduma za Hualink & Biashara ya Kimataifa",
+    "subtitle": "Ununuzi wa kimataifa hadi mwisho, usafishaji wa paja, usafirishaji wa mizigo, na huduma za ghala zinazounganisha China, Dubai, Asia, na Afrika Mashariki.",
+    "availableCount": "Huduma {{count}} zinapatikana",
+    "whatsapp": "Uliza kupitia WhatsApp",
+    "chatInApp": "Ongea ndani ya App",
+    "badge": {
+      "global": "Huduma ya Kimataifa",
+      "regional": "Kituo cha Kikanda"
+    },
+    "whatsappMessage": "Habari Hualink Distribution! Ningependa kuuliza kuhusu {{title}}. Tafadhali nifahamishe maelezo na bei.",
+    "chatContext": "Ninahusu {{title}}",
+    "items": {
+      "freight": {
+        "title": "Usafirishaji wa Kimataifa wa Mizigo (Anga & Bahari)",
+        "subtitle": "Usafirishaji wa haraka wa mizigo ya anga na bahari unaounganisha China, Dubai, Asia na Afrika Mashariki (Mbeya na Dar es Salaam).",
+        "features": [
+          "Usambazaji hadi mlangoni",
+          "Ufuatiliaji wa mizigo kwa wakati halisi",
+          "Usindikaji wa mizigo ya jumla na kontena"
+        ]
+      },
+      "customs": {
+        "title": "Usafishaji wa Paja na Ushauri wa Kodi ya TRA",
+        "subtitle": "Kufuatana kwa haraka na kanuni za TRA, tathmani za tarifa, na hati kwa uagizaji wa wingi.",
+        "features": [
+          "Ushirikiano na usafishaji wa TRA",
+          "Makadirio sahihi ya kodi",
+          "Msaada wa hati dirisha moja"
+        ]
+      },
+      "sourcing": {
+        "title": "Utafutaji wa Bidhaa na Uchunguzi wa Ubora wa Kiwanda",
+        "subtitle": "Uthibitisho wa moja kwa moja wa kiwanda, uchunguzi kabla ya usafirishaji, na majaribio ya sampuli kwa wazalishaji waliothibitishwa wa China na duniani.",
+        "features": [
+          "Ukaguzi wa ubora kabla ya usafirishaji",
+          "Ukaguzi wa kasoro",
+          "Utafutaji wa kiwanda kilichothibitishwa"
+        ]
+      },
+      "hub": {
+        "title": "Usambazaji wa Vituo vya Bidhaa vya Kikanda (Mbeya na Dar es Salaam)",
+        "subtitle": "Uhifadhi wa jumla wa ndani na mtandao wa usafirishaji wa haraka katika Tanzania na nchi jirani za Afrika Mashariki.",
+        "features": [
+          "Usafirishaji siku moja hadi vituo vya kikanda",
+          "Uhifadhi wa bidhaa kwa wingi",
+          "Ufuatiliaji hai wa njia za madereva"
+        ]
+      }
     }
   }
 }

@@ -1,7 +1,18 @@
-import { useState, useEffect } from 'react';
-import { Search, SlidersHorizontal, ChevronRight, Filter, Loader2, AlertCircle, RefreshCw, ShoppingCart, Check } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import {
+  Search,
+  SlidersHorizontal,
+  Filter,
+  RefreshCw,
+  ShieldCheck,
+  WifiOff,
+} from 'lucide-react';
 import API from '../api/axios';
+import { productsCatalog } from '../data/productsCatalog';
+import ProductCard, { ProductQuickView } from '../components/ProductCard';
+import HorizontalProductShowcase from '../components/HorizontalProductShowcase';
 
+/** Category pills — they mirror the catalogue's category values exactly. */
 const CATEGORIES = [
   'All Categories',
   'Chargers & Cables',
@@ -11,104 +22,95 @@ const CATEGORIES = [
   'Accessories',
 ];
 
+/** Numeric price resolved from the display string ("TSh 25,000" -> 25000). */
+const numericPrice = (product) =>
+  Number(String(product.price ?? product.originalPrice ?? '').replace(/[^0-9]/g, '')) || 10000;
+
 export default function Marketplace({ onAddToCart }) {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // The verified local catalogue is the guaranteed default state, so the
+  // marketplace renders every inventory item immediately.
+  const [products, setProducts] = useState(() => productsCatalog);
+  const [feedOffline, setFeedOffline] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [searchQuery, setSearchQuery] = useState('');
-  const [addedId, setAddedId] = useState(null);
+  const [wishlist, setWishlist] = useState(() => new Set());
+  const [quickView, setQuickView] = useState(null);
 
-  const loadProducts = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await API.get('/products');
-      const data = response.data?.products || response.data?.data || response.data;
-      setProducts(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Failed to load inventory from Express server:', err);
-      setError(
-        err.response?.data?.message || 'Unable to connect to inventory server. Please try again.'
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Enhance the local catalogue with the live feed when the Express server is
+  // reachable. Failures only flag the feed — the grid never empties.
+  const loadProducts = () =>
+    API.get('/products', { timeout: 5000 })
+      .then((response) => {
+        const data = response.data?.products || response.data?.data || response.data;
+        if (Array.isArray(data) && data.length > 0) {
+          setProducts((previous) => {
+            const known = new Set(previous.map((item) => String(item.id)));
+            const extras = data.filter(
+              (item) => !known.has(String(item.id ?? item.productId ?? item._id))
+            );
+            return extras.length ? [...previous, ...extras] : previous;
+          });
+        }
+        setFeedOffline(false);
+      })
+      .catch((err) => {
+        console.warn('[Marketplace] Live feed unreachable — using local catalogue:', err.message);
+        setFeedOffline(true);
+      });
 
   useEffect(() => {
-    let isMounted = true;
-
-    const fetchInventory = async () => {
-      setError(null);
-      try {
-        const response = await API.get('/products');
-        const data = response.data?.products || response.data?.data || response.data;
-        if (isMounted) {
-          setProducts(Array.isArray(data) ? data : []);
-        }
-      } catch (err) {
-        console.error('Failed to load inventory from Express server:', err);
-        if (isMounted) {
-          setError(
-            err.response?.data?.message || 'Unable to connect to inventory server. Please try again.'
-          );
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchInventory();
-
-    return () => {
-      isMounted = false;
-    };
+    loadProducts();
   }, []);
 
-  const handleAddClick = (product) => {
-    const rawPrice = product.price ?? product.basePrice ?? product.base_price ?? product.unitPrice ?? 10000;
-    const safePrice = Number(rawPrice);
-    const targetId = product.id || product.productId || product._id || 'depot-item';
-
-    if (onAddToCart) {
-      onAddToCart({
-        ...product,
-        id: targetId,
-        productId: targetId,
-        name: product.name || product.title || 'Inventory Item',
-        price: safePrice > 0 ? safePrice : 10000,
-        unitPrice: safePrice > 0 ? safePrice : 10000,
-      }, 1);
-    }
-
-    setAddedId(targetId);
-    setTimeout(() => setAddedId(null), 1500);
+  const toggleWishlist = (product) => {
+    setWishlist((current) => {
+      const next = new Set(current);
+      if (next.has(product.id)) next.delete(product.id);
+      else next.add(product.id);
+      return next;
+    });
   };
 
+  const handleQuickAction = (product) => {
+    if (!onAddToCart) return;
+    const price = numericPrice(product);
+    onAddToCart(
+      {
+        ...product,
+        id: product.id,
+        productId: product.id,
+        name: product.name || product.title || 'Inventory Item',
+        price,
+        unitPrice: price,
+      },
+      1
+    );
+    setQuickView(null);
+  };
+
+  // Category + search filtering: "All Categories" always shows everything.
   const filteredProducts = products.filter((product) => {
-    const dbCategory = (product.category || '').toLowerCase().trim();
+    const categoryName = String(product.category || '').toLowerCase().trim();
+    const categorySlug = String(product.categorySlug || '').toLowerCase().trim();
 
-    // Category match
-    let matchesCategory = true;
-    if (selectedCategory !== 'All Categories') {
-      matchesCategory = dbCategory === selectedCategory.toLowerCase();
-    }
+    const matchesCategory =
+      selectedCategory === 'All Categories' ||
+      categoryName === selectedCategory.toLowerCase().trim() ||
+      categorySlug === selectedCategory.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
 
-    // Search Query Match
-    const matchesSearch =
-      product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    if (!matchesCategory) return false;
 
-    return matchesCategory && matchesSearch;
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return true;
+
+    return [product.name, product.title, product.description, product.category].some((field) =>
+      String(field || '').toLowerCase().includes(query)
+    );
   });
 
   return (
-    <div className="bg-gray-900 min-h-screen text-white pt-6 pb-20 font-sans">
+    <div className="bg-gray-50 min-h-screen text-gray-900 pt-6 pb-20 font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-
         {/* Top Distribution Banner */}
         <div className="bg-gradient-to-r from-red-600 to-black rounded-3xl p-6 sm:p-10 mb-8 border border-red-900/40 shadow-2xl relative overflow-hidden">
           <div className="relative z-10 max-w-2xl">
@@ -119,17 +121,16 @@ export default function Marketplace({ onAddToCart }) {
               Hualink Supply Marketplace
             </h1>
             <p className="text-xs sm:text-sm text-gray-300 mt-2 font-medium">
-              Verified product distribution directly from regional depots & trusted supply channels across Tanzania.
+              Verified product distribution directly from regional depots & trusted supply channels
+              across Tanzania.
             </p>
           </div>
         </div>
 
         {/* Main Content Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-
           {/* Left Sidebar Filters */}
           <div className="lg:col-span-1 space-y-6">
-
             {/* Search Input */}
             <div className="relative">
               <Search size={18} className="absolute left-3.5 top-3.5 text-gray-400" />
@@ -137,56 +138,60 @@ export default function Marketplace({ onAddToCart }) {
                 type="text"
                 placeholder="Search inventory, SKUs..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-2xl pl-10 pr-4 py-3 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-red-600 transition-colors"
+                onChange={(event) => setSearchQuery(event.target.value)}
+                className="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-4 py-3 text-xs text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:border-[#E50914] focus:ring-2 focus:ring-[#E50914]/10 transition-colors"
               />
             </div>
 
             {/* Category Filter Pills */}
-            <div className="bg-gray-800/80 border border-gray-700/80 rounded-2xl p-4 shadow-lg">
-              <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-gray-400 mb-4 px-2">
-                <Filter size={14} className="text-red-500" />
+            <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-gray-500 mb-4 px-2">
+                <Filter size={14} className="text-[#E50914]" />
                 <span>Categories</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {CATEGORIES.map((cat) => (
+                {CATEGORIES.map((category) => (
                   <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
+                    key={category}
+                    type="button"
+                    onClick={() => setSelectedCategory(category)}
                     className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                      selectedCategory === cat
-                        ? 'bg-red-600 text-white shadow-md shadow-red-600/30'
-                        : 'bg-gray-700/60 text-gray-300 hover:bg-gray-600 hover:text-white'
+                      selectedCategory === category
+                        ? 'bg-[#E50914] text-white shadow-md shadow-[#E50914]/25'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900'
                     }`}
                   >
-                    {cat}
+                    {category}
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Distribution Verification Badge Box */}
-            <div className="bg-gray-800/50 border border-gray-700/60 rounded-2xl p-4">
+            <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
               <div className="flex items-start gap-3">
-                <span className="text-red-500 shrink-0 mt-0.5" size={20}>✓</span>
+                <ShieldCheck className="text-[#E50914] shrink-0 mt-0.5" size={20} />
                 <div>
-                  <h4 className="text-xs font-extrabold text-white uppercase">Guaranteed Quality</h4>
-                  <p className="text-[11px] text-gray-400 mt-1">
-                    Every batch item listed on Hualink is quality checked at local hubs before dispatch.
+                  <h4 className="text-xs font-extrabold text-gray-900 uppercase">
+                    Guaranteed Quality
+                  </h4>
+                  <p className="text-[11px] text-gray-500 mt-1">
+                    Every batch item listed on Hualink is quality checked at local hubs before
+                    dispatch.
                   </p>
                 </div>
               </div>
             </div>
-
           </div>
 
           {/* Right Product Grid */}
           <div className="lg:col-span-3">
-
             {/* Header bar for product list */}
-            <div className="flex items-center justify-between mb-6 pb-3 border-b border-gray-800">
-              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                Showing <span className="text-white font-extrabold">{filteredProducts.length}</span> Products
+            <div className="flex items-center justify-between mb-6 pb-3 border-b border-gray-200">
+              <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                Showing{' '}
+                <span className="text-gray-900 font-extrabold">{filteredProducts.length}</span>{' '}
+                Products
               </div>
               <div className="flex items-center gap-2 text-xs text-gray-400">
                 <SlidersHorizontal size={14} />
@@ -194,136 +199,61 @@ export default function Marketplace({ onAddToCart }) {
               </div>
             </div>
 
-            {/* Loading State */}
-            {loading && (
-              <div className="flex flex-col items-center justify-center py-20 text-gray-400 gap-3">
-                <Loader2 size={36} className="animate-spin text-red-500" />
-                <p className="text-xs font-bold uppercase tracking-wider">Loading Live Inventory...</p>
-              </div>
-            )}
-
-            {/* Error State */}
-            {error && !loading && (
-              <div className="bg-gray-800/90 border border-red-900/50 rounded-2xl p-8 text-center max-w-lg mx-auto my-8">
-                <AlertCircle size={36} className="text-red-500 mx-auto mb-3" />
-                <h3 className="text-sm font-bold text-white uppercase mb-1">Failed to Load Products</h3>
-                <p className="text-xs text-gray-400 font-medium mb-5">{error}</p>
+            {/* Offline live-feed notice (the local catalogue keeps rendering) */}
+            {feedOffline && (
+              <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-gray-200 rounded-xl px-4 py-3 mb-5 shadow-sm">
+                <div className="flex items-center gap-2 text-xs font-semibold text-gray-600">
+                  <WifiOff size={15} className="text-amber-500 shrink-0" />
+                  <span>Live inventory feed offline — showing the full local catalogue.</span>
+                </div>
                 <button
                   type="button"
                   onClick={loadProducts}
-                  className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl transition-all cursor-pointer shadow-md shadow-red-600/30"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-extrabold text-[#E50914] hover:underline cursor-pointer"
                 >
-                  <RefreshCw size={14} />
-                  <span>Retry Connection</span>
+                  <RefreshCw size={12} />
+                  <span>Retry</span>
                 </button>
               </div>
             )}
 
             {/* Empty State */}
-            {!loading && !error && filteredProducts.length === 0 && (
-              <div className="text-center py-20 bg-gray-800/40 rounded-2xl border border-gray-800">
-                <p className="text-gray-300 font-bold text-sm">No inventory items found.</p>
-                <p className="text-xs text-gray-500 mt-1">Try searching for a different item or switching categories.</p>
+            {filteredProducts.length === 0 && (
+              <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
+                <p className="text-gray-700 font-bold text-sm">No inventory items found.</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Try searching for a different item or switching categories.
+                </p>
               </div>
             )}
 
             {/* Product Grid */}
-            {!loading && !error && filteredProducts.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProducts.map((product, index) => {
-                  const rawPrice = product.price ?? product.basePrice ?? product.base_price ?? product.unitPrice ?? 10000;
-                  const safePrice = Number(rawPrice);
-                  const pId = product.id || product.productId || product._id || `item-${index}`;
-                  const isAdded = addedId === pId;
-
-                  return (
-                    <div
-                      key={pId}
-                      className="bg-gray-800 border border-gray-700/70 hover:border-red-600/60 rounded-2xl overflow-hidden flex flex-col justify-between transition-all group shadow-lg"
-                    >
-                      <div>
-                        {/* Image Header */}
-                        <div className="relative h-48 bg-gray-900 overflow-hidden">
-                          {product.imageUrl || product.image ? (
-                            <img
-                              src={product.imageUrl || product.image}
-                              alt={product.name}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xs font-black text-gray-600 uppercase tracking-widest">
-                              Hualink Depot
-                            </div>
-                          )}
-                          <span className="absolute top-3 left-3 bg-black/80 backdrop-blur-md text-red-500 text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-red-500/30 uppercase tracking-wider">
-                            {product.category || 'Direct Supply'}
-                          </span>
-                        </div>
-
-                        {/* Card Content */}
-                        <div className="p-4">
-                          <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-1">
-                            <span className="text-red-500">✓</span>
-                            <span>{product.warehouseLocation || 'Dar es Salaam Hub'}</span>
-                          </div>
-                          <h3 className="text-sm font-bold text-white line-clamp-2 leading-snug">
-                            {product.name}
-                          </h3>
-
-                          {/* Stock & Wholesale Info */}
-                          <div className="mt-3 pt-3 border-t border-gray-700/50 space-y-1">
-                            <div className="flex justify-between items-center text-[11px]">
-                              <span className="text-gray-400">Retail Unit:</span>
-                              <span className="font-extrabold text-white">
-                                {safePrice.toLocaleString()} TSH
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center text-[11px]">
-                              <span className="text-gray-400">Wholesale Tier:</span>
-                              <span className="font-bold text-red-400">
-                                {product.wholesalePrice ? `${Number(product.wholesalePrice).toLocaleString()} TSH` : 'Bulk Rates Available'}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Action Button */}
-                      <div className="p-4 pt-0">
-                        <button
-                          type="button"
-                          onClick={() => handleAddClick(product)}
-                          className={`w-full font-extrabold text-xs py-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-md ${
-                            isAdded
-                              ? 'bg-emerald-600 text-white shadow-emerald-600/30'
-                              : 'bg-red-600 hover:bg-red-700 text-white shadow-red-600/30'
-                          }`}
-                        >
-                          {isAdded ? (
-                            <>
-                              <span>✓</span>
-                              <span>Added to Order</span>
-                            </>
-                          ) : (
-                            <>
-                              <span>🛒</span>
-                              <span>Order Supply</span>
-                              <span>→</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+            {filteredProducts.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                {filteredProducts.map((product, index) => (
+                  <ProductCard
+                    key={product.id || product._id || `item-${index}`}
+                    index={index}
+                    product={product}
+                    isWishlisted={wishlist.has(product.id)}
+                    onToggleWishlist={toggleWishlist}
+                    onQuickView={setQuickView}
+                  />
+                ))}
               </div>
             )}
-
           </div>
-
         </div>
 
+        {/* Horizontal Carousels: "All Product Items" & "Bestseller Products" */}
+        <HorizontalProductShowcase />
       </div>
+
+      <ProductQuickView
+        product={quickView}
+        onClose={() => setQuickView(null)}
+        onAction={handleQuickAction}
+      />
     </div>
   );
 }

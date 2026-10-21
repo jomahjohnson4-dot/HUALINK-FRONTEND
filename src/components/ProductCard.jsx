@@ -9,7 +9,6 @@ import {
   Package,
   ShoppingCart,
   MessageCircle,
-  Check,
   X,
   MapPin,
 } from 'lucide-react';
@@ -67,7 +66,7 @@ function ProductImage({ product, className, ...rest }) {
 
   const src =
     stage === 'primary'
-      ? product.image || product.thumbnails?.[0] || heroImage
+      ? product.image || product.thumbnail || product.thumbnails?.[0] || heroImage
       : stage === 'remote'
         ? REMOTE_FALLBACK_IMAGE
         : heroImage;
@@ -114,28 +113,28 @@ export default function ProductCard({
   isWishlisted = false,
   onToggleWishlist,
   onQuickView,
-  onAction,
-  actionState = null,
 }) {
   const isList = layout === 'list';
-  const meta = ACTION_META[product.action] || ACTION_META.cart;
-  const isDone = actionState === 'done';
-  const ActionIcon = isDone ? Check : meta.icon;
 
   const name = product.name || product.title || 'Product';
   const reviews = product.reviewsCount ?? product.reviews;
   const detailLink = `/product/${product.id}`;
 
-  const actionButton = (
-    <button
-      type="button"
-      onClick={() => onAction?.(product)}
-      className="w-full bg-gray-900 group-hover:bg-[#E50914] text-white font-extrabold text-xs py-2.5 rounded-xl transition-colors duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-    >
-      <ActionIcon size={14} />
-      <span>{isDone ? meta.doneLabel : meta.label}</span>
-    </button>
-  );
+  // Discount percentage: explicit catalogue value ("discount: 29") first,
+  // otherwise derived from the price strings ("TSh 25,000" / "TSh 35,000").
+  const derivedDiscount = (() => {
+    const currentPrice = Number(String(product.price ?? '').replace(/[^0-9]/g, ''));
+    const originalPrice = Number(String(product.originalPrice ?? '').replace(/[^0-9]/g, ''));
+    return currentPrice > 0 && originalPrice > currentPrice
+      ? Math.round((1 - currentPrice / originalPrice) * 100)
+      : 0;
+  })();
+
+  const explicitDiscount = Number(product.discount);
+  const discountPercent =
+    Number.isFinite(explicitDiscount) && explicitDiscount > 0
+      ? Math.round(explicitDiscount)
+      : derivedDiscount;
 
   return (
     <div
@@ -144,22 +143,26 @@ export default function ProductCard({
       }`}
       style={{ animationDelay: `${index * 100}ms` }}
     >
-      {/* Seamless Borderless Large Image Display */}
+      {/* Clean & Completely Borderless Product Image Wrapper (No Grey Background) */}
       <div
-        className={`relative w-full bg-transparent overflow-hidden rounded-2xl mb-3 flex items-center justify-center ${
-          isList ? 'h-60 sm:w-56 sm:h-40 shrink-0 sm:mb-0' : 'h-60 sm:h-64'
+        className={`relative w-full bg-white overflow-hidden mb-4 flex items-center justify-center p-3 ${
+          isList ? 'h-60 sm:w-56 sm:h-44 shrink-0 sm:mb-0' : 'h-52 sm:h-56'
         }`}
       >
         <Link to={detailLink} className="block h-full w-full" aria-label={name}>
           <ProductImage
             product={product}
-            className="w-full h-full object-cover rounded-2xl transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
           />
         </Link>
 
-        {/* Floating Red Brand Badge */}
-        {product.badge ? (
-          <span className="absolute top-3 left-3 z-10 bg-[#E50914] text-white text-[10px] font-black px-2.5 py-1 rounded-md tracking-wider uppercase shadow-md pointer-events-none">
+        {/* Top-Left Badge: bright blue discount takes priority over brand badge */}
+        {discountPercent > 0 ? (
+          <span className="absolute top-3 left-3 z-10 bg-[#0070DC] text-white text-[10px] font-black px-2 py-1 rounded-none shadow-sm uppercase tracking-wide pointer-events-none">
+            {discountPercent}% OFF
+          </span>
+        ) : product.badge ? (
+          <span className="absolute top-3 left-3 z-10 bg-[#E50914] text-white text-[10px] font-black px-2 py-1 rounded-none shadow-sm uppercase tracking-wide pointer-events-none">
             {product.badge}
           </span>
         ) : null}
@@ -192,41 +195,35 @@ export default function ProductCard({
         ) : null}
       </div>
 
-      {/* Product Content */}
-      <div className="flex-1 flex flex-col justify-between">
+      {/* Details Area (Clean & Minimalist) */}
+      <div className="flex-1 flex flex-col justify-between space-y-2">
         <div>
-          <span className="text-[11px] font-bold text-gray-400 block mb-1">
-            {product.category || 'Hualink Distribution'}
-          </span>
           <Link to={detailLink} className="block">
-            <h3 className="text-sm font-extrabold text-gray-900 line-clamp-2 mb-2 group-hover:text-[#E50914] transition-colors leading-snug">
+            <h3 className="text-xs font-semibold text-gray-800 line-clamp-2 group-hover:text-[#0070DC] transition-colors leading-snug">
               {name}
             </h3>
           </Link>
         </div>
 
         <div>
-          <div className="flex items-baseline gap-2 mb-1">
-            <span className="text-base font-black text-gray-900 tracking-tight">
-              {product.price}
+          {/* Price Layout: "From TSh ..." */}
+          <div className="flex items-baseline gap-1.5 mb-1 flex-wrap">
+            <span className="text-xs font-extrabold text-gray-900 tracking-tight">
+              From {product.price}
             </span>
             {product.originalPrice ? (
-              <span className="text-xs font-semibold text-gray-400 line-through">
+              <span className="text-[10px] font-medium text-gray-400 line-through">
                 {product.originalPrice}
               </span>
             ) : null}
           </div>
 
-          <div className="flex items-center justify-between text-[11px] text-gray-500 mb-3">
-            <span className="bg-gray-100 font-bold px-2 py-0.5 rounded text-gray-700">
-              MOQ: {product.moq || '1 piece'}
-            </span>
-            <span className="text-amber-500 font-bold">
-              ★ {product.rating || '4.8'} ({reviews || '120'})
-            </span>
+          {/* Yellow Star Rating */}
+          <div className="flex items-center gap-1 text-[11px] text-gray-500">
+            <span className="text-amber-400 font-black">★</span>
+            <span className="font-bold text-gray-800">{product.rating || '4.8'}</span>
+            <span className="text-gray-400">({reviews || '120'})</span>
           </div>
-
-          {actionButton}
         </div>
       </div>
     </div>
@@ -286,14 +283,16 @@ export function ProductQuickView({ product, onClose, onAction }) {
           <X size={15} />
         </button>
 
-        <div className="relative w-full h-64 bg-gray-50 flex items-center justify-center">
+        <div className="relative w-full h-72 bg-white flex items-center justify-center p-4">
           <ProductImage
             product={product}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
           />
-          <span className="absolute left-3 top-3 bg-[#E50914] text-white text-[10px] font-bold px-2 py-0.5 rounded-md tracking-wider uppercase shadow-sm">
-            {product.badge}
-          </span>
+          {product.badge ? (
+            <span className="absolute left-3 top-3 bg-[#E50914] text-white text-[10px] font-bold px-2 py-0.5 rounded-md tracking-wider uppercase shadow-sm">
+              {product.badge}
+            </span>
+          ) : null}
         </div>
 
         <div className="p-5">

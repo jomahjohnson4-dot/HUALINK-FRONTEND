@@ -8,19 +8,13 @@ import SupplierLeaderboardCard from '../components/SupplierLeaderboardCard';
 import FloatingToolbar from '../components/FloatingToolbar';
 import ProductGrid from '../components/ProductGrid';
 import WelcomeShowcase from '../components/WelcomeShowcase';
+import WhyChooseUs from '../components/WhyChooseUs';
 
 const STEP_ICONS = {
   step1: UserCheck,
   step2: Search,
   step3: PackageCheck,
 };
-
-const FEATURE_ICONS = [
-  <span className="text-[24px]" key="f0">✅</span>,
-  <span className="text-[24px]" key="f1">📍</span>,
-  <span className="text-[24px]" key="f2">🏭</span>,
-  <span className="text-[24px]" key="f3">🔒</span>,
-];
 
 const STEPS = ['step1', 'step2', 'step3'];
 
@@ -103,35 +97,8 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ================= 8. WHY CHOOSE HUALINK ================= */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 my-6">
-        <div className="bg-charcoal text-white rounded-3xl p-8 sm:p-12 shadow-2xl">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
-              {t('whyChoose.title')} <span className="text-brand-red italic">{t('whyChoose.titleBrand')}</span>?
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {t('whyChoose.features', { returnObjects: true }).map((feature, idx) => (
-              <div
-                key={idx}
-                className="bg-[#1a1a1a]/90 border border-gray-800 rounded-2xl p-5 flex items-start gap-4 hover:border-gray-700 transition-colors"
-              >
-                <div className="text-brand-red shrink-0 mt-0.5">{FEATURE_ICONS[idx]}</div>
-                <div>
-                  <h3 className="text-sm font-extrabold text-white mb-1">
-                    {feature.title}
-                  </h3>
-                  <p className="text-xs text-gray-400 font-medium leading-relaxed">
-                    {feature.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ================= 8. WHY CHOOSE HUALINK + FAQ ================= */}
+      <WhyChooseUs />
 
       {/* Floating right-side toolbar */}
       <FloatingToolbar onCartClick={() => navigate('/cart')} />

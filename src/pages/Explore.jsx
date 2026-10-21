@@ -605,12 +605,12 @@ export default function Explore() {
                   className="bg-gray-800 border border-gray-700/70 hover:border-red-600/60 rounded-2xl overflow-hidden flex flex-col justify-between transition-all group shadow-lg"
                 >
                   <div>
-                    {/* Header Image */}
-                    <div className="relative h-48 bg-gray-900 overflow-hidden">
+                    {/* Header Image: clean borderless canvas, subject isolated */}
+                    <div className="relative h-52 bg-gray-800/40 overflow-hidden flex items-center justify-center p-3">
                       <img
                         src={card.image}
                         alt={card.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                       />
                       <span className={`absolute top-3 left-3 text-[10px] font-extrabold px-2.5 py-1 rounded-full border uppercase tracking-wider ${card.badgeColor}`}>
                         {card.tag}

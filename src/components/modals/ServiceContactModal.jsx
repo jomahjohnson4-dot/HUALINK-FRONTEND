@@ -5,10 +5,12 @@ import { io } from 'socket.io-client';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const socket = io(API_BASE_URL);
 
-export default function ServiceContactModal({ booking, providerPhone, currentUser, onClose }) {
+export default function ServiceContactModal({ booking, providerPhone, currentUser, onClose, initialMessage, contactName, contactLabel }) {
   const [chatMode, setChatMode] = useState('internal'); // 'internal' or 'whatsapp'
   const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
+  // Pre-fill the composer so the inquiry context (e.g. the service name) is
+  // ready to send the moment the widget opens.
+  const [input, setInput] = useState(initialMessage || '');
   const chatBottomRef = useRef(null);
 
   // Fallback current user ID for client matching
@@ -100,8 +102,13 @@ export default function ServiceContactModal({ booking, providerPhone, currentUse
         {/* Modal Header */}
         <div className="p-4 bg-slate-800/80 border-b border-slate-700 flex justify-between items-center">
           <div>
-            <h3 className="text-sm font-bold text-white">Contact Service Provider</h3>
-            <p className="text-[10px] text-slate-400">Booking ID: {booking?.id}</p>
+            <h3 className="text-sm font-bold text-white">
+              {contactName || 'Contact Service Provider'}
+            </h3>
+            <p className="text-[10px] text-slate-400">
+              {contactLabel ||
+                (booking?.serviceTitle ? `Inquiry: ${booking.serviceTitle}` : `Booking ID: ${booking?.id}`)}
+            </p>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-white p-1 cursor-pointer">
             <X size={18} />

@@ -155,6 +155,34 @@
       }
     ]
   },
+  "faq": {
+    "eyebrow": "Support",
+    "title": "Frequently Asked",
+    "titleHighlight": "Questions",
+    "subtitle": "Everything you need to know about ordering, delivery, and payments with Hualink Distribution.",
+    "items": [
+      {
+        "question": "What is Hualink Distribution and what products do you supply?",
+        "answer": "Hualink Distribution is a premier wholesale electronics & consumer goods distribution network supplying chargers, audio devices, smartphones, and home appliances across Tanzania and East Africa."
+      },
+      {
+        "question": "Where are Hualink regional stock hubs located?",
+        "answer": "Our primary stock hubs are located in Mbeya and Dar es Salaam, ensuring rapid dispatch to all regions in Tanzania."
+      },
+      {
+        "question": "How long does shipping take from Hualink stock hubs?",
+        "answer": "Orders dispatched from our regional hubs typically arrive within 1–3 business days for major cities and 3–5 business days for remote regions, with a live tracking link sent via SMS or email once your shipment leaves the warehouse."
+      },
+      {
+        "question": "What payment methods are supported?",
+        "answer": "We support secure direct payments including local Mobile Money transfers (M-Pesa, Tigo Pesa, Airtel Money), direct bank wire transfers, and verified letter payments."
+      },
+      {
+        "question": "Are all electronic goods covered by warranty?",
+        "answer": "Yes, all 100% verified outlets and products come with standard manufacturer warranties and guaranteed exchange policies for verified defects."
+      }
+    ]
+  },
   "categoryDrawer": {
     "header": "Categories for you",
     "apparel": "Apparel & Accessories",
@@ -219,6 +247,58 @@
       "item3": "POS Systems",
       "item4": "Solar Kits",
       "item5": "CCTV Cameras"
+    }
+  },
+  "services": {
+    "eyebrow": "Hualink Distribution",
+    "title": "Hualink Services & Global Trade",
+    "subtitle": "End-to-end international procurement, customs clearance, freight forwarding, and warehousing solutions connecting China, Dubai, Asia, and East Africa.",
+    "availableCount": "{{count}} services available",
+    "whatsapp": "Inquire via WhatsApp",
+    "chatInApp": "Chat in App",
+    "badge": {
+      "global": "Global Service",
+      "regional": "Regional Hub"
+    },
+    "whatsappMessage": "Hello Hualink Distribution! I would like to inquire about {{title}}. Please share details and pricing.",
+    "chatContext": "Inquiring about {{title}}",
+    "items": {
+      "freight": {
+        "title": "Global Freight Forwarding (Air & Sea)",
+        "subtitle": "Express air cargo and sea freight logistics connecting China, Dubai, Asia, and East Africa (Mbeya & Dar es Salaam).",
+        "features": [
+          "Door-to-door delivery",
+          "Real-time shipment tracking",
+          "Bulk cargo & container handling"
+        ]
+      },
+      "customs": {
+        "title": "Customs Clearance & TRA Duty Consultation",
+        "subtitle": "Fast-track TRA compliance, tariff valuation, and documentation for bulk imports.",
+        "features": [
+          "TRA compliance & clearance",
+          "Accurate duty calculation",
+          "Single-window documentation support"
+        ]
+      },
+      "sourcing": {
+        "title": "Sourcing & Factory Quality Inspection",
+        "subtitle": "Direct factory verification, pre-shipment inspections, and sample testing across verified Chinese & global manufacturers.",
+        "features": [
+          "Pre-shipment quality audits",
+          "Defect checks",
+          "Verified factory sourcing"
+        ]
+      },
+      "hub": {
+        "title": "Regional Stock Hub Distribution (Mbeya & Dar es Salaam)",
+        "subtitle": "Localized wholesale warehousing and rapid dispatch network across Tanzania and neighboring East African regions.",
+        "features": [
+          "Same-day dispatch to regional centers",
+          "Bulk inventory storage",
+          "Live driver route tracking"
+        ]
+      }
     }
   }
 }
