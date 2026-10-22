@@ -17,17 +17,19 @@ import {
   CreditCard,
   AlertCircle,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 
 const ADMIN_NAV_ITEMS = [
-  { to: '/dashboard/admin', label: 'Overview', icon: LayoutDashboard },
-  { to: '/dashboard/admin/products', label: 'Products', icon: Package },
-  { to: '/dashboard/admin/orders', label: 'Orders', icon: ShoppingBag },
-  { to: '/dashboard/admin/customers', label: 'Customers', icon: Users },
-  { to: '/dashboard/admin/analytics', label: 'Analytics', icon: BarChart3 },
+  { to: '/dashboard/admin', labelKey: 'admin.nav.overview', icon: LayoutDashboard },
+  { to: '/dashboard/admin/products', labelKey: 'admin.nav.products', icon: Package },
+  { to: '/dashboard/admin/orders', labelKey: 'admin.nav.orders', icon: ShoppingBag },
+  { to: '/dashboard/admin/customers', labelKey: 'admin.nav.customers', icon: Users },
+  { to: '/dashboard/admin/analytics', labelKey: 'admin.nav.analytics', icon: BarChart3 },
 ];
 
 export default function AdminLayout({ children }) {
+  const { t } = useTranslation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
@@ -65,7 +67,7 @@ export default function AdminLayout({ children }) {
           <button
             onClick={() => setIsSidebarOpen(false)}
             className="md:hidden p-2 text-slate-400 hover:text-white rounded hover:bg-navy-800"
-            aria-label="Close sidebar"
+            aria-label={t('admin.nav.closeSidebar')}
           >
             <XIcon size={20} />
           </button>
@@ -75,7 +77,7 @@ export default function AdminLayout({ children }) {
           <div className="px-3 mb-6">
             <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
               <Search size={14} className="text-slate-500" />
-              <span>Admin Panel</span>
+              <span>{t('admin.nav.panel')}</span>
             </div>
           </div>
 
@@ -93,21 +95,23 @@ export default function AdminLayout({ children }) {
                 }`}
               >
                 <Icon size={16} className={isActive ? 'text-white' : 'text-slate-400'} />
-                <span>{item.label}</span>
+                <span>{t(item.labelKey)}</span>
               </Link>
             );
           })}
 
           <div className="mt-8 pt-6 border-t border-navy-800">
             <div className="px-3 mb-4">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Account</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                {t('admin.nav.account')}
+              </p>
             </div>
             <button
               onClick={handleLogout}
               className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-slate-300 hover:bg-navy-800 hover:text-white transition-all cursor-pointer"
             >
               <LogOut size={16} />
-              <span>Sign Out</span>
+              <span>{t('common.signOut')}</span>
             </button>
           </div>
         </nav>
@@ -119,7 +123,7 @@ export default function AdminLayout({ children }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-navy-100 truncate">
-                {user?.name || user?.fullName || 'Administrator'}
+                {user?.name || user?.fullName || t('admin.nav.administrator')}
               </p>
               <p className="text-[10px] text-slate-400 truncate">
                 {user?.role || 'ADMIN'}

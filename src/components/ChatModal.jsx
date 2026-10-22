@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { MessageSquare, Send, ShieldCheck, X } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { createInquiry } from '../api/inquiryService';
@@ -19,11 +20,13 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const socket = io(API_BASE_URL, { autoConnect: false });
 
 export default function ChatModal({ product, onClose, currentUser, initialMessage }) {
+  const { t } = useTranslation();
+
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState(initialMessage || '');
   const chatBottomRef = useRef(null);
 
-  const name = product?.name || product?.title || 'this product';
+  const name = product?.name || product?.title || t('product.product');
   const priceLabel = formatPrice(product?.price ?? product?.basePrice);
   const bookingId = `PRD-${product?.id || 'general'}`;
   const currentUserId = currentUser?.id || currentUser?._id || 'guest-visitor';
@@ -115,7 +118,7 @@ export default function ChatModal({ product, onClose, currentUser, initialMessag
       className="fixed inset-0 z-[80] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
-      aria-label={`Live chat about ${name}`}
+      aria-label={t('product.liveChatAbout', { name })}
     >
       {/* Blurred backdrop — clicking it closes the chat cleanly */}
       <div
@@ -139,7 +142,7 @@ export default function ChatModal({ product, onClose, currentUser, initialMessag
             <h3 className="text-sm font-bold text-gray-900 leading-snug truncate">{name}</h3>
             <p className="text-[11px] text-gray-500 font-semibold flex items-center gap-1 mt-0.5">
               <ShieldCheck size={11} className="text-emerald-600 shrink-0" />
-              Hualink Live Sales Chat
+              {t('chat.liveSalesChat')}
             </p>
             <p className="text-[11px] text-red-600 font-bold mt-0.5">{priceLabel}</p>
           </div>
@@ -147,7 +150,7 @@ export default function ChatModal({ product, onClose, currentUser, initialMessag
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close chat"
+            aria-label={t('chat.closeChat')}
             className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
           >
             <X size={16} />
@@ -159,9 +162,9 @@ export default function ChatModal({ product, onClose, currentUser, initialMessag
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center gap-2 text-slate-500">
               <MessageSquare size={26} className="text-slate-600" />
-              <p className="text-xs font-medium">No messages yet.</p>
+              <p className="text-xs font-medium">{t('common.noMessages')}</p>
               <p className="text-[11px] text-slate-600">
-                Send a message to start talking to the Hualink sales desk.
+                {t('common.chatEmptyHint')}
               </p>
             </div>
           ) : (
@@ -205,14 +208,14 @@ export default function ChatModal({ product, onClose, currentUser, initialMessag
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-            placeholder="Type your message..."
-            aria-label="Chat message"
+            placeholder={t('common.typeMessage')}
+            aria-label={t('chat.messageInput')}
             className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#DC2626] transition-colors"
           />
           <button
             type="button"
             onClick={sendMessage}
-            aria-label="Send message"
+            aria-label={t('chat.sendMessage')}
             className="bg-[#DC2626] hover:bg-red-700 text-white w-11 rounded-xl flex items-center justify-center cursor-pointer transition-colors shrink-0"
           >
             <Send size={16} />

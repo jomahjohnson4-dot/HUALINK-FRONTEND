@@ -14,6 +14,7 @@ import sw from '../../locales/sw.json';
 import zh from '../../locales/zh.json';
 import fr from '../../locales/fr.json';
 import { getFaqs, createFaq, updateFaq, deleteFaq } from '../../api/faqService';
+import { useTranslation } from 'react-i18next';
 
 const LANGS = [
   { key: 'en', label: 'EN', locale: en },
@@ -25,23 +26,23 @@ const LANGS = [
 const TOGGLE_DEFS = [
   {
     key: 'featuredOffers',
-    label: 'Featured Offers Strip',
-    description: 'Surface discounted deals on the landing page.',
+    labelKey: 'admin.settings.toggles.featured',
+    descKey: 'admin.settings.toggles.featuredDesc',
   },
   {
     key: 'bannerAlerts',
-    label: 'Banner Alerts',
-    description: 'Show the promotional banner above the marketplace header.',
+    labelKey: 'admin.settings.toggles.banners',
+    descKey: 'admin.settings.toggles.bannersDesc',
   },
   {
     key: 'liveChat',
-    label: 'Live Chat Widget',
-    description: 'Allow clients to open the supplier chat panel.',
+    labelKey: 'admin.settings.toggles.chat',
+    descKey: 'admin.settings.toggles.chatDesc',
   },
   {
     key: 'maintenanceNotice',
-    label: 'Maintenance Notice',
-    description: 'Display a scheduled-maintenance message site-wide.',
+    labelKey: 'admin.settings.toggles.maintenance',
+    descKey: 'admin.settings.toggles.maintenanceDesc',
   },
 ];
 
@@ -81,6 +82,7 @@ const seedFromLocales = async () => {
 };
 
 export default function AdminSettingsPanel({ onToast }) {
+  const { t } = useTranslation();
   const [faqs, setFaqs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -112,7 +114,7 @@ export default function AdminSettingsPanel({ onToast }) {
     } catch (err) {
       console.error('Failed to load FAQs:', err);
       setFaqs([]);
-      setLoadError('Could not reach the FAQ service. Please try again.');
+      setLoadError(t('admin.settings.errorService'));
     } finally {
       setLoading(false);
     }
@@ -124,7 +126,9 @@ export default function AdminSettingsPanel({ onToast }) {
 
   const handleToggle = (key) => {
     setToggles((current) => ({ ...current, [key]: !current[key] }));
-    onToast?.(`${TOGGLE_DEFS.find((t) => t.key === key)?.label} updated.`);
+    const def = TOGGLE_DEFS.find((toggle) => toggle.key === key);
+    if (!def) return;
+    onToast?.(t('admin.settings.updated', { label: t(def.labelKey) }));
   };
 
   /** Removes the FAQ from the database, then from the local list. */
@@ -133,11 +137,11 @@ export default function AdminSettingsPanel({ onToast }) {
       await deleteFaq(id);
       setFaqs((current) => current.filter((faq) => faq.id !== id));
       if (openId === id) setOpenId(null);
-      onToast?.('FAQ removed.');
+      onToast?.(t('admin.settings.removed'));
     } catch (err) {
       console.error('FAQ delete failed:', err);
       onToast?.(
-        err?.response?.data?.message || 'Could not remove the FAQ. Please try again.',
+        err?.response?.data?.message || t('admin.settings.errorRemove'),
         'error'
       );
     }
@@ -175,7 +179,7 @@ export default function AdminSettingsPanel({ onToast }) {
 
   const handleAdd = async () => {
     if (!draft.question.trim()) {
-      onToast?.('FAQ question is required.', 'error');
+      onToast?.(t('admin.settings.errorQuestionRequired'), 'error');
       return;
     }
 
@@ -187,11 +191,11 @@ export default function AdminSettingsPanel({ onToast }) {
       });
       setFaqs((current) => [...current, normaliseFaq(created)]);
       setDraft(null);
-      onToast?.('FAQ Added Successfully!');
+      onToast?.(t('admin.settings.successAdd'));
     } catch (err) {
       console.error('FAQ create failed:', err);
       onToast?.(
-        err?.response?.data?.message || 'Could not add the FAQ. Please try again.',
+        err?.response?.data?.message || t('admin.settings.errorAdd'),
         'error'
       );
     }
@@ -208,11 +212,11 @@ export default function AdminSettingsPanel({ onToast }) {
       );
       setFaqs(saved.map(normaliseFaq));
       setDirty(false);
-      onToast?.('FAQ Changes Saved Successfully!');
+      onToast?.(t('admin.settings.successSave'));
     } catch (err) {
       console.error('FAQ save failed:', err);
       onToast?.(
-        err?.response?.data?.message || 'Could not save the FAQ changes. Please try again.',
+        err?.response?.data?.message || t('admin.settings.errorSave'),
         'error'
       );
     } finally {
@@ -226,11 +230,11 @@ export default function AdminSettingsPanel({ onToast }) {
       <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5 sm:p-6">
         <div className="flex items-center gap-2 mb-5">
           <SlidersHorizontal size={16} className="text-orange-500" />
-          <h3 className="text-sm font-extrabold text-white">System Settings</h3>
+          <h3 className="text-sm font-extrabold text-white">{t('admin.settings.title')}</h3>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {TOGGLE_DEFS.map(({ key, label, description }) => {
+          {TOGGLE_DEFS.map(({ key, labelKey, descKey }) => {
             const isOn = toggles[key];
             return (
               <div
@@ -238,14 +242,16 @@ export default function AdminSettingsPanel({ onToast }) {
                 className="flex items-start justify-between gap-4 bg-slate-900/50 border border-slate-700/60 rounded-xl px-4 py-3"
               >
                 <div>
-                  <p className="text-xs font-bold text-white">{label}</p>
-                  <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">{description}</p>
+                  <p className="text-xs font-bold text-white">{t(labelKey)}</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">
+                    {t(descKey)}
+                  </p>
                 </div>
                 <button
                   type="button"
                   role="switch"
                   aria-checked={isOn}
-                  aria-label={label}
+                  aria-label={t(labelKey)}
                   onClick={() => handleToggle(key)}
                   className={`shrink-0 mt-0.5 relative h-6 w-11 rounded-full transition-colors cursor-pointer ${
                     isOn ? 'bg-orange-500' : 'bg-slate-700'
@@ -270,9 +276,9 @@ export default function AdminSettingsPanel({ onToast }) {
           <div className="flex items-center gap-2">
             <MessageSquareText size={16} className="text-orange-500" />
             <h3 className="text-sm font-extrabold text-white">
-              FAQ Manager
+              {t('admin.settings.faqManager')}
               <span className="block text-[10px] font-bold text-slate-400 mt-0.5">
-                EN / SW / ZH / FR
+                {t('admin.settings.faqLanguages')}
               </span>
             </h3>
           </div>
@@ -282,7 +288,7 @@ export default function AdminSettingsPanel({ onToast }) {
             className="flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-slate-950 font-extrabold text-xs px-4 py-2.5 rounded-xl transition-colors cursor-pointer"
           >
             <Plus size={14} />
-            <span>Add FAQ</span>
+            <span>{t('admin.settings.addFaq')}</span>
           </button>
         </div>
 
@@ -297,7 +303,9 @@ export default function AdminSettingsPanel({ onToast }) {
           {loading ? (
             <div className="py-8 flex items-center justify-center gap-2 text-slate-400">
               <Loader2 size={16} className="animate-spin text-orange-500" />
-              <span className="text-xs font-bold">Loading FAQs from the database...</span>
+              <span className="text-xs font-bold">
+                {t('admin.settings.loadingFaqs')}
+              </span>
             </div>
           ) : null}
 
@@ -329,7 +337,9 @@ export default function AdminSettingsPanel({ onToast }) {
                     <button
                       type="button"
                       onClick={() => handleRemove(faq.id)}
-                      aria-label={`Remove FAQ: ${faq.question}`}
+                      aria-label={t('admin.settings.removeFaq', {
+                        question: faq.question,
+                      })}
                       className="h-8 w-8 shrink-0 rounded-lg border border-slate-700 flex items-center justify-center text-slate-400 hover:text-red-400 hover:border-red-500 transition-colors cursor-pointer"
                     >
                       <Trash2 size={13} />
@@ -340,7 +350,7 @@ export default function AdminSettingsPanel({ onToast }) {
                     <div className="px-4 pb-4 space-y-3 border-t border-slate-800 pt-3">
                       <div>
                         <label className="block text-[10px] font-bold text-slate-400 mb-1">
-                          Question
+                          {t('admin.settings.question')}
                         </label>
                         <input
                           type="text"
@@ -356,7 +366,7 @@ export default function AdminSettingsPanel({ onToast }) {
                             <span className="bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5">
                               {label}
                             </span>
-                            Answer
+                            {t('admin.settings.answer')}
                           </label>
                           <textarea
                             rows={3}
@@ -376,7 +386,7 @@ export default function AdminSettingsPanel({ onToast }) {
 
           {!loading && !faqs.length ? (
             <p className="text-center text-xs font-bold text-slate-400 py-8">
-              No FAQs configured. Add one to get started.
+              {t('admin.settings.emptyFaqs')}
             </p>
           ) : null}
         </div>
@@ -392,10 +402,12 @@ export default function AdminSettingsPanel({ onToast }) {
           ) : (
             <Save size={14} />
           )}
-          <span>{saving ? 'Saving...' : 'Save FAQ Changes'}</span>
+          <span>
+            {saving ? t('admin.settings.saving') : t('admin.settings.saveFaqChanges')}
+          </span>
           {dirty && !saving ? (
             <span className="ml-1 text-[10px] font-bold text-orange-400 uppercase">
-              Unsaved
+              {t('admin.settings.unsaved')}
             </span>
           ) : null}
         </button>
@@ -411,19 +423,22 @@ export default function AdminSettingsPanel({ onToast }) {
           />
           <div className="relative bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-xl shadow-2xl my-8">
             <div className="border-b border-slate-800 px-5 py-4">
-              <h3 className="text-sm font-extrabold text-white">Add New FAQ</h3>
+              <h3 className="text-sm font-extrabold text-white">
+                {t('admin.settings.addNewFaq')}
+              </h3>
             </div>
             <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
               <div>
                 <label className="block text-[11px] font-bold text-slate-400 mb-1.5">
-                  Question <span className="text-orange-500">*</span>
+                  {t('admin.settings.questionRequired')}{' '}
+                  <span className="text-orange-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={draft.question}
                   onChange={(e) => handleDraftChange('question', e.target.value)}
                   className="admin-input"
-                  placeholder="How do I place a wholesale order?"
+                  placeholder={t('admin.settings.questionPlaceholder')}
                 />
               </div>
 
@@ -433,14 +448,14 @@ export default function AdminSettingsPanel({ onToast }) {
                     <span className="bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5">
                       {label}
                     </span>
-                    Answer
+                    {t('admin.settings.answer')}
                   </label>
                   <textarea
                     rows={3}
                     value={draft.answers[key]}
                     onChange={(e) => handleDraftAnswer(key, e.target.value)}
                     className="admin-input resize-none"
-                    placeholder={`Answer in ${label}...`}
+                    placeholder={t('admin.settings.answerPlaceholder', { label })}
                   />
                 </div>
               ))}
@@ -451,7 +466,7 @@ export default function AdminSettingsPanel({ onToast }) {
                 onClick={() => setDraft(null)}
                 className="text-xs font-bold text-slate-300 hover:text-white px-4 py-2.5 rounded-xl transition-colors cursor-pointer"
               >
-                Cancel
+                {t('admin.settings.cancel')}
               </button>
               <button
                 type="button"
@@ -459,7 +474,7 @@ export default function AdminSettingsPanel({ onToast }) {
                 className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-slate-950 font-extrabold text-xs px-5 py-2.5 rounded-xl transition-colors cursor-pointer"
               >
                 <Plus size={14} />
-                <span>Add FAQ</span>
+                <span>{t('admin.settings.addFaq')}</span>
               </button>
             </div>
           </div>

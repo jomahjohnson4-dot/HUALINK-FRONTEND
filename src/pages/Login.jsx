@@ -10,8 +10,6 @@ import {
   AlertCircle,
   AlertTriangle,
   X,
-  KeyRound,
-  CheckCircle2,
   Globe,
 } from 'lucide-react';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
@@ -19,6 +17,12 @@ import Logo from '../components/Logo';
 import api from '../api/axios';
 import { useTranslation } from 'react-i18next';
 import { LANGUAGES } from '../hooks/useLanguage';
+import { useAuth } from '../context/AuthContext';
+import {
+  isAdminEmail,
+  isAdminMasterCredential,
+  isAdminUser,
+} from '../config/adminAccess';
 
 export default function Login({ onLoginSuccess }) {
   // ------------------------------------------------------------------
@@ -26,6 +30,7 @@ export default function Login({ onLoginSuccess }) {
   // default value never breaks the initial render / blank white screen).
   // ------------------------------------------------------------------
   const navigate = useNavigate();
+  const { adminLogin } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   // Defensive default-fallback state initialization so a malformed default
   // value never breaks the initial render (prevents blank white screen).
@@ -52,44 +57,35 @@ export default function Login({ onLoginSuccess }) {
   };
 
   // ------------------------------------------------------------------
-  // One-Click Demo Admin Login: no backend required. Writes the auth
-  // state (role: 'admin' + token) to localStorage, notifies the
-  // AuthContext listener and jumps straight to /admin.
+  // Secure admin entry.
+  //
+  // There is NO public "LOGIN AS ADMIN" button. Administrators either
+  //   1. sign in with the protected admin mailbox + the designated master
+  //      password in the standard form below, or
+  //   2. open the dedicated secure route `/admin/login` through the
+  //      discreet trigger or the Ctrl+Shift+A shortcut.
   // ------------------------------------------------------------------
-  const handleAdminLogin = () => {
-    const adminUser = {
-      id: 'demo_admin',
-      name: 'HUALINK Admin',
-      email: 'admin@hualink.local',
-      role: 'admin',
-      isLoggedIn: true,
-      demo: true,
-      signedInAt: new Date().toISOString(),
+  const openSecureAdminEntry = useCallback(() => {
+    navigate('/admin/login');
+  }, [navigate]);
+
+  // Keyboard shortcut: Ctrl + Shift + A (also Alt + Shift + A) opens the
+  // secure administrator entry.
+  useEffect(() => {
+    const handleShortcut = (event) => {
+      if (!event.shiftKey) return;
+      if (!(event.ctrlKey || event.altKey) || event.metaKey) return;
+
+      const key = String(event.key || '').toLowerCase();
+      if (key !== 'a') return;
+
+      event.preventDefault();
+      openSecureAdminEntry();
     };
-    const adminToken = 'demo_admin_token';
 
-    try {
-      localStorage.setItem('hualink_token', adminToken);
-      localStorage.setItem('hualink_user', JSON.stringify(adminUser));
-      localStorage.setItem('hualink_auth', 'active');
-      // Pre-unlock the admin passcode layer so access is truly one-click.
-      localStorage.setItem('isHualinkAdmin', 'true');
-    } catch {
-      // Storage unavailable — the in-memory session still applies.
-    }
-
-    window.dispatchEvent(
-      new CustomEvent('hualink:session-change', {
-        detail: { user: adminUser, token: adminToken },
-      })
-    );
-
-    if (onLoginSuccess) {
-      onLoginSuccess(adminUser);
-    }
-
-    navigate('/admin', { replace: true });
-  };
+    window.addEventListener('keydown', handleShortcut);
+    return () => window.removeEventListener('keydown', handleShortcut);
+  }, [openSecureAdminEntry]);
 
   // ------------------------------------------------------------------
   // Email / Password sign-in -> POST /api/auth/login
@@ -101,7 +97,36 @@ export default function Login({ onLoginSuccess }) {
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email || !emailRegex.test(formData.email)) {
-      setError('Please enter a valid email address.');
+      setError(t('auth.validEmail'));
+      setLoading(false);
+      return;
+    }
+
+    // ----------------------------------------------------------------
+    // Secure admin path: protected admin mailbox + designated master
+    // password. The session is routed to /admin.
+    // ----------------------------------------------------------------
+    if (isAdminMasterCredential(formData.email, formData.password)) {
+      try {
+        const { user } = await adminLogin(formData.email, formData.password);
+
+        if (onLoginSuccess) {
+          onLoginSuccess(user);
+        }
+
+        navigate('/admin', { replace: true });
+        return;
+      } catch {
+        setError(t('auth.admin.invalid'));
+        setLoading(false);
+        return;
+      }
+    }
+
+    // The admin mailbox with a non-master password is never accepted as a
+    // regular customer account.
+    if (isAdminEmail(formData.email)) {
+      setError(t('auth.admin.invalid'));
       setLoading(false);
       return;
     }
@@ -136,7 +161,9 @@ export default function Login({ onLoginSuccess }) {
         onLoginSuccess({ email: formData.email, ...(user || {}) });
       }
 
-      navigate('/');
+      // A backend-issued admin profile routes straight to the console;
+      // everybody else keeps the standard customer permissions.
+      navigate(isAdminUser(user) ? '/admin' : '/');
     } catch (err) {
       // ------------------------------------------------------------------
       // Graceful fallback: backend 404 / unreachable. Capture without
@@ -147,16 +174,17 @@ export default function Login({ onLoginSuccess }) {
       const isNotFound = err.response?.status === 404;
 
       if (isNetworkError || isNotFound) {
-        const fallbackMessage =
-          'Backend API unreachable on port 5000. Saving session locally...';
+        const fallbackMessage = t('auth.backendUnreachable');
         setError(fallbackMessage);
         setFallbackBanner(true);
         setTimeout(() => setFallbackBanner(false), 6000);
 
-        // Persist a local fallback session so testing is never blocked
+        // Persist a local fallback session so testing is never blocked.
+        // Regular users always receive standard customer permissions.
         const fallbackUser = {
           email: formData.email,
           name: formData.email.split('@')[0] || 'Customer',
+          role: 'customer',
           isLoggedIn: true,
           fallback: true,
           signedInAt: new Date().toISOString(),
@@ -178,9 +206,7 @@ export default function Login({ onLoginSuccess }) {
         navigate('/');
       } else {
         setError(
-          err.response?.data?.message ||
-            err.message ||
-            'Login failed. Please try again.'
+          err.response?.data?.message || err.message || t('auth.loginFailed')
         );
       }
     } finally {
@@ -221,14 +247,13 @@ export default function Login({ onLoginSuccess }) {
           onLoginSuccess({ email: user?.email || '', ...(user || {}) });
         }
 
-        navigate('/');
+        navigate(isAdminUser(user) ? '/admin' : '/');
       } catch (err) {
         const isNetworkError = !err.response;
         const isNotFound = err.response?.status === 404;
 
         if (isNetworkError || isNotFound) {
-          const fallbackMessage =
-            'Backend API unreachable on port 5000. Saving session locally...';
+          const fallbackMessage = t('auth.backendUnreachable');
           setError(fallbackMessage);
           setFallbackBanner(true);
           setTimeout(() => setFallbackBanner(false), 6000);
@@ -236,6 +261,7 @@ export default function Login({ onLoginSuccess }) {
           const fallbackUser = {
             email: '',
             name: 'Google User',
+            role: 'customer',
             isLoggedIn: true,
             fallback: true,
             signedInAt: new Date().toISOString(),
@@ -257,20 +283,18 @@ export default function Login({ onLoginSuccess }) {
           navigate('/');
         } else {
           setError(
-            err.response?.data?.message ||
-              err.message ||
-              'Google login failed. Please try again.'
+            err.response?.data?.message || err.message || t('auth.googleFailed')
           );
         }
       } finally {
         setGoogleLoading(false);
       }
     },
-    [onLoginSuccess, navigate]
+    [onLoginSuccess, navigate, t]
   );
 
   const handleGoogleFailure = () => {
-    setError('Google sign-in was cancelled or failed.');
+    setError(t('auth.googleCancelled'));
     setGoogleLoading(false);
   };
 
@@ -303,6 +327,7 @@ export default function Login({ onLoginSuccess }) {
             <div className="relative group">
               <button
                 onClick={() => setIsLangOpen((o) => !o)}
+                aria-label={t('common.language')}
                 className="flex items-center gap-1.5 px-4 py-1.5 border border-gray-200 bg-gray-50 rounded-full text-xs font-semibold text-gray-900 hover:bg-gray-100 transition-all flex items-center gap-2 cursor-pointer"
               >
                 <Globe size={14} className="text-gray-500" />
@@ -345,7 +370,7 @@ export default function Login({ onLoginSuccess }) {
         <div className="relative w-full h-full min-h-[550px] flex overflow-hidden">
           <img
             src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&q=80&w=1200"
-            alt="Business owner working in modern office"
+            alt={t('auth.heroAlt')}
             className="w-full h-full object-cover rounded-none md:rounded-r-3xl"
             style={{ animation: 'kenBurns 20s ease-in-out infinite alternate' }}
           />
@@ -363,7 +388,7 @@ export default function Login({ onLoginSuccess }) {
 
           {/* Disclaimer */}
           <div className="absolute bottom-3 left-6 text-[10px] text-white/80">
-            *Eligibility restrictions apply. Terms & Conditions apply.
+            {t('auth.disclaimer')}
           </div>
         </div>
 
@@ -372,23 +397,12 @@ export default function Login({ onLoginSuccess }) {
           {/* Header */}
           <div className="mb-5">
             <h2 className="text-3xl font-extrabold text-gray-900 mb-1">
-              Welcome Back
+              {t('auth.welcomeBack')}
             </h2>
             <p className="text-sm text-gray-500 mb-6">
-              Sign in to access your orders and distribution portal
+              {t('auth.signInSubtitle')}
             </p>
           </div>
-
-          {/* One-Click Demo Admin Access (prominent, no backend needed) */}
-          <button
-            type="button"
-            onClick={handleAdminLogin}
-            className="w-full mb-5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg shadow-slate-900/20 border border-slate-700 flex items-center justify-center gap-2 text-sm tracking-wide transition-all cursor-pointer"
-          >
-            <ShieldCheck size={17} className="text-emerald-400" />
-            LOGIN AS ADMIN
-            <ArrowRight size={16} />
-          </button>
 
           {error && (
             <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-sm">
@@ -399,7 +413,7 @@ export default function Login({ onLoginSuccess }) {
           {googleLoading && (
             <div className="mb-4 p-3 bg-slate-50 border border-slate-200 text-slate-600 rounded-xl text-sm flex items-center gap-2">
               <span className="h-3.5 w-3.5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
-              Verifying with Google...
+              {t('auth.verifyingGoogle')}
             </div>
           )}
 
@@ -434,7 +448,7 @@ export default function Login({ onLoginSuccess }) {
           {googleClientId ? (
             <div className="flex items-center gap-3 my-5">
               <div className="h-px bg-gray-200 flex-1"></div>
-              <span className="text-xs font-bold text-gray-400">OR</span>
+              <span className="text-xs font-bold text-gray-400">{t('auth.or')}</span>
               <div className="h-px bg-gray-200 flex-1"></div>
             </div>
           ) : null}
@@ -444,7 +458,7 @@ export default function Login({ onLoginSuccess }) {
             {/* Email Field */}
             <div>
               <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                Email Address
+                {t('auth.emailAddress')}
               </label>
               <div className="relative mb-4">
                 <Mail className="w-5 h-5 text-gray-400 absolute left-3.5 top-3.5" />
@@ -453,7 +467,7 @@ export default function Login({ onLoginSuccess }) {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="name@example.com"
+                  placeholder={t('auth.emailPlaceholder')}
                   className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-[#E50914] focus:outline-none"
                 />
               </div>
@@ -462,13 +476,13 @@ export default function Login({ onLoginSuccess }) {
             {/* Password Field & Forgot? Link */}
             <div className="flex items-center justify-between mb-1">
               <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                Password
+                {t('auth.password')}
               </label>
               <Link
                 to="/forgot-password"
                 className="text-xs font-bold text-[#E50914] hover:underline"
               >
-                Forgot?
+                {t('auth.forgot')}
               </Link>
             </div>
             <div className="relative mb-6">
@@ -484,7 +498,8 @@ export default function Login({ onLoginSuccess }) {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-3.5 text-gray-400 hover:text-gray-600"
+                aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                className="absolute right-3.5 top-3.5 text-gray-400 hover:text-gray-600 cursor-pointer"
               >
                 <Eye className="w-5 h-5" />
               </button>
@@ -496,7 +511,7 @@ export default function Login({ onLoginSuccess }) {
               disabled={loading}
               className="w-full bg-[#E50914] hover:bg-[#C0040F] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-red-500/20 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {loading ? 'Signing in...' : 'SIGN IN'}
+              {loading ? t('auth.signingIn') : t('auth.signIn')}
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
@@ -504,16 +519,31 @@ export default function Login({ onLoginSuccess }) {
           {/* Security Note */}
           <div className="mt-6 text-center text-xs text-gray-500 flex items-center justify-center gap-1.5">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>Secured Direct Distribution Portal</span>
+            <span>{t('auth.secureNote')}</span>
           </div>
 
           {/* Register Link */}
           <p className="mt-3 text-center text-xs text-gray-600">
-            Don't have an account?{' '}
+            {t('auth.noAccount')}{' '}
             <Link to="/register" className="font-bold text-[#E50914] hover:underline">
-              Create Account
+              {t('auth.createAccount')}
             </Link>
           </p>
+
+          {/* Discreet administrator entry.
+              Kept intentionally unobtrusive: no public "LOGIN AS ADMIN"
+              button exists, the route is also reachable with Ctrl + Shift + A. */}
+          <div className="mt-4 flex justify-center">
+            <button
+              type="button"
+              onClick={openSecureAdminEntry}
+              aria-label={t('auth.admin.discreetEntry')}
+              title={t('auth.admin.discreetEntry')}
+              className="text-gray-300 hover:text-gray-600 focus:text-gray-700 transition-colors cursor-pointer opacity-60 hover:opacity-100 focus:opacity-100"
+            >
+              <ShieldCheck size={14} />
+            </button>
+          </div>
         </div>
       </div>
     </div>

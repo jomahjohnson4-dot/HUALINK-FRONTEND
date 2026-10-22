@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../api/axios';
 import { requestSignupOtp, verifyOtp } from '../api/verificationService';
 import OtpVerificationModal from '../components/modals/OtpVerificationModal';
@@ -21,6 +22,7 @@ import {
 
 export default function Register({ onRegisterSuccess }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [accountType, setAccountType] = useState('buyer');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -65,12 +67,12 @@ export default function Register({ onRegisterSuccess }) {
     setError('');
 
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long.');
+      setError(t('register.errorPasswordShort'));
       return;
     }
 
     if (accountType === 'wholesale' && !formData.companyName.trim()) {
-      setError('Company name is required for Wholesale Partner accounts.');
+      setError(t('register.errorCompanyRequired'));
       return;
     }
 
@@ -113,7 +115,7 @@ export default function Register({ onRegisterSuccess }) {
       }
 
       setError(
-        err.response?.data?.message || err.message || 'Could not send the verification code.'
+        err.response?.data?.message || err.message || t('register.errorSendCode')
       );
     } finally {
       setLoading(false);
@@ -157,7 +159,7 @@ export default function Register({ onRegisterSuccess }) {
       const isNotFound = err.response?.status === 404;
 
       if (isNetworkError || isNotFound) {
-        setError('Backend API unreachable on port 5000. Saving session locally...');
+        setError(t('register.errorFallback'));
         setFallbackBanner(true);
         setTimeout(() => setFallbackBanner(false), 6000);
 
@@ -205,7 +207,7 @@ export default function Register({ onRegisterSuccess }) {
         navigate('/');
       } else {
         setError(
-          err.response?.data?.message || err.message || 'Registration failed. Please try again.'
+          err.response?.data?.message || err.message || t('register.errorRegisterFailed')
         );
         // Re-thrown so the verification modal can surface the failure.
         throw err;
@@ -233,14 +235,14 @@ export default function Register({ onRegisterSuccess }) {
       });
 
       if (!result.success) {
-        throw new Error(result.message || 'The verification code is incorrect.');
+        throw new Error(result.message || t('register.errorCodeIncorrect'));
       }
 
       await completeRegistration(pendingPayload, result.verificationId);
     } catch (err) {
       // The modal renders the failure, but the banner keeps the form context.
       if (err?.response) {
-        setError(err.response?.data?.message || 'The verification code is incorrect.');
+        setError(err.response?.data?.message || t('register.errorCodeIncorrect'));
       }
       throw err;
     } finally {
@@ -261,7 +263,7 @@ export default function Register({ onRegisterSuccess }) {
       setOtpSession(session);
     } catch (err) {
       setError(
-        err.response?.data?.message || err.message || 'Could not resend the verification code.'
+        err.response?.data?.message || err.message || t('register.errorResendCode')
       );
     } finally {
       setOtpResendLoading(false);
@@ -284,7 +286,7 @@ export default function Register({ onRegisterSuccess }) {
               to="/login"
               className="flex items-center gap-1.5 px-4 py-1.5 border border-gray-200 rounded-full bg-gray-50 text-gray-800 hover:bg-gray-100 hover:text-[#E50914] font-bold text-xs cursor-pointer transition-all"
             >
-              <span>Sign In</span>
+              <span>{t('register.signIn')}</span>
             </Link>
           </div>
         </div>
@@ -308,25 +310,25 @@ export default function Register({ onRegisterSuccess }) {
         <div className="relative w-full h-full min-h-[550px] flex overflow-hidden">
           <img
             src="https://images.unsplash.com/photo-1505075489807-bfee9915866e?auto=format&fit=crop&q=80&w=1200"
-            alt="Verified wholesale distribution warehouse"
+            alt={t('register.altWarehouse')}
             className="w-full h-full object-cover rounded-none md:rounded-r-3xl"
             style={{ animation: 'kenBurns 20s ease-in-out infinite alternate' }}
           />
 
           {/* Floating Feature Badges */}
           <div className="absolute top-10 right-8 bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-full text-xs font-bold text-slate-900 shadow-xl border-l-4 border-[#E50914] animate-bounce">
-            Verified Suppliers
+            {t('register.badgeVerified')}
           </div>
           <div className="absolute top-1/3 left-8 bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-full text-xs font-bold text-slate-900 shadow-xl border-l-4 border-[#E50914] animate-pulse">
-            Direct Factory Wholesale
+            {t('register.badgeFactory')}
           </div>
           <div className="absolute bottom-1/3 right-12 bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-full text-xs font-bold text-slate-900 shadow-xl border-l-4 border-[#E50914] animate-[floatBadge_4s_ease-in-out_infinite]">
-            Fast Regional Delivery
+            {t('register.badgeDelivery')}
           </div>
 
           {/* Disclaimer */}
           <div className="absolute bottom-3 left-6 text-[10px] text-white/80">
-            *Eligibility restrictions apply. Terms & Conditions apply.
+            {t('register.disclaimer')}
           </div>
         </div>
 
@@ -335,10 +337,10 @@ export default function Register({ onRegisterSuccess }) {
           {/* Header */}
           <div className="mb-8">
             <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">
-              Create Your Hualink Account
+              {t('register.title')}
             </h2>
             <p className="text-sm font-semibold text-slate-500">
-              Join Tanzania's direct supply &amp; logistics distribution network
+              {t('register.subtitle')}
             </p>
           </div>
 
@@ -371,7 +373,7 @@ export default function Register({ onRegisterSuccess }) {
                 }`}
               >
                 <ShoppingBag size={16} className={accountType === 'buyer' ? 'text-red-600' : ''} />
-                <span>Customer / Buyer</span>
+                <span>{t('register.buyer')}</span>
               </button>
               <button
                 type="button"
@@ -383,7 +385,7 @@ export default function Register({ onRegisterSuccess }) {
                 }`}
               >
                 <Building2 size={16} className={accountType === 'wholesale' ? 'text-red-600' : ''} />
-                <span>Wholesale Partner</span>
+                <span>{t('register.wholesale')}</span>
               </button>
             </div>
 
@@ -391,7 +393,7 @@ export default function Register({ onRegisterSuccess }) {
             {accountType === 'wholesale' && (
               <div className="fade-in">
                 <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
-                  Business / Company Name
+                  {t('register.companyName')}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
@@ -403,7 +405,7 @@ export default function Register({ onRegisterSuccess }) {
                     required
                     value={formData.companyName}
                     onChange={handleChange}
-                    placeholder="Hualink Retail Store"
+                    placeholder={t('register.companyPlaceholder')}
                     className="block w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold focus:bg-white focus:border-red-600 focus:outline-none transition-colors"
                   />
                 </div>
@@ -413,7 +415,7 @@ export default function Register({ onRegisterSuccess }) {
             {/* Name */}
             <div>
               <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
-                Full Name
+                {t('register.fullName')}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
@@ -425,7 +427,7 @@ export default function Register({ onRegisterSuccess }) {
                   required
                   value={formData.fullName}
                   onChange={handleChange}
-                  placeholder="John Doe"
+                  placeholder={t('register.fullNamePlaceholder')}
                   className="block w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold focus:bg-white focus:border-red-600 focus:outline-none transition-colors"
                 />
               </div>
@@ -434,7 +436,7 @@ export default function Register({ onRegisterSuccess }) {
             {/* Email */}
             <div>
               <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
-                Email Address
+                {t('register.emailAddress')}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
@@ -446,7 +448,7 @@ export default function Register({ onRegisterSuccess }) {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="name@example.com"
+                  placeholder={t('register.emailPlaceholder')}
                   className="block w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold focus:bg-white focus:border-red-600 focus:outline-none transition-colors"
                 />
               </div>
@@ -456,7 +458,7 @@ export default function Register({ onRegisterSuccess }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
-                  Phone Number
+                  {t('register.phoneNumber')}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
@@ -468,7 +470,7 @@ export default function Register({ onRegisterSuccess }) {
                     required
                     value={formData.phone}
                     onChange={handleChange}
-                    placeholder="+255..."
+                    placeholder={t('register.phonePlaceholder')}
                     className="block w-full pl-11 pr-3 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold focus:bg-white focus:border-red-600 focus:outline-none transition-colors"
                   />
                 </div>
@@ -476,7 +478,7 @@ export default function Register({ onRegisterSuccess }) {
 
               <div>
                 <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
-                  Region
+                  {t('register.region')}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
@@ -501,7 +503,7 @@ export default function Register({ onRegisterSuccess }) {
             {/* Password */}
             <div>
               <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
-                Password
+                {t('register.password')}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
@@ -532,13 +534,12 @@ export default function Register({ onRegisterSuccess }) {
               className="w-full mt-2 bg-[#E50914] text-white font-bold py-3.5 rounded-xl hover:bg-[#C0040F] transition-all flex items-center justify-center gap-2 cursor-pointer"
               disabled={loading}
             >
-              {loading ? 'Sending verification code...' : 'CREATE ACCOUNT'}
+              {loading ? t('register.sendingCode') : t('register.createAccount')}
               <ArrowRight size={18} />
             </button>
 
             <p className="text-[10px] font-semibold text-slate-400 text-center leading-relaxed">
-              A 6-digit verification code will be sent to your email address and phone
-              number to confirm your account.
+              {t('register.codeNotice')}
             </p>
           </form>
 
@@ -546,17 +547,17 @@ export default function Register({ onRegisterSuccess }) {
           <div className="mt-8 border-t border-slate-100 pt-6 space-y-4">
             <div className="flex items-center justify-center gap-2 text-xs text-slate-500 font-semibold">
               <ShieldCheck size={16} className="text-red-600" />
-              <span>Secured Direct Distribution Portal</span>
+              <span>{t('register.securePortal')}</span>
             </div>
 
             <p className="text-center text-xs text-slate-600 font-medium">
-              Already have an account?{' '}
+              {t('register.alreadyHaveAccount')}{' '}
               <Link to="/login" className="font-extrabold text-red-600 hover:text-red-700">
-                Sign In here
+                {t('register.signInHere')}
               </Link>
               &nbsp;•&nbsp;
               <Link to="/forgot-password" className="font-extrabold text-[#E50914] hover:text-[#C0040F]">
-                Forgot password?
+                {t('register.forgotPassword')}
               </Link>
             </p>
           </div>
@@ -569,8 +570,8 @@ export default function Register({ onRegisterSuccess }) {
         onClose={() => setOtpOpen(false)}
         onVerify={handleVerifyOtp}
         onResend={handleResendOtp}
-        title="Verify Your Account"
-        subtitle="Enter the 6-digit verification code we sent to your email address and phone number to confirm your identity."
+        title={t('register.verifyTitle')}
+        subtitle={t('register.verifySubtitle')}
         length={otpSession?.length || 6}
         demoCode={otpSession?.demoCode || null}
         isDemo={Boolean(otpSession?.isDemo)}

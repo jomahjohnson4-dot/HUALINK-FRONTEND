@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MessageSquare, MessageCircle, Send, X } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { createInquiry } from '../../api/inquiryService';
@@ -7,6 +8,8 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const socket = io(API_BASE_URL);
 
 export default function ServiceContactModal({ booking, providerPhone, currentUser, onClose, initialMessage, contactName, contactLabel }) {
+  const { t } = useTranslation();
+
   const [chatMode, setChatMode] = useState('internal'); // 'internal' or 'whatsapp'
   const [messages, setMessages] = useState([]);
   // Pre-fill the composer so the inquiry context (e.g. the service name) is
@@ -104,7 +107,9 @@ export default function ServiceContactModal({ booking, providerPhone, currentUse
 
   const openWhatsApp = () => {
     const formattedPhone = (providerPhone || '').replace(/[^0-9]/g, '');
-    const defaultText = encodeURIComponent(`Hello, I am reaching out regarding Service Order #${booking?.id}`);
+    const defaultText = encodeURIComponent(
+      t('contact.whatsappGreeting', { id: booking?.id })
+    );
     window.open(`https://wa.me/${formattedPhone}?text=${defaultText}`, '_blank');
   };
 
@@ -116,11 +121,13 @@ export default function ServiceContactModal({ booking, providerPhone, currentUse
         <div className="p-4 bg-slate-900 border-b border-gray-800 border-t-2 border-t-red-600 flex justify-between items-center">
           <div>
             <h3 className="text-sm font-bold text-white">
-              {contactName || 'Contact Service Provider'}
+              {contactName || t('contact.provider')}
             </h3>
             <p className="text-[10px] text-slate-400">
               {contactLabel ||
-                (booking?.serviceTitle ? `Inquiry: ${booking.serviceTitle}` : `Booking ID: ${booking?.id}`)}
+                (booking?.serviceTitle
+                  ? t('contact.inquiryLabel', { service: booking.serviceTitle })
+                  : t('contact.bookingIdLabel', { id: booking?.id }))}
             </p>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-white p-1 cursor-pointer">
@@ -139,7 +146,7 @@ export default function ServiceContactModal({ booking, providerPhone, currentUse
             }`}
           >
             <MessageSquare size={14} />
-            <span>In-App Live Chat</span>
+            <span>{t('contact.inAppChat')}</span>
           </button>
           
           <button
@@ -151,7 +158,7 @@ export default function ServiceContactModal({ booking, providerPhone, currentUse
             }`}
           >
             <MessageCircle size={14} />
-            <span>WhatsApp Direct</span>
+            <span>{t('contact.whatsappDirect')}</span>
           </button>
         </div>
 
@@ -159,7 +166,7 @@ export default function ServiceContactModal({ booking, providerPhone, currentUse
         <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-[#0F172A]">
           {chatMode === 'internal' ? (
             messages.length === 0 ? (
-              <p className="text-xs text-slate-500 text-center py-12">No messages yet. Send a message to start live chat.</p>
+              <p className="text-xs text-slate-500 text-center py-12">{t('contact.noMessages')}</p>
             ) : (
               messages.map((msg, idx) => {
                 const isMe = msg.senderId === currentUserId;
@@ -188,14 +195,14 @@ export default function ServiceContactModal({ booking, providerPhone, currentUse
                 <MessageCircle size={32} />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white">Chat via WhatsApp</h4>
-                <p className="text-xs text-slate-400 mt-1">Redirect to WhatsApp to talk directly with the assigned provider.</p>
+                <h4 className="text-sm font-bold text-white">{t('contact.chatViaWhatsapp')}</h4>
+                <p className="text-xs text-slate-400 mt-1">{t('contact.whatsappRedirect')}</p>
               </div>
               <button
                 onClick={openWhatsApp}
                 className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-2.5 rounded-xl text-xs transition-colors cursor-pointer"
               >
-                Open WhatsApp Chat
+                {t('contact.openWhatsapp')}
               </button>
             </div>
           )}
@@ -210,12 +217,12 @@ export default function ServiceContactModal({ booking, providerPhone, currentUse
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-              placeholder="Type your message..."
+              placeholder={t('common.typeMessage')}
               className="flex-1 bg-slate-800 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-red-500 transition-colors"
             />
             <button
               onClick={sendMessage}
-              aria-label="Send message"
+              aria-label={t('contact.sendMessageAria')}
               className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-xl cursor-pointer font-bold transition-colors"
             >
               <Send size={16} />

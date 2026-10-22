@@ -1,105 +1,114 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ChevronDown, Trophy, Wrench } from 'lucide-react';
 
 export default function TopRankingPage() {
+  const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState('All');
   const [activeSubFilter, setActiveSubFilter] = useState('Hot Selling');
 
   const CATEGORY_FILTERS = [
-    'All',
-    'Consumer Electronics',
-    'Smartphones & Accessories',
-    'Chargers & Power Supplies',
-    'Printing & Branding Services',
-    'Bulk Hardware',
+    { key: 'All', labelKey: 'ranking.filterAll' },
+    { key: 'Consumer Electronics', labelKey: 'ranking.filterConsumerElectronics' },
+    { key: 'Smartphones & Accessories', labelKey: 'ranking.filterSmartphones' },
+    { key: 'Chargers & Power Supplies', labelKey: 'ranking.filterChargers' },
+    { key: 'Printing & Branding Services', labelKey: 'ranking.filterPrinting' },
+    { key: 'Bulk Hardware', labelKey: 'ranking.filterBulkHardware' },
   ];
 
-  const SUB_FILTERS = ['Hot Selling', 'Most Popular', 'Best Reviewed'];
+  const SUB_FILTERS = [
+    { key: 'Hot Selling', labelKey: 'ranking.hotSelling' },
+    { key: 'Most Popular', labelKey: 'ranking.mostPopular' },
+    { key: 'Best Reviewed', labelKey: 'ranking.bestReviewed' },
+  ];
 
   const RANKED_PRODUCTS = [
     {
+      categoryKey: 'ranking.categorySmartphones',
       category: 'Smartphones & Devices',
       items: [
         {
           rank: 1,
-          title: 'Note 30 Ultra 5G',
+          titleKey: 'ranking.productNote30',
           price: 'TSh 177,332',
-          moq: 'MOQ: 1',
+          moq: '1',
           image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=400',
           badge: 'Gold',
         },
         {
           rank: 2,
-          title: 'Galaxy S25 Ultra',
+          titleKey: 'ranking.productGalaxy',
           price: 'TSh 277,456',
-          moq: 'MOQ: 1',
+          moq: '1',
           image: 'https://images.unsplash.com/photo-1510557880182-7e24a831c424?auto=format&fit=crop&q=80&w=400',
           badge: 'Silver',
         },
         {
           rank: 3,
-          title: 'Budget Android Phone',
+          titleKey: 'ranking.productBudgetPhone',
           price: 'TSh 109,100',
-          moq: 'MOQ: 2',
+          moq: '2',
           image: 'https://images.unsplash.com/photo-1510557880182-7e24a831c424?auto=format&fit=crop&q=80&w=400',
           badge: 'Bronze',
         },
       ],
     },
     {
+      categoryKey: 'ranking.categoryChargers',
       category: 'Chargers & Fast Power',
       items: [
         {
           rank: 1,
-          title: '65W GaN Fast Charger',
+          titleKey: 'ranking.productCharger65W',
           price: 'TSh 18,500',
-          moq: 'MOQ: 5',
+          moq: '5',
           image: 'https://images.unsplash.com/photo-1603746380946-1a67c3e28115?auto=format&fit=crop&q=80&w=400',
           badge: 'Gold',
         },
         {
           rank: 2,
-          title: '20,000mAh Power Bank',
+          titleKey: 'ranking.productPowerBank',
           price: 'TSh 35,000',
-          moq: 'MOQ: 2',
+          moq: '2',
           image: 'https://images.unsplash.com/photo-1603746380946-1a67c3e28115?auto=format&fit=crop&q=80&w=400',
           badge: 'Silver',
         },
         {
           rank: 3,
-          title: 'USB-C Braided Cable Pack',
+          titleKey: 'ranking.productCablePack',
           price: 'TSh 4,500',
-          moq: 'MOQ: 10',
+          moq: '10',
           image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=400',
           badge: 'Bronze',
         },
       ],
     },
     {
+      categoryKey: 'ranking.categoryPrinting',
       category: 'Hualink Printing & Customization Services',
       items: [
         {
           rank: 1,
-          title: 'Custom Brand Packaging & Boxes',
+          titleKey: 'ranking.productPackaging',
           price: 'TSh 2,456',
-          moq: 'MOQ: 50',
+          moq: '50',
           image: 'https://images.unsplash.com/photo-1492074373747-9997039802ca?auto=format&fit=crop&q=80&w=400',
           badge: 'Gold',
         },
         {
           rank: 2,
-          title: 'Promotional Apparel Printing',
+          titleKey: 'ranking.productApparel',
           price: 'TSh 12,000',
-          moq: 'MOQ: 10',
+          moq: '10',
           image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=400',
           badge: 'Silver',
         },
         {
           rank: 3,
-          title: 'Large Format Banner Printing',
+          titleKey: 'ranking.productBanner',
           price: 'TSh 15,000',
-          moq: 'MOQ: 1',
+          moq: '1',
           image: 'https://images.unsplash.com/photo-1593358292147-4eb18bcf2333?auto=format&fit=crop&q=80&w=400',
           badge: 'Bronze',
         },
@@ -119,19 +128,19 @@ export default function TopRankingPage() {
       <section className="max-w-7xl mx-auto">
         <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-sm mb-8">
           <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-4">
-            Top Ranking
+            {t('ranking.title')}
           </h1>
 
           <div className="flex flex-wrap items-center gap-4 mb-6">
             <div className="relative">
               <button className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-5 py-2 font-semibold text-sm cursor-pointer hover:bg-gray-50 transition-colors">
-                <span>Global Rankings</span>
+                <span>{t('ranking.globalRankings')}</span>
                 <ChevronDown size={14} className="text-gray-500" />
               </button>
             </div>
             <div className="relative">
               <button className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-5 py-2 font-semibold text-sm cursor-pointer hover:bg-gray-50 transition-colors">
-                <span>All Categories</span>
+                <span>{t('ranking.allCategories')}</span>
                 <ChevronDown size={14} className="text-gray-500" />
               </button>
             </div>
@@ -142,18 +151,18 @@ export default function TopRankingPage() {
         <div className="bg-white border-b border-gray-200 rounded-xl p-1 shadow-sm mb-6">
           <div className="flex overflow-x-auto no-scrollbar gap-2 px-2 pb-2">
             {CATEGORY_FILTERS.map((cat) => {
-              const isActive = activeCategory === cat;
+              const isActive = activeCategory === cat.key;
               return (
                 <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
+                  key={cat.key}
+                  onClick={() => setActiveCategory(cat.key)}
                   className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors shrink-0 ${
                     isActive
                       ? 'bg-gray-900 text-white'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   }`}
                 >
-                  {cat}
+                  {t(cat.labelKey)}
                 </button>
               );
             })}
@@ -191,7 +200,7 @@ export default function TopRankingPage() {
           return (
             <section key={categoryBlock.category} className="space-y-6">
               <h2 className="text-2xl font-black text-gray-900 tracking-tight mb-4">
-                {categoryBlock.category}
+                {t(categoryBlock.categoryKey || categoryBlock.category)}
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -217,18 +226,18 @@ export default function TopRankingPage() {
                       {/* Product Info */}
                       <div className="p-4">
                         <h3 className="text-lg font-black text-gray-900 leading-tight mb-2 group-hover:text-[#E50914] transition-colors">
-                          {item.title}
+                          {t(item.titleKey || item.title)}
                         </h3>
                         <div className="flex items-baseline gap-1 mb-2">
                           <span className="text-base font-extrabold text-gray-900">
                             {item.price}
                           </span>
                           <span className="text-xs text-gray-500 font-medium">
-                            {item.moq}
+                            {t('ranking.moq')} {item.moq}
                           </span>
                         </div>
                         <div className="flex items-center justify-between text-xs text-gray-500 font-medium">
-                          <span>Free Delivery</span>
+                          <span>{t('ranking.freeDelivery')}</span>
                           <span>TZ</span>
                         </div>
                       </div>

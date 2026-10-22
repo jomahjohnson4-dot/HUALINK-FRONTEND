@@ -16,6 +16,7 @@ import {
   markNotificationRead,
   subscribeToNotifications,
 } from '../api/notificationService';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { relativeTime } from '../utils/time';
@@ -33,6 +34,7 @@ const TYPE_STYLES = {
 export default function NotificationBell({ limit = 20 }) {
   const { isAuthenticated } = useAuth();
   const { push } = useToast();
+  const { t } = useTranslation();
 
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -159,10 +161,13 @@ export default function NotificationBell({ limit = 20 }) {
       await markAllNotificationsRead();
       setNotifications((current) => current.map((item) => ({ ...item, isRead: true })));
       setUnreadCount(0);
-      push('All notifications marked as read.');
+      push(t('notifications.markAllReadToast'));
     } catch (error) {
       console.error('[Notifications] Failed to mark all as read:', error);
-      push(error?.response?.data?.message || 'Could not mark the notifications as read.', 'error');
+      push(
+        error?.response?.data?.message || t('notifications.markAllReadError'),
+        'error'
+      );
     } finally {
       setBusy(false);
     }
@@ -177,7 +182,11 @@ export default function NotificationBell({ limit = 20 }) {
         ref={buttonRef}
         type="button"
         onClick={() => setIsOpen((open) => !open)}
-        aria-label={`Notifications${unreadCount ? ` (${unreadCount} unread)` : ''}`}
+        aria-label={
+          unreadCount
+            ? `${t('notifications.bellAria')} (${t('notifications.unread', { count: unreadCount })})`
+            : t('notifications.bellAria')
+        }
         aria-expanded={isOpen}
         aria-haspopup="menu"
         className="relative w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center bg-gray-50 text-gray-900 hover:text-brand-red hover:bg-red-50 transition-all cursor-pointer"
@@ -195,14 +204,14 @@ export default function NotificationBell({ limit = 20 }) {
         <div
           ref={panelRef}
           role="menu"
-          aria-label="Notifications"
+          aria-label={t('notifications.title')}
           className="absolute right-0 mt-2 w-[22rem] max-w-[calc(100vw-2rem)] bg-white border border-gray-200 shadow-xl rounded-xl z-50 overflow-hidden"
         >
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
             <div>
-              <p className="text-xs font-black text-gray-900">Notifications</p>
+              <p className="text-xs font-black text-gray-900">{t('notifications.title')}</p>
               <p className="text-[10px] font-semibold text-gray-500">
-                {unreadCount} unread
+                {t('notifications.unread', { count: unreadCount })}
               </p>
             </div>
             <button
@@ -216,7 +225,7 @@ export default function NotificationBell({ limit = 20 }) {
               ) : (
                 <CheckCheck size={12} />
               )}
-              <span>Mark all as read</span>
+              <span>{t('notifications.markAllRead')}</span>
             </button>
           </div>
 
@@ -224,14 +233,14 @@ export default function NotificationBell({ limit = 20 }) {
             {loading && !notifications.length ? (
               <div className="py-10 flex items-center justify-center gap-2 text-gray-400">
                 <Loader2 size={16} className="animate-spin text-brand-red" />
-                <span className="text-[11px] font-bold">Loading notifications...</span>
+                <span className="text-[11px] font-bold">{t('notifications.loading')}</span>
               </div>
             ) : null}
 
             {!loading && !notifications.length ? (
               <div className="py-10 flex flex-col items-center gap-2 text-gray-400">
                 <Inbox size={22} />
-                <p className="text-[11px] font-bold">You're all caught up.</p>
+                <p className="text-[11px] font-bold">{t('notifications.caughtUp')}</p>
               </div>
             ) : null}
 
@@ -277,14 +286,14 @@ export default function NotificationBell({ limit = 20 }) {
 
           <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-3">
             <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">
-              System activity — live
+              {t('notifications.systemActivityLive')}
             </p>
             <Link
               to="/notifications"
               onClick={() => setIsOpen(false)}
               className="inline-flex items-center gap-1 text-[10px] font-black text-brand-red hover:text-red-700 transition-colors"
             >
-              <span>View All Notifications</span>
+              <span>{t('notifications.viewAll')}</span>
               <ArrowRight size={11} />
             </Link>
           </div>

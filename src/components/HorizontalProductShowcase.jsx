@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { productsCatalog } from '../data/productsCatalog';
 
@@ -15,7 +16,26 @@ const CATEGORIES = [
   'Accessories',
 ];
 
+/**
+ * Translation key for every showcase tab.
+ *
+ * The tab values stay the raw catalogue category names (they are matched
+ * against the category field of each product), while the visible text is
+ * resolved through the shared `categories.*` dictionary.
+ */
+const CATEGORY_LABEL_KEYS = {
+  All: 'categories.allCategories',
+  'Chargers & Cables': 'categories.chargersCables',
+  'Audio & Sound': 'categories.audioSound',
+  Smartphones: 'categories.smartphones',
+  'Home Appliances': 'categories.homeAppliances',
+  Accessories: 'categories.accessories',
+};
+
 function ShowcaseCard({ product, index }) {
+  // Every badge, price label and social proof line follows the active language.
+  const { t } = useTranslation();
+
   // Discount percentage: explicit catalogue value first, otherwise derived
   // from the price strings ("TSh 25,000" / "TSh 35,000").
   const currentPrice = Number(String(product.price ?? '').replace(/[^0-9]/g, ''));
@@ -51,7 +71,7 @@ function ShowcaseCard({ product, index }) {
         <div className="absolute top-2 left-2 z-10 flex items-center gap-1 pointer-events-none">
           {discountPercent > 0 ? (
             <span className="bg-[#DC2626] text-white text-[11px] font-bold px-2 py-0.5 rounded shadow-md">
-              {discountPercent}% OFF
+              {t('product.off', { percent: discountPercent })}
             </span>
           ) : product.badge ? (
             <span className="bg-[#0070DC] text-white text-[11px] font-bold px-2 py-0.5 rounded shadow-md">
@@ -60,7 +80,7 @@ function ShowcaseCard({ product, index }) {
           ) : null}
 
           <span className="bg-emerald-600 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded shadow-md">
-            Local Stock
+            {t('shop.localStock')}
           </span>
         </div>
       </div>
@@ -74,7 +94,7 @@ function ShowcaseCard({ product, index }) {
         <div className="mt-2">
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400">
-              From
+              {t('shop.from')}
             </span>
             <span className="text-base font-bold text-red-600">{product.price}</span>
             {product.originalPrice && (
@@ -87,7 +107,9 @@ function ShowcaseCard({ product, index }) {
             <Star size={12} className="text-amber-400 fill-amber-400" />
             <span className="font-bold text-gray-800">{product.rating || '4.7'}</span>
             <span className="text-gray-400">
-              ({product.reviewsCount ? `${product.reviewsCount}+ sold` : '1.2k+ sold'})
+              ({product.reviewsCount
+                ? t('product.soldCount', { count: product.reviewsCount })
+                : t('product.soldDefault')})
             </span>
           </div>
         </div>
@@ -97,6 +119,9 @@ function ShowcaseCard({ product, index }) {
 }
 
 function CarouselGroup({ title, products, scrollRef }) {
+  // The carousel heading, link and scroll controls follow the active language.
+  const { t } = useTranslation();
+
   const scroll = (direction) => {
     scrollRef.current?.scrollBy({ left: direction * 340, behavior: 'smooth' });
   };
@@ -112,14 +137,14 @@ function CarouselGroup({ title, products, scrollRef }) {
           to="/shop"
           className="text-xs font-bold text-gray-500 hover:text-gray-900 border border-gray-300 hover:border-gray-500 px-3 py-1.5 rounded-lg transition-colors shrink-0"
         >
-          View More
+          {t('shop.viewMore')}
         </Link>
       </div>
 
       {/* Carousel Side Navigation Arrows */}
       <button
         type="button"
-        aria-label={`Scroll ${title} left`}
+        aria-label={t('catalog.scrollLeft', { title })}
         onClick={() => scroll(-1)}
         className="absolute -left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 bg-white border border-gray-200 text-gray-700 hover:bg-[#E50914] hover:text-white hover:border-[#E50914] rounded-full flex items-center justify-center shadow-md transition-all duration-200 active:scale-90 cursor-pointer"
       >
@@ -127,7 +152,7 @@ function CarouselGroup({ title, products, scrollRef }) {
       </button>
       <button
         type="button"
-        aria-label={`Scroll ${title} right`}
+        aria-label={t('catalog.scrollRight', { title })}
         onClick={() => scroll(1)}
         className="absolute -right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 bg-white border border-gray-200 text-gray-700 hover:bg-[#E50914] hover:text-white hover:border-[#E50914] rounded-full flex items-center justify-center shadow-md transition-all duration-200 active:scale-90 cursor-pointer"
       >
@@ -145,7 +170,7 @@ function CarouselGroup({ title, products, scrollRef }) {
           ))
         ) : (
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wider py-6">
-            No products in this category yet.
+            {t('shop.noCategoryProducts')}
           </p>
         )}
       </div>
@@ -154,6 +179,9 @@ function CarouselGroup({ title, products, scrollRef }) {
 }
 
 export default function HorizontalProductShowcase() {
+  // Every tab and carousel heading follows the active language.
+  const { t } = useTranslation();
+
   const [activeTab, setActiveTab] = useState('All');
   const featuredRef = useRef(null);
   const hubRef = useRef(null);
@@ -178,14 +206,14 @@ export default function HorizontalProductShowcase() {
                 : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
             }`}
           >
-            {cat}
+            {t(CATEGORY_LABEL_KEYS[cat] || 'categories.allCategories')}
           </button>
         ))}
       </div>
 
       {/* GROUP 1: Featured Deals & Top Offers */}
       <CarouselGroup
-        title="Featured Deals & Top Offers"
+        title={t('shop.featuredDeals')}
         products={filteredCatalog}
         scrollRef={featuredRef}
       />
@@ -193,7 +221,7 @@ export default function HorizontalProductShowcase() {
       {/* GROUP 2: Shop the World / All Hualink Inventory */}
       <div className="pt-6 border-t border-gray-200">
         <CarouselGroup
-          title="Shop the World — Hualink Wholesale Hub"
+          title={t('shop.worldHub')}
           products={[...productsCatalog].reverse()}
           scrollRef={hubRef}
         />

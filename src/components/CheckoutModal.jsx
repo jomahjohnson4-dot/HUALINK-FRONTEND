@@ -2,17 +2,34 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { Loader2, AlertCircle, X, ShieldCheck, CheckCircle2, PhoneCall } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const API_BASE_URL = import.meta.env?.VITE_API_URL 
   ? `${import.meta.env.VITE_API_URL}/api` 
   : 'http://localhost:5000/api';
 
+/**
+ * The mobile-money gateways offered at checkout.
+ *
+ * `id` is the stable provider code sent to the backend and must never be
+ * translated — `labelKey` points at the translated display name instead.
+ */
 const PAYMENT_PROVIDERS = [
-  { id: 'M-PESA', label: 'Vodacom M-Pesa', badge: 'M-PESA', color: 'border-red-500/40 text-red-400' },
-  { id: 'AIRTEL-MONEY', label: 'Airtel Money', badge: 'AIRTEL', color: 'border-rose-500/40 text-rose-400' },
-  { id: 'HALOPESA', label: 'HaloPesa', badge: 'HALOPESA', color: 'border-orange-500/40 text-orange-400' },
-  { id: 'AZAMPAY', label: 'AzamPay Wallet', badge: 'AZAMPAY', color: 'border-sky-500/40 text-sky-400' },
-  { id: 'MIXX-BY-YAS', label: 'Mixx by Yas (Tigo)', badge: 'TIGO', color: 'border-blue-500/40 text-blue-400' },
+  { id: 'M-PESA', labelKey: 'checkout.providers.vodacom', badge: 'M-PESA', color: 'border-red-500/40 text-red-400' },
+  { id: 'AIRTEL-MONEY', labelKey: 'checkout.providers.airtel', badge: 'AIRTEL', color: 'border-rose-500/40 text-rose-400' },
+  { id: 'HALOPESA', labelKey: 'checkout.providers.halo', badge: 'HALOPESA', color: 'border-orange-500/40 text-orange-400' },
+  { id: 'AZAMPAY', labelKey: 'checkout.providers.azamPay', badge: 'AZAMPAY', color: 'border-sky-500/40 text-sky-400' },
+  { id: 'MIXX-BY-YAS', labelKey: 'checkout.providers.mixx', badge: 'TIGO', color: 'border-blue-500/40 text-blue-400' },
+];
+
+/** The delivery regions offered at checkout. */
+const REGIONS = [
+  { id: 'Dar es Salaam', labelKey: 'checkout.regions.darEsSalaam' },
+  { id: 'Mbeya', labelKey: 'checkout.regions.mbeya' },
+  { id: 'Arusha', labelKey: 'checkout.regions.arusha' },
+  { id: 'Dodoma', labelKey: 'checkout.regions.dodoma' },
+  { id: 'Mwanza', labelKey: 'checkout.regions.mwanza' },
+  { id: 'Songwe', labelKey: 'checkout.regions.songwe' },
 ];
 
 /**
@@ -29,6 +46,8 @@ export const CheckoutModal = ({
   onOrderSuccess,
   zIndex = 'z-50',
 }) => {
+  const { t } = useTranslation();
+
   const [formData, setFormData] = useState({
     customerName: '',
     customerPhone: '',
@@ -67,7 +86,7 @@ export const CheckoutModal = ({
           eventSource.close();
           if (onOrderSuccess) onOrderSuccess(activeOrder);
         } else if (data.status === 'FAILED' || data.status === 'CANCELLED') {
-          setErrorMessage('Payment request was declined or timed out. Please try again.');
+          setErrorMessage(t('checkout.errorDeclined'));
           setPaymentState('FORM');
           setLoading(false);
           eventSource.close();
@@ -86,7 +105,7 @@ export const CheckoutModal = ({
       console.log(`[SSE Cleanup] Closing stream for order #${orderIdToStream}`);
       eventSource.close();
     };
-  }, [orderIdToStream, paymentState, activeOrder, onOrderSuccess]);
+  }, [orderIdToStream, paymentState, activeOrder, onOrderSuccess, t]);
 
   if (!isOpen) return null;
 
@@ -107,14 +126,14 @@ export const CheckoutModal = ({
 
     const token = localStorage.getItem('token');
     if (!token) {
-      setErrorMessage('Authentication required. Please sign in to place an order.');
+      setErrorMessage(t('checkout.errorAuthRequired'));
       setLoading(false);
       return;
     }
 
     const cleanPhone = formData.customerPhone.replace(/[^0-9]/g, '');
     if (cleanPhone.length < 10) {
-      setErrorMessage('Please enter a valid phone number (e.g., 0781359770).');
+      setErrorMessage(t('checkout.errorInvalidPhone'));
       setLoading(false);
       return;
     }
@@ -146,9 +165,9 @@ export const CheckoutModal = ({
 
       if (error.response?.status === 401 || error.response?.status === 403) {
         localStorage.removeItem('token');
-        setErrorMessage('Your session has expired. Please sign in again.');
+        setErrorMessage(t('checkout.errorSessionExpired'));
       } else {
-        const msg = error.response?.data?.message || 'Failed to place order. Please try again.';
+        const msg = error.response?.data?.message || t('checkout.errorFailedOrder');
         setErrorMessage(msg);
       }
       setLoading(false);
@@ -171,10 +190,11 @@ export const CheckoutModal = ({
         <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
           <div className="flex items-center gap-2">
             <ShieldCheck size={20} className="text-orange-500" />
-            <h2 className="text-base sm:text-lg font-bold text-white tracking-wide">Express Mobile Checkout</h2>
+            <h2 className="text-base sm:text-lg font-bold text-white tracking-wide">{t('checkout.expressCheckout')}</h2>
           </div>
           <button
             onClick={resetAndClose}
+            aria-label={t('common.close')}
             className="p-1.5 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
           >
             <X size={20} />
@@ -201,9 +221,9 @@ export const CheckoutModal = ({
               </div>
 
               <div className="space-y-2">
-                <h3 className="text-lg font-bold text-white">Check Your Mobile Phone</h3>
+                <h3 className="text-lg font-bold text-white">{t('checkout.checkPhone')}</h3>
                 <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
-                  A USSD push prompt was sent to <span className="text-orange-400 font-mono font-bold">{formData.customerPhone}</span>. Please enter your PIN to authorize payment of:
+                  {t('checkout.ussdPrompt', { phone: formData.customerPhone })}
                 </p>
                 <div className="text-xl font-bold font-mono text-emerald-400 pt-1">
                   TZS {Number(totalAmount).toLocaleString()}
@@ -215,7 +235,7 @@ export const CheckoutModal = ({
                   onClick={() => setPaymentState('FORM')}
                   className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 rounded-xl transition cursor-pointer"
                 >
-                  Edit Number / Details
+                  {t('checkout.editDetails')}
                 </button>
               </div>
             </div>
@@ -227,15 +247,17 @@ export const CheckoutModal = ({
               <div className="w-16 h-16 mx-auto bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center text-3xl">
                 <CheckCircle2 size={40} className="text-emerald-400" />
               </div>
-              <h3 className="text-xl font-bold text-emerald-400">Payment Completed!</h3>
+              <h3 className="text-xl font-bold text-emerald-400">{t('checkout.paymentCompleted')}</h3>
               <p className="text-xs text-slate-300 max-w-xs mx-auto">
-                Order <span className="text-white font-mono font-bold">#{activeOrder?.orderNumber || activeOrder?.id}</span> is paid and currently processing.
+                {t('checkout.orderPaidProcessing', {
+                  reference: activeOrder?.orderNumber || activeOrder?.id,
+                })}
               </p>
               <button
                 onClick={resetAndClose}
                 className="mt-4 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-xs font-bold rounded-xl text-white transition shadow-lg shadow-emerald-600/20 cursor-pointer"
               >
-                Done & View Order
+                {t('checkout.doneViewOrder')}
               </button>
             </div>
           )}
@@ -248,13 +270,13 @@ export const CheckoutModal = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">
-                    Full Name
+                    {t('checkout.fullName')}
                   </label>
                   <input
                     type="text"
                     name="customerName"
                     required
-                    placeholder="e.g. John Doe"
+                    placeholder={t('checkout.fullNamePlaceholder')}
                     value={formData.customerName}
                     onChange={handleChange}
                     disabled={loading}
@@ -264,13 +286,13 @@ export const CheckoutModal = ({
 
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">
-                    Mobile Money Phone
+                    {t('checkout.phone')}
                   </label>
                   <input
                     type="tel"
                     name="customerPhone"
                     required
-                    placeholder="e.g. 0781359770"
+                    placeholder={t('checkout.phonePlaceholder')}
                     value={formData.customerPhone}
                     onChange={handleChange}
                     disabled={loading}
@@ -282,7 +304,7 @@ export const CheckoutModal = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">
-                    Destination Region
+                    {t('checkout.region')}
                   </label>
                   <select
                     name="region"
@@ -291,18 +313,17 @@ export const CheckoutModal = ({
                     disabled={loading}
                     className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white font-medium focus:outline-none focus:border-orange-500 transition-colors"
                   >
-                    <option value="Dar es Salaam">Dar es Salaam</option>
-                    <option value="Mbeya">Mbeya</option>
-                    <option value="Arusha">Arusha</option>
-                    <option value="Dodoma">Dodoma</option>
-                    <option value="Mwanza">Mwanza</option>
-                    <option value="Songwe">Songwe</option>
+                    {REGIONS.map((region) => (
+                      <option key={region.id} value={region.id}>
+                        {t(region.labelKey)}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">
-                    Payment Gateway Provider
+                    {t('checkout.paymentProvider')}
                   </label>
                   <select
                     name="paymentMethod"
@@ -313,7 +334,7 @@ export const CheckoutModal = ({
                   >
                     {PAYMENT_PROVIDERS.map((provider) => (
                       <option key={provider.id} value={provider.id}>
-                        {provider.label}
+                        {t(provider.labelKey)}
                       </option>
                     ))}
                   </select>
@@ -322,13 +343,13 @@ export const CheckoutModal = ({
 
               <div>
                 <label className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">
-                  Street / Delivery Address
+                  {t('checkout.address')}
                 </label>
                 <textarea
                   name="shippingAddress"
                   required
                   rows="2"
-                  placeholder="Building name, street, or house location"
+                  placeholder={t('checkout.addressPlaceholder')}
                   value={formData.shippingAddress}
                   onChange={handleChange}
                   disabled={loading}
@@ -338,7 +359,7 @@ export const CheckoutModal = ({
 
               {/* Total Price Card */}
               <div className="p-3 bg-slate-800/60 rounded-xl border border-slate-700/60 flex justify-between items-center font-bold">
-                <span className="text-slate-400">Total Amount:</span>
+                <span className="text-slate-400">{t('checkout.totalAmountLabel')}</span>
                 <span className="text-base font-mono text-emerald-400">
                   TZS {Number(totalAmount).toLocaleString()}
                 </span>
@@ -352,7 +373,7 @@ export const CheckoutModal = ({
                   disabled={loading}
                   className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold transition-colors cursor-pointer text-xs"
                 >
-                  Cancel
+                  {t('checkout.cancel')}
                 </button>
                 <button
                   type="submit"
@@ -362,10 +383,10 @@ export const CheckoutModal = ({
                   {loading ? (
                     <>
                       <Loader2 size={16} className="animate-spin" />
-                      <span>Initiating USSD...</span>
+                      <span>{t('checkout.initiatingUssd')}</span>
                     </>
                   ) : (
-                    <span>Pay Now</span>
+                    <span>{t('checkout.payNow')}</span>
                   )}
                 </button>
               </div>

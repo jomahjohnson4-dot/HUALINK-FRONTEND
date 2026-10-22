@@ -11,10 +11,11 @@
 import { Boxes, Home, Smartphone, Tv } from 'lucide-react';
 
 export const SHOP_CATEGORIES = [
-  { id: 'all', name: 'All Inventory', icon: Boxes },
+  { id: 'all', name: 'All Inventory', nameKey: 'categories.allInventory', icon: Boxes },
   {
     id: 'smartphones',
     name: 'Smartphones & Mobile',
+    nameKey: 'categories.smartphonesMobile',
     icon: Smartphone,
     slugs: ['smartphones'],
     keywords: ['smartphone', 'iphone', 'galaxy', 'phone', 'mobile', 'smart watch'],
@@ -22,6 +23,7 @@ export const SHOP_CATEGORIES = [
   {
     id: 'electronics',
     name: 'Electronics & Gadgets',
+    nameKey: 'categories.electronicsGadgets',
     icon: Tv,
     slugs: ['chargers-cables', 'audio', 'accessories', 'electronics', 'tvs', 'networking', 'security'],
     keywords: [
@@ -44,6 +46,7 @@ export const SHOP_CATEGORIES = [
   {
     id: 'home',
     name: 'Home & Living',
+    nameKey: 'categories.homeLiving',
     icon: Home,
     slugs: ['home-appliances', 'furniture', 'energy'],
     keywords: ['kettle', 'steam iron', 'iron', 'appliance', 'blender', 'heater', 'home'],

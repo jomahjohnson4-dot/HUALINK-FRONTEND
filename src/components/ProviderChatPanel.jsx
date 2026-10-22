@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Send, MessageSquare, ShieldCheck } from 'lucide-react';
 import { io } from 'socket.io-client';
 
@@ -6,6 +7,8 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const socket = io(API_BASE_URL);
 
 export const ProviderChatPanel = ({ providerId = 'hualink_admin', selectedBooking }) => {
+  const { t } = useTranslation();
+
   const [messages, setMessages] = useState([]);
   const [replyText, setReplyText] = useState('');
   const chatBottomRef = useRef(null);
@@ -80,14 +83,18 @@ export const ProviderChatPanel = ({ providerId = 'hualink_admin', selectedBookin
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-white">Support Communications</h3>
+              <h3 className="text-sm font-bold text-white">{t('chat.supportCommunications')}</h3>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] rounded-full font-semibold">
-                <ShieldCheck size={10} /> Active Room
+                <ShieldCheck size={10} /> {t('chat.activeRoom')}
               </span>
             </div>
             <p className="text-[11px] text-slate-400 mt-0.5">
-              Ref ID: <span className="text-red-500 font-mono">{selectedBooking?.id || 'General Session'}</span>
-              {selectedBooking?.serviceTitle && ` | Service: ${selectedBooking.serviceTitle}`}
+              {t('chat.refId')}{' '}
+              <span className="text-red-500 font-mono">
+                {selectedBooking?.id || t('chat.generalSession')}
+              </span>
+              {selectedBooking?.serviceTitle &&
+                ` | ${t('chat.serviceInline', { service: selectedBooking.serviceTitle })}`}
             </p>
           </div>
         </div>
@@ -97,7 +104,7 @@ export const ProviderChatPanel = ({ providerId = 'hualink_admin', selectedBookin
       <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-[#0F172A]">
         {messages.length === 0 ? (
           <div className="h-full flex items-center justify-center text-slate-500 text-xs font-medium">
-            No message history available for this thread yet.
+            {t('chat.noHistory')}
           </div>
         ) : (
           messages.map((msg, idx) => {
@@ -131,7 +138,7 @@ export const ProviderChatPanel = ({ providerId = 'hualink_admin', selectedBookin
           type="text"
           value={replyText}
           onChange={(e) => setReplyText(e.target.value)}
-          placeholder="Type live dispatch response..."
+          placeholder={t('chat.dispatchPlaceholder')}
           className="flex-1 bg-slate-800 border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-red-500 transition-colors"
         />
         <button
@@ -139,7 +146,7 @@ export const ProviderChatPanel = ({ providerId = 'hualink_admin', selectedBookin
           disabled={!selectedBooking?.id}
           className="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <span>Send</span>
+          <span>{t('common.send')}</span>
           <Send size={13} />
         </button>
       </form>

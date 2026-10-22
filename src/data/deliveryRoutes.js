@@ -9,98 +9,144 @@
  * the backend already stores.
  */
 
-/** The distribution hubs Hualink dispatches from and delivers to. */
+/**
+ * The distribution hubs Hualink dispatches from and delivers to.
+ *
+ * Every human readable field keeps its stable value (the name, the city and
+ * the role are matched against API data and against the corridor maths) and
+ * gains a `*Key` pointer next to it, so the UI can render the localized copy
+ * without ever touching the value the routing relies on.
+ */
 export const HUBS = {
   darEsSalaam: {
     id: 'dar-es-salaam',
     name: 'Hualink Central Hub',
+    nameKey: 'deliveryRoutes.hubs.darEsSalaam.name',
     city: 'Dar es Salaam',
+    cityKey: 'deliveryRoutes.cities.darEsSalaam',
     coordinates: [-6.7924, 39.2083],
     role: 'Dispatch Hub',
+    roleKey: 'deliveryRoutes.roles.dispatchHub',
   },
   darEsSalaamPort: {
     id: 'dar-es-salaam-port',
     name: 'Dar es Salaam Port Terminal',
+    nameKey: 'deliveryRoutes.hubs.darEsSalaamPort.name',
     city: 'Dar es Salaam',
+    cityKey: 'deliveryRoutes.cities.darEsSalaam',
     coordinates: [-6.82, 39.29],
     role: 'Port Gateway',
+    roleKey: 'deliveryRoutes.roles.portGateway',
   },
   mbeya: {
     id: 'mbeya',
     name: 'Mbeya Regional Warehouse',
+    nameKey: 'deliveryRoutes.hubs.mbeya.name',
     city: 'Mbeya',
+    cityKey: 'deliveryRoutes.cities.mbeya',
     coordinates: [-8.902, 33.453],
     role: 'Regional Depot',
+    roleKey: 'deliveryRoutes.roles.regionalDepot',
   },
   iringa: {
     id: 'iringa',
     name: 'Iringa Transit Depot',
+    nameKey: 'deliveryRoutes.hubs.iringa.name',
     city: 'Iringa',
+    cityKey: 'deliveryRoutes.cities.iringa',
     coordinates: [-7.6689, 35.27],
     role: 'Transit Depot',
+    roleKey: 'deliveryRoutes.roles.transitDepot',
   },
   morogoro: {
     id: 'morogoro',
     name: 'Morogoro Transit Depot',
+    nameKey: 'deliveryRoutes.hubs.morogoro.name',
     city: 'Morogoro',
+    cityKey: 'deliveryRoutes.cities.morogoro',
     coordinates: [-6.7667, 37.6333],
     role: 'Transit Depot',
+    roleKey: 'deliveryRoutes.roles.transitDepot',
   },
   arusha: {
     id: 'arusha',
     name: 'Arusha Regional Warehouse',
+    nameKey: 'deliveryRoutes.hubs.arusha.name',
     city: 'Arusha',
+    cityKey: 'deliveryRoutes.cities.arusha',
     coordinates: [-3.3869, 36.683],
     role: 'Regional Depot',
+    roleKey: 'deliveryRoutes.roles.regionalDepot',
   },
   dodoma: {
     id: 'dodoma',
     name: 'Dodoma Regional Warehouse',
+    nameKey: 'deliveryRoutes.hubs.dodoma.name',
     city: 'Dodoma',
+    cityKey: 'deliveryRoutes.cities.dodoma',
     coordinates: [-6.163, 35.7516],
     role: 'Regional Depot',
+    roleKey: 'deliveryRoutes.roles.regionalDepot',
   },
   mwanza: {
     id: 'mwanza',
     name: 'Mwanza Regional Warehouse',
+    nameKey: 'deliveryRoutes.hubs.mwanza.name',
     city: 'Mwanza',
+    cityKey: 'deliveryRoutes.cities.mwanza',
     coordinates: [-2.5167, 32.9],
     role: 'Regional Depot',
+    roleKey: 'deliveryRoutes.roles.regionalDepot',
   },
   tanga: {
     id: 'tanga',
     name: 'Tanga Regional Warehouse',
+    nameKey: 'deliveryRoutes.hubs.tanga.name',
     city: 'Tanga',
+    cityKey: 'deliveryRoutes.cities.tanga',
     coordinates: [-5.0692, 39.1083],
     role: 'Regional Depot',
+    roleKey: 'deliveryRoutes.roles.regionalDepot',
   },
   zanzibar: {
     id: 'zanzibar',
     name: 'Zanzibar City Depot',
+    nameKey: 'deliveryRoutes.hubs.zanzibar.name',
     city: 'Zanzibar',
+    cityKey: 'deliveryRoutes.cities.zanzibar',
     coordinates: [-6.1659, 39.2026],
     role: 'Regional Depot',
+    roleKey: 'deliveryRoutes.roles.regionalDepot',
   },
   darLocal: {
     id: 'dar-local',
     name: 'Customer Drop-off — Dar es Salaam',
+    nameKey: 'deliveryRoutes.hubs.darLocal.name',
     city: 'Dar es Salaam',
+    cityKey: 'deliveryRoutes.cities.darEsSalaam',
     coordinates: [-6.7, 39.3],
     role: 'Customer Drop-off',
+    roleKey: 'deliveryRoutes.roles.customerDropoff',
   },
 };
 
 /**
  * The corridors Hualink runs. Every route starts at the Dar es Salaam hub
  * and follows the road network to its destination.
+ *
+ * `labelKey` and `stopKeys` point at the localized copy of the corridor and
+ * of every intermediate stop, while `label` and `stops` keep the stable
+ * values the routing matches against.
  */
 export const ROUTES = {
   mbeya: {
     id: 'dar-mbeya',
     label: 'Dar es Salaam → Mbeya',
+    labelKey: 'deliveryRoutes.routes.mbeya.label',
     origin: HUBS.darEsSalaam,
     destination: HUBS.mbeya,
     stops: ['Morogoro', 'Iringa'],
+    stopKeys: ['deliveryRoutes.cities.morogoro', 'deliveryRoutes.cities.iringa'],
     waypoints: [
       [-6.7924, 39.2083],
       [-6.82, 39.29],
@@ -115,9 +161,11 @@ export const ROUTES = {
   iringa: {
     id: 'dar-iringa',
     label: 'Dar es Salaam → Iringa',
+    labelKey: 'deliveryRoutes.routes.iringa.label',
     origin: HUBS.darEsSalaam,
     destination: HUBS.iringa,
     stops: ['Morogoro'],
+    stopKeys: ['deliveryRoutes.cities.morogoro'],
     waypoints: [
       [-6.7924, 39.2083],
       [-6.82, 39.29],
@@ -130,9 +178,11 @@ export const ROUTES = {
   morogoro: {
     id: 'dar-morogoro',
     label: 'Dar es Salaam → Morogoro',
+    labelKey: 'deliveryRoutes.routes.morogoro.label',
     origin: HUBS.darEsSalaam,
     destination: HUBS.morogoro,
     stops: ['Chalinze'],
+    stopKeys: ['deliveryRoutes.cities.chalinze'],
     waypoints: [
       [-6.7924, 39.2083],
       [-6.82, 39.29],
@@ -143,9 +193,16 @@ export const ROUTES = {
   arusha: {
     id: 'dar-arusha',
     label: 'Dar es Salaam → Arusha',
+    labelKey: 'deliveryRoutes.routes.arusha.label',
     origin: HUBS.darEsSalaam,
     destination: HUBS.arusha,
     stops: ['Chalinze', 'Morogoro', 'Kilosa', 'Mount Kilimanjaro'],
+    stopKeys: [
+      'deliveryRoutes.cities.chalinze',
+      'deliveryRoutes.cities.morogoro',
+      'deliveryRoutes.cities.kilosa',
+      'deliveryRoutes.cities.mountKilimanjaro',
+    ],
     waypoints: [
       [-6.7924, 39.2083],
       [-6.82, 39.29],
@@ -160,9 +217,15 @@ export const ROUTES = {
   dodoma: {
     id: 'dar-dodoma',
     label: 'Dar es Salaam → Dodoma',
+    labelKey: 'deliveryRoutes.routes.dodoma.label',
     origin: HUBS.darEsSalaam,
     destination: HUBS.dodoma,
     stops: ['Chalinze', 'Morogoro', 'Kilosa'],
+    stopKeys: [
+      'deliveryRoutes.cities.chalinze',
+      'deliveryRoutes.cities.morogoro',
+      'deliveryRoutes.cities.kilosa',
+    ],
     waypoints: [
       [-6.7924, 39.2083],
       [-6.82, 39.29],
@@ -175,9 +238,16 @@ export const ROUTES = {
   mwanza: {
     id: 'dar-mwanza',
     label: 'Dar es Salaam → Mwanza',
+    labelKey: 'deliveryRoutes.routes.mwanza.label',
     origin: HUBS.darEsSalaam,
     destination: HUBS.mwanza,
     stops: ['Morogoro', 'Iringa', 'Sumbawanga', 'Mpanda'],
+    stopKeys: [
+      'deliveryRoutes.cities.morogoro',
+      'deliveryRoutes.cities.iringa',
+      'deliveryRoutes.cities.sumbawanga',
+      'deliveryRoutes.cities.mpanda',
+    ],
     waypoints: [
       [-6.7924, 39.2083],
       [-6.82, 39.29],
@@ -191,9 +261,11 @@ export const ROUTES = {
   tanga: {
     id: 'dar-tanga',
     label: 'Dar es Salaam → Tanga',
+    labelKey: 'deliveryRoutes.routes.tanga.label',
     origin: HUBS.darEsSalaam,
     destination: HUBS.tanga,
     stops: ['Chalinze', 'Bagamoyo'],
+    stopKeys: ['deliveryRoutes.cities.chalinze', 'deliveryRoutes.cities.bagamoyo'],
     waypoints: [
       [-6.7924, 39.2083],
       [-6.65, 39.1],
@@ -205,9 +277,14 @@ export const ROUTES = {
   zanzibar: {
     id: 'dar-zanzibar',
     label: 'Dar es Salaam → Zanzibar',
+    labelKey: 'deliveryRoutes.routes.zanzibar.label',
     origin: HUBS.darEsSalaam,
     destination: HUBS.zanzibar,
     stops: ['Dar es Salaam Port', 'Mafia Channel'],
+    stopKeys: [
+      'deliveryRoutes.cities.darEsSalaamPort',
+      'deliveryRoutes.cities.mafiaChannel',
+    ],
     waypoints: [
       [-6.7924, 39.2083],
       [-6.82, 39.29],
@@ -219,9 +296,11 @@ export const ROUTES = {
   local: {
     id: 'dar-local',
     label: 'Dar es Salaam → Customer Drop-off',
+    labelKey: 'deliveryRoutes.routes.local.label',
     origin: HUBS.darEsSalaam,
     destination: HUBS.darLocal,
     stops: ['Kivukoni', 'Kinondoni'],
+    stopKeys: ['deliveryRoutes.cities.kivukoni', 'deliveryRoutes.cities.kinondoni'],
     waypoints: [
       [-6.7924, 39.2083],
       [-6.75, 39.25],
@@ -263,10 +342,57 @@ export const resolveRouteForOrder = (order) => {
  * The intermediate stops a shipment passes through on a corridor.
  *
  * @param {object} route
+ * @param {Function} [translate] the i18next translate function
  * @returns {string} e.g. "Morogoro / Iringa"
  */
-export const corridorStops = (route) =>
-  (route?.stops || []).filter(Boolean).join(' / ');
+export const corridorStops = (route, translate) =>
+  (route?.stops || [])
+    .filter(Boolean)
+    .map((stop, index) => {
+      const key = route?.stopKeys?.[index];
+      return key && translate ? translate(key) : stop;
+    })
+    .join(' / ');
+
+/**
+ * The i18n key holding the localized name of every place Hualink ships to.
+ *
+ * The map is keyed by the lowercased place name so a region coming straight
+ * from the API ("Mbeya") resolves to the same translation as the corridor
+ * stop ("Mbeya") — while the raw value stays untouched for the route
+ * matching.
+ */
+export const PLACE_LABEL_KEYS = {
+  'dar es salaam': 'deliveryRoutes.cities.darEsSalaam',
+  'dar es salaam port': 'deliveryRoutes.cities.darEsSalaamPort',
+  mbeya: 'deliveryRoutes.cities.mbeya',
+  iringa: 'deliveryRoutes.cities.iringa',
+  morogoro: 'deliveryRoutes.cities.morogoro',
+  arusha: 'deliveryRoutes.cities.arusha',
+  dodoma: 'deliveryRoutes.cities.dodoma',
+  mwanza: 'deliveryRoutes.cities.mwanza',
+  tanga: 'deliveryRoutes.cities.tanga',
+  zanzibar: 'deliveryRoutes.cities.zanzibar',
+  songwe: 'deliveryRoutes.cities.songwe',
+  chalinze: 'deliveryRoutes.cities.chalinze',
+  kilosa: 'deliveryRoutes.cities.kilosa',
+  'mount kilimanjaro': 'deliveryRoutes.cities.mountKilimanjaro',
+  sumbawanga: 'deliveryRoutes.cities.sumbawanga',
+  mpanda: 'deliveryRoutes.cities.mpanda',
+  bagamoyo: 'deliveryRoutes.cities.bagamoyo',
+  'mafia channel': 'deliveryRoutes.cities.mafiaChannel',
+  kivukoni: 'deliveryRoutes.cities.kivukoni',
+  kinondoni: 'deliveryRoutes.cities.kinondoni',
+};
+
+/**
+ * The i18n key holding the localized name of a place.
+ *
+ * @param {string} value the stable place name
+ * @returns {string|null} the translation key, or null for an unknown place
+ */
+export const placeLabelKey = (value) =>
+  PLACE_LABEL_KEYS[String(value ?? '').trim().toLowerCase()] || null;
 
 /**
  * The human readable stage a status maps onto.
@@ -367,6 +493,33 @@ export const STATUS_LABELS = {
   CANCELLED: 'Cancelled',
   FAILED: 'Cancelled',
 };
+
+/**
+ * The i18n key holding the localized stage label of every order status.
+ *
+ * The status values themselves stay stable — only the label the customer
+ * reads is translated.
+ */
+export const STATUS_LABEL_KEYS = {
+  PENDING: 'deliveryRoutes.statuses.pending',
+  CONFIRMED: 'deliveryRoutes.statuses.confirmed',
+  PROCESSING: 'deliveryRoutes.statuses.processing',
+  SHIPPED: 'deliveryRoutes.statuses.dispatched',
+  OUT_FOR_DELIVERY: 'deliveryRoutes.statuses.inTransit',
+  DELIVERED: 'deliveryRoutes.statuses.delivered',
+  PAID: 'deliveryRoutes.statuses.delivered',
+  CANCELLED: 'deliveryRoutes.statuses.cancelled',
+  FAILED: 'deliveryRoutes.statuses.cancelled',
+};
+
+/**
+ * The i18n key holding the localized stage label of a status.
+ *
+ * @param {string} status
+ * @returns {string|null} the translation key, or null for an unknown status
+ */
+export const stageLabelKey = (status) =>
+  STATUS_LABEL_KEYS[String(status || 'PENDING').toUpperCase()] || null;
 
 /**
  * The share of the corridor a shipment has covered for a given status.

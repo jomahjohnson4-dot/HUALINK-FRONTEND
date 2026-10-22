@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Heart,
   Eye,
@@ -15,9 +16,15 @@ import heroImage from '../assets/hero.png';
 import { formatPrice } from './productFormat';
 import { useCart } from '../context/CartContext';
 
+/**
+ * Action metadata for the floating quick-action button.
+ *
+ * `key` points at the translation entry; the label is resolved at render
+ * time so switching the language instantly updates every card.
+ */
 const ACTION_META = {
-  cart: { label: 'Add to Cart', doneLabel: 'Added!', icon: ShoppingCart },
-  inquiry: { label: 'Inquire Now', doneLabel: 'Sent!', icon: MessageCircle },
+  cart: { labelKey: 'product.addToCart', doneKey: 'product.added', icon: ShoppingCart },
+  inquiry: { labelKey: 'product.inquireNow', doneKey: 'product.sent', icon: MessageCircle },
 };
 
 /** Verified remote fallback used when a product image cannot be loaded. */
@@ -28,11 +35,11 @@ const REMOTE_FALLBACK_IMAGE =
  * Social proof line for the card ("1.2k+ sold"). The catalogue ships a
  * pre-formatted `sold` string; everything else falls back to the review count.
  */
-const formatSold = (product, reviews) => {
+const formatSold = (product, reviews, t) => {
   const sold = String(product.sold ?? '').trim();
   if (sold) return sold;
   const count = String(reviews ?? '').trim();
-  return count ? `${count}+ sold` : '1.2k+ sold';
+  return count ? t('product.soldCount', { count }) : t('product.soldDefault');
 };
 
 /**
@@ -87,6 +94,7 @@ export function RatingStars({ rating, reviews }) {
  * therefore never leave a broken image or raw alt text in the card.
  */
 export function ProductImage({ product, className, ...rest }) {
+  const { t } = useTranslation();
   const [stage, setStage] = useState('primary');
 
   const src =
@@ -110,7 +118,9 @@ export function ProductImage({ product, className, ...rest }) {
     return (
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-400">
         <Package size={34} />
-        <span className="text-[10px] font-bold uppercase tracking-wider">Image unavailable</span>
+        <span className="text-[10px] font-bold uppercase tracking-wider">
+          {t('product.imageUnavailable')}
+        </span>
       </div>
     );
   }
@@ -118,7 +128,7 @@ export function ProductImage({ product, className, ...rest }) {
   return (
     <img
       src={src}
-      alt={product.name || product.title || 'Product image'}
+      alt={product.name || product.title || t('product.productImage')}
       loading="lazy"
       onError={handleError}
       className={className}
@@ -143,12 +153,16 @@ export default function ProductCard({
 }) {
   const isList = layout === 'list';
 
+  // Every label on the card resolves through i18next, so the card follows the
+  // header language switcher instantly.
+  const { t } = useTranslation();
+
   // The shared cart is the single source of truth for the basket, so the
   // floating quick-cart button works on every surface — including the ones
   // that never wire up an `onAction` handler.
   const { addToCart, openCart } = useCart();
 
-  const name = product.name || product.title || 'Product';
+  const name = product.name || product.title || t('product.product');
   const reviews = product.reviewsCount ?? product.reviews;
   const detailLink = `/product/${product.id}`;
 
@@ -175,13 +189,14 @@ export default function ProductCard({
       : derivedDiscount;
 
   const priceLabel = formatPrice(rawPrice);
-  const soldLabel = formatSold(product, reviews);
+  const soldLabel = formatSold(product, reviews, t);
   const showLocalStock = hasLocalStock(product);
 
   // The floating button mirrors the product intent: inquiry items get the
   // message bubble, everything else the shopping cart.
   const actionMeta = product.action === 'inquiry' ? ACTION_META.inquiry : ACTION_META.cart;
   const ActionIcon = actionMeta.icon;
+  const actionLabel = t(actionMeta.labelKey);
 
   const handleQuickAction = (event) => {
     event.preventDefault();
@@ -229,7 +244,7 @@ export default function ProductCard({
         <div className="absolute top-2 left-2 z-10 flex items-center gap-1 pointer-events-none">
           {discountPercent > 0 ? (
             <span className="bg-[#DC2626] text-white text-[11px] font-bold px-1.5 py-0.5 rounded shadow">
-              {discountPercent}% OFF
+              {t('product.off', { percent: discountPercent })}
             </span>
           ) : product.badge ? (
             <span className="bg-[#0070DC] text-white text-[11px] font-bold px-1.5 py-0.5 rounded shadow">
@@ -239,7 +254,7 @@ export default function ProductCard({
 
           {showLocalStock ? (
             <span className="bg-emerald-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-              Local Express
+              {t('product.localExpress')}
             </span>
           ) : null}
         </div>
@@ -250,7 +265,9 @@ export default function ProductCard({
             <button
               type="button"
               onClick={() => onToggleWishlist?.(product)}
-              aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+              aria-label={
+                isWishlisted ? t('product.removeFromWishlist') : t('product.addToWishlist')
+              }
               aria-pressed={isWishlisted}
               className="h-8 w-8 rounded-full bg-white/90 backdrop-blur shadow-md flex items-center justify-center text-gray-600 hover:bg-[#E50914] hover:text-white transition-colors cursor-pointer"
             >
@@ -263,7 +280,7 @@ export default function ProductCard({
             <button
               type="button"
               onClick={() => onQuickView(product)}
-              aria-label="Quick view"
+              aria-label={t('product.quickView')}
               className="h-8 w-8 rounded-full bg-white/90 backdrop-blur shadow-md flex items-center justify-center text-gray-600 hover:bg-[#E50914] hover:text-white transition-colors cursor-pointer"
             >
               <Eye size={14} />
@@ -275,7 +292,7 @@ export default function ProductCard({
         <button
           type="button"
           onClick={handleQuickAction}
-          aria-label={actionMeta.label}
+          aria-label={actionLabel}
           className="absolute bottom-2 right-2 z-10 w-8 h-8 bg-white/95 hover:bg-white text-gray-800 rounded-full flex items-center justify-center shadow-md transition-all cursor-pointer opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 focus:opacity-100 focus:translate-y-0 focus-visible:opacity-100 max-sm:opacity-100 max-sm:translate-y-0"
         >
           {actionDone ? (
@@ -325,9 +342,11 @@ export default function ProductCard({
 /* -------------------------------------------------------------------------- */
 
 export function ViewToggle({ viewMode, onChange, className = '' }) {
+  const { t } = useTranslation();
+
   const options = [
-    { id: 'grid', label: 'Grid view', Icon: Grid },
-    { id: 'list', label: 'List view', Icon: List },
+    { id: 'grid', label: t('product.gridView'), Icon: Grid },
+    { id: 'list', label: t('product.listView'), Icon: List },
   ];
 
   return (

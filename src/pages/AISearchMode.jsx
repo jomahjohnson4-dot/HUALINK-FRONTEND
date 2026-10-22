@@ -12,6 +12,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { productsCatalog } from '../data/productsCatalog';
+import { useTranslation } from 'react-i18next';
 
 /* -------------------------------------------------------------------------- */
 /*  Storage                                                                   */
@@ -96,6 +97,7 @@ const matchInventory = (tokens) => {
 /* -------------------------------------------------------------------------- */
 
 export default function AISearchMode() {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -181,7 +183,7 @@ export default function AISearchMode() {
           id: Date.now(),
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           userQuery:
-            trimmed || (imageFile ? `Image search: ${imageFile.name}` : 'Smart voice search'),
+            trimmed || (imageFile ? `${t('aiMode.imageSearchLabel')} ${imageFile.name}` : t('aiMode.smartVoiceSearch')),
           hasImage: !!imageFile,
           mode,
           resultCount: finalResults.length,
@@ -209,7 +211,7 @@ export default function AISearchMode() {
       window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      setNotice('Voice Recognition is not supported on this browser. Please type your query.');
+      setNotice(t('aiMode.voiceNotSupported'));
       return;
     }
 
@@ -225,9 +227,9 @@ export default function AISearchMode() {
     recognition.onerror = (event) => {
       setIsListening(false);
       if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-        setNotice('Microphone access was blocked. Please allow it or type your query.');
+        setNotice(t('aiMode.micBlocked'));
       } else if (event.error !== 'aborted') {
-        setNotice('Voice search could not be completed. Please try again.');
+        setNotice(t('aiMode.voiceFailed'));
       }
     };
 
@@ -265,7 +267,7 @@ export default function AISearchMode() {
   };
 
   const resultsLabel = useMemo(
-    () => `${filteredResults.length} ${filteredResults.length === 1 ? 'Item' : 'Items'} Found`,
+    () => `${filteredResults.length} ${filteredResults.length === 1 ? t('aiMode.itemFound') : t('aiMode.itemsFound')}`,
     [filteredResults.length]
   );
 
@@ -275,7 +277,7 @@ export default function AISearchMode() {
         {/* Header Banner */}
         <div className="text-center max-w-2xl mx-auto mb-8">
           <h1 className="text-3xl font-black text-gray-900 tracking-tight mb-2">
-            AI Smart Search Mode
+            {t('aiMode.title')}
           </h1>
           <p className="text-xs font-bold text-gray-500">
             Multimodal product discovery — speak, upload photos, or type to query Hualink
@@ -292,14 +294,14 @@ export default function AISearchMode() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handlePerformAISearch(query)}
-              placeholder="Ask AI for chargers, AirPods, JBL, smartphones, kettles, pasi..."
+              placeholder={t('aiMode.searchPlaceholder')}
               className="w-full bg-transparent text-xs font-bold text-gray-900 focus:outline-none"
             />
             <button
               onClick={() => handlePerformAISearch(query)}
               className="bg-[#E50914] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow hover:bg-red-700 transition-colors cursor-pointer shrink-0"
             >
-              {isSearching ? 'Analyzing...' : 'AI Search'}
+              {isSearching ? t('aiMode.analyzing') : t('aiMode.aiSearch')}
             </button>
           </div>
 
@@ -312,14 +314,14 @@ export default function AISearchMode() {
                 className="w-16 h-16 object-cover rounded-xl border border-gray-200"
               />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-extrabold text-gray-800">Image reference attached</p>
+                <p className="text-xs font-extrabold text-gray-800">{t('aiMode.imageReferenceAttached')}</p>
                 <p className="text-[11px] font-semibold text-gray-500">
-                  Matching this photo against the Hualink catalogue…
+                  {t('aiMode.matchingPhoto')}
                 </p>
               </div>
               <button
                 onClick={handleClearImage}
-                aria-label="Remove image"
+                aria-label={t('aiMode.removeImage')}
                 className="w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-500 hover:text-[#E50914] flex items-center justify-center cursor-pointer transition-colors"
               >
                 <X size={14} />
@@ -333,7 +335,7 @@ export default function AISearchMode() {
               {/* Image Search Input */}
               <label className="flex items-center gap-1.5 px-3.5 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-xs font-bold text-gray-700 cursor-pointer transition-colors">
                 <ImageIcon size={14} />
-                <span>Image Search</span>
+                <span>{t('aiMode.imageSearch')}</span>
                 <input
                   type="file"
                   accept="image/*"
@@ -352,13 +354,13 @@ export default function AISearchMode() {
                 }`}
               >
                 <Mic size={14} />
-                <span>{isListening ? 'Listening...' : 'Voice Search'}</span>
+                <span>{isListening ? t('aiMode.listening') : t('aiMode.voiceSearch')}</span>
               </button>
             </div>
 
             <span className="text-[11px] font-extrabold text-red-600 bg-red-50 px-2.5 py-1 rounded-full flex items-center gap-1">
               <Sparkles size={12} />
-              Mastered Hualink Price Catalog
+              {t('aiMode.masteredCatalog')}
             </span>
           </div>
 
@@ -376,7 +378,7 @@ export default function AISearchMode() {
             <h2 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <Sparkles size={16} className="text-[#E50914]" />
-                AI Product Recommendations
+                {t('aiMode.aiRecommendations')}
               </span>
               <span className="text-xs text-gray-400 font-bold">{resultsLabel}</span>
             </h2>
@@ -384,7 +386,7 @@ export default function AISearchMode() {
             {isSearching ? (
               <div className="bg-white border border-gray-200 rounded-2xl p-12 text-center text-gray-400 font-bold text-xs space-y-2">
                 <Loader2 size={24} className="animate-spin text-red-600 mx-auto" />
-                <p>AI matching visual & text query with Hualink inventory...</p>
+                <p>{t('aiMode.matchingInventory')}</p>
               </div>
             ) : filteredResults.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -422,8 +424,7 @@ export default function AISearchMode() {
               </div>
             ) : (
               <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center text-xs font-bold text-gray-500">
-                Try searching &quot;AirPods&quot;, &quot;JBL&quot;, &quot;Iron Pasi&quot;, or
-                &quot;iPhone&quot; to get instant AI matches.
+                {t('aiMode.trySearching')}
               </div>
             )}
           </div>
@@ -433,14 +434,14 @@ export default function AISearchMode() {
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h3 className="text-xs font-black text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
                 <History size={14} className="text-[#E50914]" />
-                Customer Search History Log
+                {t('aiMode.searchHistory')}
               </h3>
               {chatHistory.length > 0 ? (
                 <button
                   onClick={() => saveToHistory([])}
                   className="text-[10px] font-bold text-red-600 hover:underline cursor-pointer"
                 >
-                  Clear History
+                  {t('aiMode.clearHistory')}
                 </button>
               ) : null}
             </div>
@@ -449,7 +450,7 @@ export default function AISearchMode() {
               {chatHistory.length === 0 ? (
                 <p className="text-[11px] font-semibold text-gray-400 text-center py-4 flex items-center justify-center gap-1.5">
                   <Package size={13} />
-                  No past search records stored yet.
+                  {t('aiMode.noPastSearches')}
                 </p>
               ) : (
                 chatHistory.map((item) => (
@@ -465,7 +466,7 @@ export default function AISearchMode() {
                       &quot;{item.userQuery}&quot;
                     </p>
                     <p className="text-[10px] text-gray-500 font-semibold">
-                      Matched: {item.recommendedItem}
+                      {t('aiMode.matched')} {item.recommendedItem}
                     </p>
                   </div>
                 ))

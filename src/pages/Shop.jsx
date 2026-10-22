@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 import { Search, Filter, ShoppingCart, Eye, RefreshCw, Check, AlertCircle } from 'lucide-react';
 import { getProducts } from '../api/productService';
 import { useCart } from '../context/CartContext';
+import { useTranslation } from 'react-i18next';
 
 export default function Shop() {
   const { addToCart, openCart } = useCart();
+  const { t } = useTranslation();
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,11 +18,11 @@ export default function Shop() {
 
   // Categories aligned with Hualink & TeKeL offerings
   const categories = [
-    'All',
-    'Electronics',
-    'Networking Maintenance',
-    'Office Furniture',
-    'TeKeL Branding & Print'
+    { key: 'All', labelKey: 'shopLegacy.all' },
+    { key: 'Electronics', labelKey: 'shopLegacy.electronics' },
+    { key: 'Networking Maintenance', labelKey: 'shopLegacy.networkingMaintenance' },
+    { key: 'Office Furniture', labelKey: 'shopLegacy.officeFurniture' },
+    { key: 'TeKeL Branding & Print', labelKey: 'shopLegacy.teKelBrandingPrint' }
   ];
 
   /**
@@ -42,7 +44,7 @@ export default function Shop() {
     } catch (err) {
       console.error('Error fetching products:', err);
       setProducts([]);
-      setError('Could not reach the inventory service. Please try again.');
+      setError(t('shopLegacy.errorReachInventory'));
     } finally {
       setLoading(false);
     }
@@ -68,13 +70,13 @@ export default function Shop() {
         {/* Page Header */}
         <div className="mb-8 space-y-2">
           <span className="text-xs font-black uppercase tracking-widest text-red-600">
-            Hualink Distribution
+            {t('shopLegacy.hualinkDistribution')}
           </span>
           <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-            Product Catalog & Regional Inventory
+            {t('shopLegacy.title')}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 font-medium">
-            Browse verified hardware stock, networking maintenance components, and corporate branding solutions.
+            {t('shopLegacy.subtitle')}
           </p>
         </div>
 
@@ -86,7 +88,7 @@ export default function Shop() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input
               type="text"
-              placeholder="Search products..."
+              placeholder={t('shopLegacy.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-red-600 transition-all"
@@ -98,15 +100,15 @@ export default function Shop() {
             <Filter size={16} className="text-slate-400 shrink-0 hidden sm:block mr-1" />
             {categories.map((cat) => (
               <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
+                key={cat.key}
+                onClick={() => setSelectedCategory(cat.key)}
                 className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                  selectedCategory === cat
+                  selectedCategory === cat.key
                     ? 'bg-red-600 text-white shadow-md shadow-red-600/20'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                {cat}
+                {t(cat.labelKey)}
               </button>
             ))}
           </div>
@@ -117,7 +119,7 @@ export default function Shop() {
         {loading ? (
           <div className="py-20 text-center flex flex-col items-center justify-center space-y-3">
             <RefreshCw size={28} className="animate-spin text-red-600" />
-            <p className="text-xs font-bold text-slate-500">Loading inventory from server...</p>
+            <p className="text-xs font-bold text-slate-500">{t('shopLegacy.loadingInventory')}</p>
           </div>
         ) : error ? (
           <div className="py-20 text-center bg-white rounded-3xl border border-slate-200 space-y-3">
@@ -129,12 +131,12 @@ export default function Shop() {
               className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-colors cursor-pointer"
             >
               <RefreshCw size={13} />
-              <span>Retry</span>
+              <span>{t('shopLegacy.retry')}</span>
             </button>
           </div>
         ) : products.length === 0 ? (
           <div className="py-20 text-center bg-white rounded-3xl border border-slate-200">
-            <p className="text-sm font-bold text-slate-600">No products found matching your search criteria.</p>
+            <p className="text-sm font-bold text-slate-600">{t('shopLegacy.noProductsFound')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -171,7 +173,7 @@ export default function Shop() {
                 <div className="p-5 pt-0 space-y-3">
                   <div className="flex items-center justify-between border-t border-slate-100 pt-3">
                     <div>
-                      <span className="text-[10px] font-bold uppercase text-slate-400 block">Price</span>
+                      <span className="text-[10px] font-bold uppercase text-slate-400 block">{t('shopLegacy.price')}</span>
                       <span className="text-base font-black text-slate-900">
                         {Number(product.price || 0).toLocaleString()} TZS
                       </span>
@@ -179,7 +181,7 @@ export default function Shop() {
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                       product.stock > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
                     }`}>
-                      {product.stock > 0 ? `In Stock (${product.stock})` : 'Out of Stock'}
+                      {product.stock > 0 ? `${t('shopLegacy.inStock')} (${product.stock})` : t('shopLegacy.outOfStock')}
                     </span>
                   </div>
 
@@ -189,7 +191,7 @@ export default function Shop() {
                       className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl flex items-center justify-center gap-1 transition-all"
                     >
                       <Eye size={14} />
-                      <span>Details</span>
+                      <span>{t('shopLegacy.details')}</span>
                     </Link>
                     <button
                       type="button"
@@ -206,12 +208,12 @@ export default function Shop() {
                       {addedId === product.id ? (
                         <>
                           <Check size={14} />
-                          <span>Added!</span>
+                          <span>{t('shopLegacy.added')}</span>
                         </>
                       ) : (
                         <>
                           <ShoppingCart size={14} />
-                          <span>Add</span>
+                          <span>{t('shopLegacy.add')}</span>
                         </>
                       )}
                     </button>

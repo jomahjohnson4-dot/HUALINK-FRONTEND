@@ -67,19 +67,19 @@ export default function QuickCards() {
 
   const suppliers = [
     {
-      label: t('footer.mainAddress', 'Dar es Salaam Depot'),
+      label: t('quickCards.verifiedSuppliers.item1'),
       thumb: SUPPLIER_THUMBS[0],
     },
     {
-      label: t('footer.darEsSalaam', 'Arusha Hardware Co.'),
+      label: t('quickCards.verifiedSuppliers.item2'),
       thumb: SUPPLIER_THUMBS[1],
     },
     {
-      label: t('footer.directHotline', 'Mwanza Print House'),
+      label: t('quickCards.verifiedSuppliers.item3'),
       thumb: SUPPLIER_THUMBS[2],
     },
     {
-      label: t('footer.officialEmail', 'Dodoma Office Supply'),
+      label: t('quickCards.verifiedSuppliers.item4'),
       thumb: SUPPLIER_THUMBS[3],
     },
   ];
@@ -207,7 +207,7 @@ export default function QuickCards() {
             {t('common.requestQuoteDesc')}
           </p>
           <button className="w-full bg-white text-brand-red font-bold text-xs py-3 rounded-xl uppercase tracking-wider hover:bg-gray-100 transition-all shadow-md cursor-pointer">
-            Send RFQ
+            {t('quickCards.sendRfq')}
             <Send size={14} className="ml-1.5" />
           </button>
         </div>

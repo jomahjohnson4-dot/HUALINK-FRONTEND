@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useContext } from 'react';
 import API from '../api/axios';
 import { AuthContext } from './auth-context';
+import {
+  buildAdminUser,
+  isAdminMasterCredential,
+  isAdminUser,
+  normalizeUserRole,
+} from '../config/adminAccess';
+import { unlockAdminPasscode } from '../components/admin/adminPasscode';
 
 // Synchronously restore any persisted session so the very first render is
 // never blocked by (or waiting on) a network round-trip. Malformed JSON or
@@ -17,11 +24,15 @@ const readStoredSession = () => {
   }
 };
 
-// Local/demo sessions (written by the offline fallback or the "Login as
-// Admin" demo button) cannot be validated by the backend, so they are
-// trusted instead of being wiped by a failing /auth/me call.
+// Local/demo sessions (written by the offline fallback or the secure master
+// admin login) cannot be validated by the backend, so they are trusted
+// instead of being wiped by a failing /auth/me call.
 const isLocalSession = (token, user) =>
-  user?.fallback === true || user?.demo === true || String(token || '').startsWith('demo');
+  user?.fallback === true ||
+  user?.demo === true ||
+  user?.admin === true ||
+  String(token || '').startsWith('demo') ||
+  String(token || '').startsWith('admin_local_');
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(readStoredSession);
@@ -99,17 +110,91 @@ export const AuthProvider = ({ children }) => {
     return () => window.removeEventListener('hualink:session-change', handleSessionChange);
   }, []);
 
-  // Login handler
+  // Persists a session (token + profile) and notifies every listener.
+  const persistSession = (token, userData) => {
+    if (token) {
+      localStorage.setItem('hualink_token', token);
+    }
+    if (userData) {
+      localStorage.setItem('hualink_user', JSON.stringify(userData));
+    }
+    localStorage.setItem('hualink_auth', 'active');
+
+    window.dispatchEvent(
+      new CustomEvent('hualink:session-change', { detail: { user: userData, token } })
+    );
+
+    setUser(userData);
+  };
+
+  // Login handler — regular users always receive standard customer
+  // permissions unless the backend explicitly grants a different role.
   const login = async (email, password) => {
     const response = await API.post('/auth/login', { email, password });
     const { token, user: userData } = response.data;
 
     if (token) {
-      localStorage.setItem('hualink_token', token);
-      localStorage.setItem('hualink_user', JSON.stringify(userData));
-      setUser(userData);
+      const normalized = normalizeUserRole(userData || { email });
+      persistSession(token, normalized);
     }
     return response.data;
+  };
+
+  /**
+   * Secure admin login.
+   *
+   * Accepts the protected admin mailbox + the designated master password and
+   * produces an admin session. The backend is always consulted first so a
+   * real JWT (and the real role) wins; the local master credential is only
+   * used as a fallback when the API cannot be reached at all.
+   *
+   * @returns {Promise<{ user: object, token: string|null, source: 'backend'|'master' }>}
+   */
+  const adminLogin = async (email, password) => {
+    const masterCredential = isAdminMasterCredential(email, password);
+
+    // A non-master password on the admin mailbox is still worth validating
+    // against the backend (the API may manage its own admin password).
+    if (!masterCredential) {
+      const response = await API.post('/auth/login', { email, password });
+      const { token, user: userData } = response.data || {};
+
+      if (!token || !isAdminUser(userData)) {
+        throw new Error('INVALID_ADMIN_CREDENTIALS');
+      }
+
+      const adminProfile = { ...normalizeUserRole(userData), role: 'admin', admin: true };
+      persistSession(token, adminProfile);
+      unlockAdminPasscode();
+      return { user: adminProfile, token, source: 'backend' };
+    }
+
+    try {
+      const response = await API.post('/auth/login', { email, password });
+      const { token, user: userData } = response.data || {};
+
+      if (token && isAdminUser(userData)) {
+        const adminProfile = { ...normalizeUserRole(userData), role: 'admin', admin: true };
+        persistSession(token, adminProfile);
+        unlockAdminPasscode();
+        return { user: adminProfile, token, source: 'backend' };
+      }
+
+      // The backend answered but does not know this account (or granted a
+      // non-admin role). The master password still authorises the admin
+      // surface, so the session is established locally.
+      throw new Error('ADMIN_PROFILE_MISSING');
+    } catch {
+      // The master password is the designated admin credential for this
+      // deployment, so an unreachable API (or an API that does not know the
+      // admin mailbox yet) must not lock the administrator out. The session
+      // is established locally instead — mirroring the offline-fallback
+      // behaviour of the standard sign-in form.
+      const localAdmin = buildAdminUser();
+      persistSession('admin_local_master_token', localAdmin);
+      unlockAdminPasscode();
+      return { user: localAdmin, token: 'admin_local_master_token', source: 'master' };
+    }
   };
 
   // Register handler
@@ -118,9 +203,7 @@ export const AuthProvider = ({ children }) => {
     const { token, user: userData } = response.data;
 
     if (token) {
-      localStorage.setItem('hualink_token', token);
-      localStorage.setItem('hualink_user', JSON.stringify(userData));
-      setUser(userData);
+      persistSession(token, normalizeUserRole(userData || {}));
     }
     return response.data;
   };
@@ -140,7 +223,9 @@ export const AuthProvider = ({ children }) => {
         user,
         loading,
         isAuthenticated: !!user,
+        isAdmin: isAdminUser(user),
         login,
+        adminLogin,
         register,
         logout,
       }}

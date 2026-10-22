@@ -18,6 +18,7 @@ import { getProductById as fetchProductById } from '../api/productService';
 import { normalizeProduct } from '../components/productsData';
 import PaymentMethodsPanel from '../components/PaymentMethodsPanel';
 import PaymentModal from '../components/modals/PaymentModal';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import {
@@ -51,14 +52,14 @@ const COLOR_SWATCHES = {
 };
 
 const COLOR_LABELS = {
-  Black: 'Black',
-  Blue: 'Blue',
-  Red: 'Red',
-  White: 'White',
-  Green: 'Green',
-  Grey: 'Grey',
-  Gray: 'Gray',
-  Silver: 'Silver',
+  Black: 'productDetail.colors.black',
+  Blue: 'productDetail.colors.blue',
+  Red: 'productDetail.colors.red',
+  White: 'productDetail.colors.white',
+  Green: 'productDetail.colors.green',
+  Grey: 'productDetail.colors.grey',
+  Gray: 'productDetail.colors.gray',
+  Silver: 'productDetail.colors.silver',
 };
 
 export default function ProductDetails() {
@@ -66,6 +67,7 @@ export default function ProductDetails() {
   const catalogProduct = getCatalogProduct(id);
   const { user, isAuthenticated } = useAuth();
   const { addToCart, openCart } = useCart();
+  const { t } = useTranslation();
 
   const [apiState, setApiState] = useState({ id: null, product: null, checked: false });
   const [quantity, setQuantity] = useState(1);
@@ -166,12 +168,12 @@ export default function ProductDetails() {
 
     const msisdn = normalizeMsisdn(phoneInput);
     if (msisdn.length < 12) {
-      setPaymentError('Please enter a valid phone number');
+      setPaymentError(t('productDetail.errorInvalidPhone'));
       return;
     }
 
     if (!isAuthenticated) {
-      setPaymentError('Please sign in to complete a mobile money payment.');
+      setPaymentError(t('productDetail.errorSignIn'));
       return;
     }
 
@@ -181,10 +183,10 @@ export default function ProductDetails() {
 
     try {
       const order = await createOrderService({
-        customerName: user?.name || user?.customerName || 'Hualink Customer',
+        customerName: user?.name || user?.customerName || t('productDetail.customerName'),
         customerPhone: msisdn,
         deliveryRegion: 'Dar es Salaam',
-        deliveryAddress: 'Hualink Distribution Hub, Dar es Salaam',
+        deliveryAddress: t('productDetail.deliveryAddress'),
         paymentMethod: selectedMethod.method,
         totalAmount: paymentAmount,
         items: [
@@ -208,7 +210,7 @@ export default function ProductDetails() {
       // Follow the webhook driven payment status for this order
       subscribeToPaymentStatusService(orderId, (data) => {
         if (data.status === 'FAILED' || data.status === 'CANCELLED') {
-          setPaymentError('Payment was declined or timed out. Please try again.');
+          setPaymentError(t('productDetail.errorDeclined'));
           setPaymentStep('INPUT');
           setIsProcessing(false);
         }
@@ -252,7 +254,7 @@ export default function ProductDetails() {
   if (!product && !apiChecked) {
     return (
       <div className="min-h-screen bg-[#F5F5F5] font-sans text-slate-900 py-20 px-4 text-center">
-        <p className="text-sm font-bold text-slate-500">Loading product details...</p>
+        <p className="text-sm font-bold text-slate-500">{t('productDetail.loading')}</p>
       </div>
     );
   }
@@ -262,24 +264,22 @@ export default function ProductDetails() {
       <div className="min-h-screen bg-[#F5F5F5] font-sans text-slate-900 py-16 px-4">
         <div className="max-w-xl mx-auto bg-white border border-gray-200 rounded-2xl p-10 text-center shadow-sm">
           <PackageX size={40} className="mx-auto text-gray-300 mb-4" />
-          <h1 className="text-xl font-black text-gray-900 mb-2">Product not found</h1>
+          <h1 className="text-xl font-black text-gray-900 mb-2">{t('productDetail.notFound')}</h1>
           <p className="text-sm text-slate-600 mb-6">
-            We could not find a catalogue product with the reference
-            <span className="font-bold text-gray-900"> &quot;{id}&quot;</span>. It may have been
-            removed or the link is out of date.
+            {t('productDetail.notFoundBody', { id })}
           </p>
           <div className="flex flex-col sm:flex-row gap-2 justify-center">
             <Link
               to="/"
               className="bg-[#E50914] hover:bg-[#C0040F] text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-colors"
             >
-              Back to Marketplace
+              {t('productDetail.backToMarketplace')}
             </Link>
             <Link
               to="/shop"
               className="bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-colors"
             >
-              Browse the Shop
+              {t('productDetail.browseShop')}
             </Link>
           </div>
         </div>
@@ -298,7 +298,11 @@ export default function ProductDetails() {
     : [];
   const activeColor = selectedColor || availableColors[0] || null;
 
-  const breadcrumbItems = ['Home', product.category, product.name];
+  const breadcrumbItems = [
+    { label: t('productDetail.home'), to: '/' },
+    { label: product.category, to: `/?category=${encodeURIComponent(product.categorySlug)}` },
+    { label: product.name, to: null },
+  ];
 
   // Adds the product to the shared cart and opens the drawer so the updated
   // basket count is visible straight away.
@@ -313,19 +317,19 @@ export default function ProductDetails() {
       <nav className="max-w-7xl mx-auto mb-6">
         <ol className="flex items-center gap-2 text-xs font-medium text-slate-600 flex-wrap">
           {breadcrumbItems.map((item, idx) => (
-            <li key={`${item}-${idx}`} className="flex items-center gap-1">
+            <li key={`${item.label}-${idx}`} className="flex items-center gap-1">
               {idx < breadcrumbItems.length - 1 ? (
                 <>
                   <Link
-                    to={idx === 0 ? '/' : `/?category=${encodeURIComponent(product.categorySlug)}`}
+                    to={item.to}
                     className="hover:text-[#E50914] transition-colors"
                   >
-                    {item}
+                    {item.label}
                   </Link>
                   <ArrowLeft size={12} className="text-slate-400" />
                 </>
               ) : (
-                <span className="text-[#E50914] font-bold">{item}</span>
+                <span className="text-[#E50914] font-bold">{item.label}</span>
               )}
             </li>
           ))}
@@ -343,7 +347,7 @@ export default function ProductDetails() {
                 key={thumb}
                 type="button"
                 onClick={() => setActiveImage(i)}
-                aria-label={`View image ${i + 1} of ${product.name}`}
+                aria-label={t('productDetail.viewImage', { index: i + 1, name: product.name })}
                 className={`w-16 h-16 cursor-pointer transition-all ${
                   activeImage === i
                     ? 'border-2 border-[#E50914] rounded-lg p-0.5'
@@ -352,7 +356,7 @@ export default function ProductDetails() {
               >
                 <img
                   src={thumb}
-                  alt={`${product.name} view ${i + 1}`}
+                  alt={t('productDetail.imageAlt', { name: product.name, index: i + 1 })}
                   className="w-full h-full object-contain"
                 />
               </button>
@@ -378,7 +382,7 @@ export default function ProductDetails() {
                   key={thumb}
                   type="button"
                   onClick={() => setActiveImage(i)}
-                  aria-label={`View image ${i + 1}`}
+                  aria-label={t('productDetail.viewImage', { index: i + 1, name: product.name })}
                   className={`w-16 h-16 shrink-0 cursor-pointer transition-all ${
                     activeImage === i
                       ? 'border-2 border-[#E50914] rounded-lg p-0.5'
@@ -396,7 +400,8 @@ export default function ProductDetails() {
         <div className="lg:col-span-6">
           {/* Brand */}
           <span className="text-[11px] font-black uppercase tracking-widest text-[#E50914] block mb-2">
-            Hualink Certified / {product.details?.Brand || product.category}
+            {t('productDetail.certified')}
+            {product.details?.Brand || product.category}
           </span>
 
           {/* Title */}
@@ -410,11 +415,14 @@ export default function ProductDetails() {
               <span className="text-xs font-bold text-gray-700">{product.rating}</span>
               <Star size={12} className="fill-amber-400 text-amber-400" />
               <span className="text-xs text-slate-600 font-medium">
-                ({reviewsCount} ratings)
+                {t('productDetail.ratings', { count: reviewsCount })}
               </span>
             </div>
             {product.details?.Model ? (
-              <span className="text-xs text-slate-500">Model Number: {product.details.Model}</span>
+              <span className="text-xs text-slate-500">
+                {t('productDetail.modelNumber')}
+                {product.details.Model}
+              </span>
             ) : null}
           </div>
 
@@ -427,7 +435,8 @@ export default function ProductDetails() {
           </div>
 
           <p className="text-xs text-slate-500 font-medium mb-6">
-            Minimum order: {product.moq}
+            {t('productDetail.minimumOrder')}
+            {product.moq}
             {product.sold ? ` · ${product.sold}` : ''}
           </p>
 
@@ -435,7 +444,7 @@ export default function ProductDetails() {
           {availableColors.length ? (
             <div className="mb-6">
               <span className="text-xs font-bold text-gray-700 uppercase tracking-wider block mb-3">
-                Select Color
+                {t('productDetail.selectColor')}
               </span>
               <div className="flex items-center gap-3">
                 {availableColors.map((color) => {
@@ -445,9 +454,9 @@ export default function ProductDetails() {
                       key={color}
                       type="button"
                       onClick={() => setSelectedColor(color)}
-                      aria-label={COLOR_LABELS[color] || color}
+                      aria-label={t(COLOR_LABELS[color] || color)}
                       aria-pressed={isSelected}
-                      title={COLOR_LABELS[color] || color}
+                      title={t(COLOR_LABELS[color] || color)}
                       className={`w-10 h-10 rounded-full cursor-pointer transition-all ${
                         isSelected
                           ? 'ring-2 ring-[#E50914] ring-offset-2'
@@ -464,13 +473,13 @@ export default function ProductDetails() {
           {/* Quantity */}
           <div className="mb-6">
             <span className="text-xs font-bold text-gray-700 uppercase tracking-wider block mb-3">
-              Quantity
+              {t('productDetail.quantity')}
             </span>
             <div className="inline-flex items-center bg-gray-100 rounded-xl overflow-hidden">
               <button
                 type="button"
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                aria-label="Decrease quantity"
+                aria-label={t('productDetail.decreaseQuantity')}
                 className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
               >
                 <Minus size={14} />
@@ -481,7 +490,7 @@ export default function ProductDetails() {
               <button
                 type="button"
                 onClick={() => setQuantity((q) => q + 1)}
-                aria-label="Increase quantity"
+                aria-label={t('productDetail.increaseQuantity')}
                 className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
               >
                 <Plus size={14} />
@@ -493,7 +502,7 @@ export default function ProductDetails() {
           {product.specs?.length ? (
             <div className="mb-6">
               <h2 className="text-xs font-black uppercase tracking-wider text-slate-700 block mb-3">
-                About This Item
+                {t('productDetail.aboutThisItem')}
               </h2>
               <ul className="space-y-2 text-sm text-slate-700 font-medium">
                 {product.specs.map((spec) => (
@@ -510,7 +519,7 @@ export default function ProductDetails() {
           {detailsEntries.length ? (
             <div className="mb-6">
               <h2 className="text-xs font-black uppercase tracking-wider text-slate-700 block mb-3">
-                Specifications
+                {t('productDetail.specifications')}
               </h2>
               <dl className="bg-gray-50 rounded-xl overflow-hidden">
                 {detailsEntries.map(([key, value]) => (
@@ -534,10 +543,10 @@ export default function ProductDetails() {
                 <span className="text-sm text-slate-700 font-medium">{product.details.Warranty}</span>
               </div>
             ) : null}
-            {['Easy Returns & Exchanges', 'Verified Hualink Supplier'].map((item) => (
-              <div key={item} className="flex items-start gap-2">
+            {['productDetail.easyReturns', 'productDetail.verifiedSupplier'].map((itemKey) => (
+              <div key={itemKey} className="flex items-start gap-2">
                 <CheckCircle2 size={16} className="text-[#10b981] shrink-0" />
-                <span className="text-sm text-slate-700 font-medium">{item}</span>
+                <span className="text-sm text-slate-700 font-medium">{t(itemKey)}</span>
               </div>
             ))}
           </div>
@@ -548,7 +557,7 @@ export default function ProductDetails() {
             onClick={handleAddToCart}
             className="w-full bg-[#E50914] text-white font-bold py-3 px-6 rounded-lg text-center hover:bg-[#C0040F] transition-colors shadow-md shadow-[#E50914]/30 cursor-pointer"
           >
-            Add to Cart
+            {t('productDetail.addToCart')}
           </button>
 
           {/* Payment Methods & Security */}
@@ -568,7 +577,9 @@ export default function ProductDetails() {
           <div className="flex items-center gap-2 mb-5">
             <Layers size={18} className="text-[#E50914]" />
             <h2 className="text-lg font-bold text-gray-800">
-              {relatedIsSameCategory ? `More in ${product.category}` : 'More from Hualink Distribution'}
+              {relatedIsSameCategory
+                ? t('productDetail.moreIn', { category: product.category })
+                : t('productDetail.moreFrom')}
             </h2>
           </div>
 

@@ -18,6 +18,7 @@ import {
   toggleProductAvailability,
   normaliseProduct,
 } from '../../api/productService';
+import { useTranslation } from 'react-i18next';
 
 /** Categories offered in the product form. */
 const CATEGORIES = [
@@ -31,6 +32,9 @@ const CATEGORIES = [
   'TeKeL Branding & Print',
   'Power Banks',
 ];
+
+/** Sentinel used by the category filter — the label itself is translated. */
+const ALL_CATEGORIES = 'All Categories';
 
 const LANGS = [
   { key: 'en', label: 'EN' },
@@ -50,13 +54,14 @@ const EMPTY_FORM = {
   description: { en: '', sw: '', zh: '', fr: '' },
 };
 
-function stockStatus(stock) {
-  if (stock <= 0) return { label: 'Out of Stock', className: 'bg-red-500/15 text-red-400 border-red-500/30' };
-  if (stock <= 10) return { label: 'Low Stock', className: 'bg-amber-500/15 text-amber-400 border-amber-500/30' };
-  return { label: 'In Stock', className: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' };
+function stockStatus(stock, t) {
+  if (stock <= 0) return { label: t('admin.products.outOfStock'), className: 'bg-red-500/15 text-red-400 border-red-500/30' };
+  if (stock <= 10) return { label: t('admin.products.lowStock'), className: 'bg-amber-500/15 text-amber-400 border-amber-500/30' };
+  return { label: t('admin.products.inStock'), className: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' };
 }
 
 export default function AdminProductsPanel({ onToast }) {
+  const { t } = useTranslation();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -64,7 +69,7 @@ export default function AdminProductsPanel({ onToast }) {
   const [busyId, setBusyId] = useState(null);
 
   const [search, setSearch] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('All Categories');
+  const [categoryFilter, setCategoryFilter] = useState(ALL_CATEGORIES);
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -80,7 +85,7 @@ export default function AdminProductsPanel({ onToast }) {
     } catch (err) {
       console.error('Failed to load inventory:', err);
       setRows([]);
-      setLoadError('Could not reach the inventory service. Changes cannot be saved right now.');
+      setLoadError(t('admin.products.errorService'));
     } finally {
       setLoading(false);
     }
@@ -94,14 +99,14 @@ export default function AdminProductsPanel({ onToast }) {
   const categoryOptions = useMemo(() => {
     const fromDb = rows.map((row) => row.category).filter(Boolean);
     const unique = Array.from(new Set([...fromDb, ...CATEGORIES]));
-    return ['All Categories', ...unique];
+    return [ALL_CATEGORIES, ...unique];
   }, [rows]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     return rows.filter((row) => {
       const matchesCategory =
-        categoryFilter === 'All Categories' || row.category === categoryFilter;
+        categoryFilter === ALL_CATEGORIES || row.category === categoryFilter;
       const matchesSearch =
         !term ||
         row.name.toLowerCase().includes(term) ||
@@ -140,10 +145,10 @@ export default function AdminProductsPanel({ onToast }) {
 
   const validate = () => {
     const next = {};
-    if (!form.name.trim()) next.name = 'Product name is required.';
-    if (!form.category) next.category = 'Category is required.';
-    if (!String(form.price).trim()) next.price = 'Price is required.';
-    else if (Number(form.price) <= 0) next.price = 'Price must be greater than zero.';
+    if (!form.name.trim()) next.name = t('admin.products.errorName');
+    if (!form.category) next.category = t('admin.products.errorCategory');
+    if (!String(form.price).trim()) next.price = t('admin.products.errorPrice');
+    else if (Number(form.price) <= 0) next.price = t('admin.products.errorPriceZero');
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -171,17 +176,17 @@ export default function AdminProductsPanel({ onToast }) {
         setRows((current) =>
           current.map((row) => (row.id === editingId ? { ...row, ...normaliseProduct(saved) } : row))
         );
-        onToast?.('Product Updated Successfully!');
+        onToast?.(t('admin.products.successUpdate'));
       } else {
         const created = await createProduct(payload);
         setRows((current) => [normaliseProduct(created), ...current]);
-        onToast?.('Product Added Successfully!');
+        onToast?.(t('admin.products.successAdd'));
       }
       setFormOpen(false);
     } catch (err) {
       console.error('Product save failed:', err);
       onToast?.(
-        err?.response?.data?.message || 'Could not save the product. Please try again.',
+        err?.response?.data?.message || t('admin.products.errorSave'),
         'error'
       );
     } finally {
@@ -190,16 +195,16 @@ export default function AdminProductsPanel({ onToast }) {
   };
 
   const handleDelete = async (row) => {
-    if (!window.confirm(`Delete "${row.name}" from the catalog?`)) return;
+    if (!window.confirm(t('admin.products.confirmDelete', { name: row.name }))) return;
     setBusyId(row.id);
     try {
       await deleteProduct(row.id);
       setRows((current) => current.filter((item) => item.id !== row.id));
-      onToast?.('Product Deleted Successfully!');
+      onToast?.(t('admin.products.successDelete'));
     } catch (err) {
       console.error('Delete failed:', err);
       onToast?.(
-        err?.response?.data?.message || 'Could not delete the product. Please try again.',
+        err?.response?.data?.message || t('admin.products.errorDelete'),
         'error'
       );
     } finally {
@@ -217,11 +222,18 @@ export default function AdminProductsPanel({ onToast }) {
           item.id === row.id ? { ...item, isAvailable: nextAvailable } : item
         )
       );
-      onToast?.(`${row.name} marked ${nextAvailable ? 'Available' : 'Unavailable'}.`);
+      onToast?.(
+        t('admin.products.availabilityUpdated', {
+          name: row.name,
+          status: nextAvailable
+            ? t('admin.products.available')
+            : t('admin.products.unavailable'),
+        })
+      );
     } catch (err) {
       console.error('Availability toggle failed:', err);
       onToast?.(
-        err?.response?.data?.message || 'Could not update availability. Please try again.',
+        err?.response?.data?.message || t('admin.products.errorAvailability'),
         'error'
       );
     } finally {
@@ -239,7 +251,7 @@ export default function AdminProductsPanel({ onToast }) {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search products by name or category..."
+            placeholder={t('admin.products.searchPlaceholder')}
             className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 transition-colors"
           />
         </div>
@@ -251,7 +263,7 @@ export default function AdminProductsPanel({ onToast }) {
         >
           {categoryOptions.map((cat) => (
             <option key={cat} value={cat}>
-              {cat}
+              {cat === ALL_CATEGORIES ? t('admin.products.allCategories') : cat}
             </option>
           ))}
         </select>
@@ -262,7 +274,7 @@ export default function AdminProductsPanel({ onToast }) {
           className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-slate-950 font-extrabold text-xs px-5 py-3 rounded-xl transition-colors cursor-pointer shadow-md shadow-orange-500/20"
         >
           <Plus size={15} />
-          <span>Add New Product</span>
+          <span>{t('admin.products.addNew')}</span>
         </button>
       </div>
 
@@ -277,24 +289,28 @@ export default function AdminProductsPanel({ onToast }) {
       {loading ? (
         <div className="flex items-center justify-center gap-3 py-16 text-slate-400">
           <Loader2 size={22} className="animate-spin text-orange-500" />
-          <span className="text-xs font-bold uppercase tracking-wider">Loading inventory...</span>
+          <span className="text-xs font-bold uppercase tracking-wider">
+            {t('admin.products.loading')}
+          </span>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-slate-700/60">
           <table className="w-full min-w-[820px] text-left">
             <thead className="bg-slate-800/80">
               <tr className="text-[10px] uppercase tracking-wider text-slate-400">
-                <th className="px-4 py-3 font-bold">Product</th>
-                <th className="px-4 py-3 font-bold">Category</th>
-                <th className="px-4 py-3 font-bold">Price</th>
-                <th className="px-4 py-3 font-bold">Stock</th>
-                <th className="px-4 py-3 font-bold">Rating</th>
-                <th className="px-4 py-3 font-bold text-right">Actions</th>
+                <th className="px-4 py-3 font-bold">{t('admin.products.name')}</th>
+                <th className="px-4 py-3 font-bold">{t('admin.products.category')}</th>
+                <th className="px-4 py-3 font-bold">{t('admin.products.price')}</th>
+                <th className="px-4 py-3 font-bold">{t('admin.products.stock')}</th>
+                <th className="px-4 py-3 font-bold">{t('admin.products.rating')}</th>
+                <th className="px-4 py-3 font-bold text-right">
+                  {t('admin.products.actions')}
+                </th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((row) => {
-                const status = stockStatus(row.stock);
+                const status = stockStatus(row.stock, t);
                 return (
                   <tr key={row.id} className="border-t border-slate-700/50 hover:bg-slate-800/40 transition-colors">
                     <td className="px-4 py-3">
@@ -311,7 +327,9 @@ export default function AdminProductsPanel({ onToast }) {
                             {row.name}
                           </p>
                           {!row.isAvailable ? (
-                            <span className="text-[10px] font-bold text-red-400 uppercase">Hidden</span>
+                            <span className="text-[10px] font-bold text-red-400 uppercase">
+                              {t('admin.products.hidden')}
+                            </span>
                           ) : null}
                         </div>
                       </div>
@@ -324,7 +342,9 @@ export default function AdminProductsPanel({ onToast }) {
                       <span className={`inline-block text-[10px] font-bold px-2 py-1 rounded border ${status.className}`}>
                         {status.label}
                       </span>
-                      <span className="block text-[10px] text-slate-400 mt-1">{row.stock} units</span>
+                      <span className="block text-[10px] text-slate-400 mt-1">
+                        {t('admin.products.units', { count: row.stock })}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-xs font-bold text-amber-400">★ {row.rating}</td>
                     <td className="px-4 py-3">
@@ -332,7 +352,7 @@ export default function AdminProductsPanel({ onToast }) {
                         <button
                           type="button"
                           onClick={() => openEdit(row)}
-                          aria-label={`Edit ${row.name}`}
+                          aria-label={t('admin.products.edit', { name: row.name })}
                           className="h-8 w-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:text-white hover:border-blue-500 transition-colors cursor-pointer"
                         >
                           <Pencil size={13} />
@@ -341,7 +361,7 @@ export default function AdminProductsPanel({ onToast }) {
                           type="button"
                           onClick={() => handleToggle(row)}
                           disabled={busyId === row.id}
-                          aria-label={`Toggle availability for ${row.name}`}
+                          aria-label={t('admin.products.toggle', { name: row.name })}
                           className={`h-8 w-8 rounded-lg bg-slate-800 border flex items-center justify-center transition-colors cursor-pointer disabled:opacity-50 ${
                             row.isAvailable
                               ? 'border-slate-700 text-emerald-400 hover:border-emerald-500'
@@ -354,7 +374,7 @@ export default function AdminProductsPanel({ onToast }) {
                           type="button"
                           onClick={() => handleDelete(row)}
                           disabled={busyId === row.id}
-                          aria-label={`Delete ${row.name}`}
+                          aria-label={t('admin.products.remove', { name: row.name })}
                           className="h-8 w-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:text-red-400 hover:border-red-500 transition-colors cursor-pointer disabled:opacity-50"
                         >
                           <Trash2 size={13} />
@@ -369,7 +389,7 @@ export default function AdminProductsPanel({ onToast }) {
 
           {!filtered.length ? (
             <p className="text-center text-xs font-bold text-slate-400 py-10">
-              No products match your search.
+              {t('admin.products.empty')}
             </p>
           ) : null}
         </div>
@@ -386,12 +406,12 @@ export default function AdminProductsPanel({ onToast }) {
           >
             <div className="flex items-center justify-between border-b border-slate-800 px-5 py-4">
               <h3 className="text-sm font-extrabold text-white">
-                {editingId ? 'Edit Product' : 'Add New Product'}
+                {editingId ? t('admin.products.editProduct') : t('admin.products.addNew')}
               </h3>
               <button
                 type="button"
                 onClick={() => setFormOpen(false)}
-                aria-label="Close form"
+                aria-label={t('admin.products.closeForm')}
                 className="text-slate-400 hover:text-white transition-colors cursor-pointer"
               >
                 <X size={18} />
@@ -400,17 +420,17 @@ export default function AdminProductsPanel({ onToast }) {
 
             <div className="p-5 space-y-4 max-h-[65vh] overflow-y-auto">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Product Name" required error={errors.name} className="sm:col-span-2">
+                <Field label={t('admin.products.nameLabel')} required error={errors.name} className="sm:col-span-2">
                   <input
                     type="text"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     className="admin-input"
-                    placeholder="Hualink 65W Fast Charger Adapter"
+                    placeholder={t('admin.products.namePlaceholder')}
                   />
                 </Field>
 
-                <Field label="Category" required error={errors.category}>
+                <Field label={t('admin.products.categoryLabel')} required error={errors.category}>
                   <select
                     value={form.category}
                     onChange={(e) => setForm({ ...form, category: e.target.value })}
@@ -422,40 +442,40 @@ export default function AdminProductsPanel({ onToast }) {
                   </select>
                 </Field>
 
-                <Field label="Price (TSh)" required error={errors.price}>
+                <Field label={t('admin.products.priceLabel')} required error={errors.price}>
                   <input
                     type="number"
                     min="0"
                     value={form.price}
                     onChange={(e) => setForm({ ...form, price: e.target.value })}
                     className="admin-input"
-                    placeholder="25000"
+                    placeholder={t('admin.products.pricePlaceholder')}
                   />
                 </Field>
 
-                <Field label="Original Price (TSh)">
+                <Field label={t('admin.products.originalPriceLabel')}>
                   <input
                     type="number"
                     min="0"
                     value={form.originalPrice}
                     onChange={(e) => setForm({ ...form, originalPrice: e.target.value })}
                     className="admin-input"
-                    placeholder="35000"
+                    placeholder={t('admin.products.originalPricePlaceholder')}
                   />
                 </Field>
 
-                <Field label="Stock Quantity">
+                <Field label={t('admin.products.stockLabel')}>
                   <input
                     type="number"
                     min="0"
                     value={form.stock}
                     onChange={(e) => setForm({ ...form, stock: e.target.value })}
                     className="admin-input"
-                    placeholder="120"
+                    placeholder={t('admin.products.stockPlaceholder')}
                   />
                 </Field>
 
-                <Field label="Rating (0-5)">
+                <Field label={t('admin.products.ratingLabel')}>
                   <input
                     type="number"
                     min="0"
@@ -467,17 +487,21 @@ export default function AdminProductsPanel({ onToast }) {
                   />
                 </Field>
 
-                <Field label="Image URL" className="sm:col-span-2">
+                <Field label={t('admin.products.imageLabel')} className="sm:col-span-2">
                   <input
                     type="url"
                     value={form.image}
                     onChange={(e) => setForm({ ...form, image: e.target.value })}
                     className="admin-input"
-                    placeholder="https://..."
+                    placeholder={t('admin.products.imagePlaceholder')}
                   />
                   {form.image ? (
                     <div className="mt-2 h-24 w-24 rounded-lg bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center">
-                      <img src={form.image} alt="Preview" className="h-full w-full object-contain" />
+                      <img
+                        src={form.image}
+                        alt={t('admin.products.imagePreviewAlt')}
+                        className="h-full w-full object-contain"
+                      />
                     </div>
                   ) : null}
                 </Field>
@@ -486,14 +510,14 @@ export default function AdminProductsPanel({ onToast }) {
               {/* Multi-language description */}
               <div className="pt-2 border-t border-slate-800">
                 <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-3">
-                  Multi-language Description
+                  {t('admin.products.multiLanguageDescription')}
                 </p>
                 <div className="space-y-3">
                   {LANGS.map(({ key, label }) => (
                     <div key={key}>
                       <label className="flex items-center gap-2 text-[10px] font-bold text-slate-400 mb-1">
                         <span className="bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5">{label}</span>
-                        Description
+                        {t('admin.products.description')}
                       </label>
                       <textarea
                         rows={2}
@@ -505,7 +529,7 @@ export default function AdminProductsPanel({ onToast }) {
                           })
                         }
                         className="admin-input resize-none"
-                        placeholder={`Description in ${label}...`}
+                        placeholder={t('admin.products.descriptionPlaceholder', { label })}
                       />
                     </div>
                   ))}
@@ -519,7 +543,7 @@ export default function AdminProductsPanel({ onToast }) {
                 onClick={() => setFormOpen(false)}
                 className="text-xs font-bold text-slate-300 hover:text-white px-4 py-2.5 rounded-xl transition-colors cursor-pointer"
               >
-                Cancel
+                {t('admin.products.cancel')}
               </button>
               <button
                 type="submit"
@@ -527,7 +551,9 @@ export default function AdminProductsPanel({ onToast }) {
                 className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-slate-950 font-extrabold text-xs px-5 py-2.5 rounded-xl transition-colors cursor-pointer disabled:opacity-60"
               >
                 {saving ? <Loader2 size={14} className="animate-spin" /> : null}
-                <span>{editingId ? 'Save Changes' : 'Add Product'}</span>
+                <span>
+                  {editingId ? t('admin.products.saveChanges') : t('admin.products.addProduct')}
+                </span>
               </button>
             </div>
           </form>

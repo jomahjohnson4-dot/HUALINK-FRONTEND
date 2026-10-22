@@ -1,11 +1,30 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Filter, Grid, LayoutGrid } from 'lucide-react';
 import ProductCard, { ViewToggle } from './ProductCard';
 import { ProductQuickView } from './ProductModal';
 import { PRODUCTS, GRID_FILTERS } from './productsData';
 
+/**
+ * Translation key for every shelf chip.
+ *
+ * The catalogue stores the raw English shelf label, so the visible text is
+ * resolved through the shared `categories.*` dictionary instead.
+ */
+const FILTER_LABEL_KEYS = {
+  all: 'categories.allCategories',
+  'chargers-cables': 'categories.chargersCables',
+  audio: 'categories.audioSound',
+  accessories: 'categories.accessories',
+  smartphones: 'categories.smartphones',
+  'home-appliances': 'categories.homeAppliances',
+};
+
 export default function ProductGrid({ onInquiry }) {
+  // Every heading, chip and button follows the active language.
+  const { t } = useTranslation();
+
   const [viewMode, setViewMode] = useState('grid');
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
@@ -19,6 +38,9 @@ export default function ProductGrid({ onInquiry }) {
   // shareable. An unknown slug falls back to the full catalogue.
   const categoryParam = searchParams.get('category');
   const filter = GRID_FILTERS.some((f) => f.id === categoryParam) ? categoryParam : 'all';
+
+  // Localised label of the shelf that is currently on screen.
+  const filterLabel = (id) => t(FILTER_LABEL_KEYS[id] || 'categories.allCategories');
 
   // Deep links such as /?category=audio#featured scroll down to the grid.
   useEffect(() => {
@@ -75,10 +97,10 @@ export default function ProductGrid({ onInquiry }) {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div className="flex flex-col">
               <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
-                Marketplace
+                {t('common.marketplace')}
               </h1>
               <p className="text-sm text-gray-600 mt-2">
-                Discover high-converting products from verified Hualink suppliers.
+                {t('catalog.subtitle')}
               </p>
             </div>
 
@@ -97,11 +119,7 @@ export default function ProductGrid({ onInquiry }) {
                   className="flex items-center gap-2 bg-white border border-gray-300 text-xs font-medium text-gray-700 px-3 py-2 rounded-sm cursor-pointer hover:bg-gray-50 transition-colors shadow-sm"
                 >
                   <Filter size={14} className="text-gray-500" />
-                  <span>
-                    {filter === 'all'
-                      ? 'All Categories'
-                      : GRID_FILTERS.find((f) => f.id === filter)?.label || filter}
-                  </span>
+                  <span>{filterLabel(filter)}</span>
                 </button>
               </div>
 
@@ -109,7 +127,7 @@ export default function ProductGrid({ onInquiry }) {
                 to="/shop"
                 className="text-xs font-bold text-[#E50914] hover:text-[#C0040F] transition-colors"
               >
-                View All
+                {t('common.viewAll')}
                 <Grid size={12} className="ml-0.5" />
               </Link>
             </div>
@@ -118,7 +136,7 @@ export default function ProductGrid({ onInquiry }) {
           <div className="mt-6 mb-6 lg:mt-0 lg:mb-0">
             <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
               <LayoutGrid size={18} className="text-[#E50914]" />
-              <span>Categories</span>
+              <span>{t('shop.categories')}</span>
             </h2>
 
             <div className="flex flex-wrap gap-2">
@@ -132,7 +150,7 @@ export default function ProductGrid({ onInquiry }) {
                       : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:text-[#E50914] hover:border-[#E50914]'
                   }`}
                 >
-                  {f.label}
+                  {filterLabel(f.id)}
                 </button>
               ))}
             </div>

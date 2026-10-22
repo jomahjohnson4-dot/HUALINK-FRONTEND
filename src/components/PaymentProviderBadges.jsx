@@ -6,6 +6,7 @@
  * inline vector mark below so the panel never shows a broken image.
  */
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PROVIDER_LOGOS, CARD_LOGOS } from './paymentLogos';
 
 const TILE = 'w-9 h-9';
@@ -212,6 +213,7 @@ const findLogo = (map, key) => {
 
 /** Square brand tile containing the provider's official logo image. */
 export function ProviderTile({ provider, className = TILE }) {
+  const { t } = useTranslation();
   const [imageFailed, setImageFailed] = useState(false);
 
   const Mark = PROVIDER_MARKS[provider?.id] || CashMark;
@@ -225,7 +227,7 @@ export function ProviderTile({ provider, className = TILE }) {
       >
         <img
           src={logo}
-          alt={`${provider?.label} logo`}
+          alt={t('payment.providerLogoAlt', { provider: provider?.label })}
           loading="lazy"
           onError={() => setImageFailed(true)}
           className="w-full h-full object-contain p-0.5"

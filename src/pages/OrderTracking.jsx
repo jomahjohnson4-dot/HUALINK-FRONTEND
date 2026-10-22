@@ -12,13 +12,15 @@ import {
   Route as RouteIcon,
   Truck,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import DeliveryMap from '../components/DeliveryMap';
 import OrderStatusTimeline from '../components/OrderStatusTimeline';
 import { getMyOrders, getOrderById, subscribeToOrderStatus } from '../api/orderService';
 import {
+  placeLabelKey,
   resolveRouteForOrder,
   routeDistance,
-  stageLabelFor,
+  stageLabelKey,
   statusProgress,
   statusTone,
 } from '../data/deliveryRoutes';
@@ -69,6 +71,7 @@ const normaliseOrder = (raw) => {
 export default function OrderTracking() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -103,7 +106,7 @@ export default function OrderTracking() {
 
       return {
         order: active,
-        error: active ? null : 'You have no orders to track yet.',
+        error: active ? null : t('tracking.noOrdersToTrack'),
       };
     } catch (err) {
       console.error('Failed to load the order for tracking:', err);
@@ -111,13 +114,13 @@ export default function OrderTracking() {
         order: null,
         error:
           err?.response?.status === 403
-            ? 'You do not have access to this shipment.'
+            ? t('tracking.accessDenied')
             : err?.response?.status === 404
-              ? 'That shipment could not be found.'
-              : 'Live tracking is temporarily unavailable.',
+              ? t('tracking.notFound')
+              : t('tracking.unavailable'),
       };
     }
-  }, [id]);
+  }, [id, t]);
 
   /* Loads the tracked order and reloads it whenever the tracked id changes. */
   useEffect(() => {
@@ -185,15 +188,20 @@ export default function OrderTracking() {
     return unsubscribe;
   }, [order?.id]);
 
-  const route = useMemo(
-    () => resolveRouteForOrder(order || {}),
-    [order]
+  const route = useMemo(() => resolveRouteForOrder(order || {}), [order]);
+
+  /** The localized name of a hub, a stop or a region. */
+  const placeLabel = useCallback(
+    (value) => {
+      const placeKey = placeLabelKey(value);
+      return placeKey ? t(placeKey) : value;
+    },
+    [t]
   );
 
-  const distanceKm = useMemo(
-    () => Math.round(routeDistance(route.waypoints)),
-    [route]
-  );
+  const distanceKm = useMemo(() => Math.round(routeDistance(route.waypoints)), [
+    route,
+  ]);
 
   /**
    * A rough delivery estimate based on the share of the corridor still to
@@ -201,15 +209,28 @@ export default function OrderTracking() {
    */
   const eta = useMemo(() => {
     const key = String(order?.status || 'PENDING').toUpperCase();
-    if (['DELIVERED', 'PAID'].includes(key)) return 'Delivered';
-    if (['CANCELLED', 'FAILED'].includes(key)) return 'Cancelled';
+    if (['DELIVERED', 'PAID'].includes(key)) return t('tracking.delivered');
+    if (['CANCELLED', 'FAILED'].includes(key)) return t('tracking.cancelled');
 
     const progress = Math.min(Math.max(statusProgress(key), 0), 1);
     const remaining = distanceKm * (1 - progress);
     const hours = Math.max(Math.round(remaining / AVERAGE_SPEED_KMH), 1);
 
-    return `~${hours} hr${hours === 1 ? '' : 's'} remaining`;
-  }, [order?.status, distanceKm]);
+    return t('tracking.hoursRemaining', { count: hours });
+  }, [order?.status, distanceKm, t]);
+
+  const routeLabel = route.labelKey ? t(route.labelKey) : route.label;
+
+  /** Localizes a status label. */
+  const getStatusLabel = useCallback(
+    (status) => {
+      const key = stageLabelKey(String(status || '').toUpperCase());
+      return key ? t(key) : String(status || '').replace(/_/g, ' ');
+    },
+    [t]
+  );
+
+  const stageLabelFor = getStatusLabel;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 font-sans text-slate-900 bg-slate-50/50 min-h-screen">
@@ -220,7 +241,7 @@ export default function OrderTracking() {
             type="button"
             onClick={() => navigate('/orders')}
             className="mt-0.5 p-2 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-red-600 hover:border-red-200 shadow-sm transition-colors cursor-pointer"
-            aria-label="Back to orders"
+            aria-label={t('tracking.backToOrdersAria')}
           >
             <ArrowLeft size={16} />
           </button>
@@ -231,12 +252,11 @@ export default function OrderTracking() {
                 <Truck size={18} />
               </div>
               <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                Live Order Tracking
+                {t('tracking.title')}
               </h1>
             </div>
             <p className="text-xs text-slate-500 mt-1">
-              Follow the shipment across the Hualink distribution corridor in
-              real time.
+              {t('tracking.subtitle')}
             </p>
           </div>
         </div>
@@ -248,7 +268,7 @@ export default function OrderTracking() {
                 statusTone(order.status)
               }`}
             >
-              {stageLabelFor(order.status)}
+              {getStatusLabel(order.status)}
             </span>
           ) : null}
 
@@ -256,7 +276,7 @@ export default function OrderTracking() {
             type="button"
             onClick={handleRefresh}
             className="p-2 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-red-600 shadow-sm transition-colors cursor-pointer"
-            aria-label="Refresh tracking"
+            aria-label={t('tracking.refreshAria')}
           >
             <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
           </button>
@@ -274,24 +294,23 @@ export default function OrderTracking() {
         <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center space-y-3">
           <RefreshCw size={32} className="mx-auto animate-spin text-red-500" />
           <p className="text-xs font-bold text-slate-500">
-            Loading the shipment route...
+            {t('tracking.loadingRoute')}
           </p>
         </div>
       ) : !order ? (
         <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center space-y-3">
           <Package size={48} className="mx-auto text-slate-300" />
           <h3 className="text-base font-bold text-slate-800">
-            Nothing to track yet
+            {t('tracking.nothingToTrack')}
           </h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            Place an order from the checkout screen to start tracking its
-            fulfilment status.
+            {t('tracking.nothingToTrackHint')}
           </p>
           <Link
             to="/orders"
             className="inline-block mt-2 px-5 py-2.5 bg-red-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-red-700 transition-colors"
           >
-            View my orders
+            {t('tracking.viewMyOrders')}
           </Link>
         </div>
       ) : (
@@ -300,22 +319,22 @@ export default function OrderTracking() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
             <SummaryTile
               icon={Package}
-              label="Order number"
+              label={t('tracking.orderNumber')}
               value={order.orderNumber}
             />
             <SummaryTile
               icon={RouteIcon}
-              label="Corridor"
-              value={route.label}
+              label={t('tracking.corridor')}
+              value={routeLabel}
             />
             <SummaryTile
               icon={Gauge}
-              label="Distance"
+              label={t('tracking.distance')}
               value={`${distanceKm} km`}
             />
             <SummaryTile
               icon={Truck}
-              label="Estimated arrival"
+              label={t('tracking.estimatedArrival')}
               value={eta}
             />
           </div>
@@ -330,7 +349,7 @@ export default function OrderTracking() {
               <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
                 <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
                   <FileText size={16} className="text-red-500" />
-                  <span>ITEMIZED DISPATCH RECEIPT</span>
+                  <span>{t('tracking.itemizedReceipt')}</span>
                 </div>
 
                 <div className="space-y-2 bg-slate-50/70 rounded-2xl p-4 border border-slate-100">
@@ -353,12 +372,12 @@ export default function OrderTracking() {
                     ))
                   ) : (
                     <div className="text-xs text-slate-500">
-                      Receipt details available
+                      {t('tracking.receiptAvailable')}
                     </div>
                   )}
 
                   <div className="flex justify-between items-center text-xs font-black text-red-600 border-t border-slate-200 pt-3 mt-2">
-                    <span>Total Paid Amount</span>
+                    <span>{t('tracking.totalPaidAmount')}</span>
                     <span>{order.amount}</span>
                   </div>
                 </div>
@@ -366,16 +385,18 @@ export default function OrderTracking() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5 pt-5 border-t border-slate-100 text-[11px]">
                   <div>
                     <span className="font-bold text-slate-400 uppercase tracking-wider">
-                      Delivering to
+                      {t('tracking.deliveringTo')}
                     </span>
                     <p className="font-bold text-slate-800 mt-1">
-                      {order.shippingAddress}
+                      {placeLabel(order.shippingAddress)}
                     </p>
-                    <p className="text-slate-500 mt-0.5">{order.region}</p>
+                    <p className="text-slate-500 mt-0.5">
+                      {placeLabel(order.region)}
+                    </p>
                   </div>
                   <div>
                     <span className="font-bold text-slate-400 uppercase tracking-wider">
-                      Payment
+                      {t('tracking.payment')}
                     </span>
                     <p className="font-bold text-slate-800 mt-1">
                       {order.paymentMethod}
@@ -386,7 +407,7 @@ export default function OrderTracking() {
                   </div>
                   <div>
                     <span className="font-bold text-slate-400 uppercase tracking-wider">
-                      Dispatched on
+                      {t('tracking.dispatchedOn')}
                     </span>
                     <p className="font-bold text-slate-800 mt-1">
                       {order.fullDate}
@@ -415,14 +436,12 @@ export default function OrderTracking() {
                       lastSync ? 'text-emerald-500 animate-pulse' : 'text-slate-300'
                     }
                   />
-                  <span>LIVE STATUS FEED</span>
+                  <span>{t('tracking.liveStatusFeed')}</span>
                 </div>
 
                 {events.length === 0 ? (
                   <p className="text-[11px] text-slate-400 leading-relaxed">
-                    Waiting for the next dispatch update. The map and the
-                    timeline move automatically as soon as the hub changes the
-                    shipment stage.
+                    {t('tracking.liveStatusFeedHint')}
                   </p>
                 ) : (
                   <ul className="space-y-2">
@@ -432,7 +451,7 @@ export default function OrderTracking() {
                         className="flex items-center justify-between gap-3 text-[11px] bg-slate-50 rounded-xl px-3 py-2 border border-slate-100"
                       >
                         <span className="font-bold text-slate-700">
-                          {stageLabelFor(event.status)}
+                          {getStatusLabel(event.status)}
                         </span>
                         <span className="text-slate-400 font-semibold">
                           {relativeTime(event.at)}
@@ -449,7 +468,7 @@ export default function OrderTracking() {
                   className="inline-flex items-center gap-2 text-xs font-bold text-red-600 hover:text-red-700 transition-colors"
                 >
                   <MapPin size={13} />
-                  View all your dispatches
+                  {t('tracking.viewAllDispatches')}
                 </Link>
               </div>
             </div>

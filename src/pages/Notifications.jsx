@@ -20,6 +20,7 @@ import {
   subscribeToNotifications,
   ADMIN_RECIPIENT,
 } from '../api/notificationService';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import NotificationCard from '../components/NotificationCard';
@@ -39,20 +40,27 @@ import NotificationCard from '../components/NotificationCard';
 
 /** The tabs of the page. */
 const TABS = [
-  { id: 'all', label: 'All Activity', Icon: Activity, types: null },
-  { id: 'orders', label: 'Purchases & Orders', Icon: ShoppingBag, types: ['ORDER'] },
+  { id: 'all', labelKey: 'notifications.tabs.all', Icon: Activity, types: null },
+  { id: 'orders', labelKey: 'notifications.tabs.purchases', Icon: ShoppingBag, types: ['ORDER'] },
   {
     id: 'account',
-    label: 'Account & Verification',
+    labelKey: 'notifications.tabs.account',
     Icon: ShieldCheck,
     types: ['SIGNUP', 'VERIFY', 'SYSTEM'],
   },
-  { id: 'admin', label: 'Admin Alerts', Icon: Siren, types: null, adminOnly: true },
+  {
+    id: 'admin',
+    labelKey: 'notifications.tabs.admin',
+    Icon: Siren,
+    types: null,
+    adminOnly: true,
+  },
 ];
 
 export default function Notifications() {
   const { user, isAuthenticated } = useAuth();
   const { push } = useToast();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -191,11 +199,11 @@ export default function Notifications() {
       await markAllNotificationsRead();
       setNotifications((current) => current.map((item) => ({ ...item, isRead: true })));
       setUnreadCount(0);
-      push('All notifications marked as read.');
+      push(t('notifications.markAllReadToast'));
     } catch (error) {
       console.error('[Notifications] Failed to mark all as read:', error);
       push(
-        error?.response?.data?.message || 'Could not mark the notifications as read.',
+        error?.response?.data?.message || t('notifications.markAllReadError'),
         'error'
       );
     } finally {
@@ -215,16 +223,17 @@ export default function Notifications() {
         <span className="w-16 h-16 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center">
           <Lock size={28} />
         </span>
-        <h1 className="text-2xl font-black text-slate-900 mt-5">Sign in to view notifications</h1>
+        <h1 className="text-2xl font-black text-slate-900 mt-5">
+          {t('notifications.signInTitle')}
+        </h1>
         <p className="text-xs font-semibold text-slate-500 mt-2 max-w-sm">
-          Your order updates, sign-up confirmations and verification alerts live in
-          your personal notification centre.
+          {t('notifications.signInBody')}
         </p>
         <Link
           to="/login"
           className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-colors"
         >
-          <span>Sign in</span>
+          <span>{t('notifications.signInCta')}</span>
           <ArrowRight size={14} />
         </Link>
       </div>
@@ -239,14 +248,14 @@ export default function Notifications() {
           <div>
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-red-600">
               <Bell size={13} />
-              <span>Notification Centre</span>
+              <span>{t('notifications.centreEyebrow')}</span>
             </div>
             <h1 className="text-3xl font-black tracking-tight text-slate-900 mt-2">
-              Your Notifications
+              {t('notifications.yourNotifications')}
             </h1>
             <p className="text-xs font-semibold text-slate-500 mt-1">
-              {unreadCount} unread alert{unreadCount === 1 ? '' : 's'} ·{' '}
-              {live ? 'streaming live' : 'polling for updates'}
+              {t('notifications.unread', { count: unreadCount })} ·{' '}
+              {live ? t('notifications.streamingLive') : t('notifications.polling')}
             </p>
           </div>
 
@@ -255,11 +264,11 @@ export default function Notifications() {
               type="button"
               onClick={load}
               disabled={refreshing}
-              aria-label="Refresh notifications"
+              aria-label={t('notifications.refreshAria')}
               className="inline-flex items-center gap-1.5 h-10 px-3.5 rounded-xl border border-slate-200 bg-white text-[11px] font-black uppercase tracking-wider text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer disabled:opacity-50"
             >
               <RefreshCw size={13} className={refreshing ? 'animate-spin' : ''} />
-              <span>Refresh</span>
+              <span>{t('notifications.refresh')}</span>
             </button>
 
             <button
@@ -273,14 +282,14 @@ export default function Notifications() {
               ) : (
                 <CheckCheck size={13} />
               )}
-              <span>Mark all read</span>
+              <span>{t('notifications.markAllReadShort')}</span>
             </button>
           </div>
         </header>
 
         {/* Tabs */}
         <div className="bg-white rounded-2xl border border-slate-200 p-1.5 flex flex-wrap gap-1.5">
-          {TABS.map(({ id, label, Icon }) => {
+          {TABS.map(({ id, labelKey, Icon }) => {
             const isActive = activeTab === id;
             const count = tabCounts[id] || 0;
 
@@ -296,7 +305,7 @@ export default function Notifications() {
                 }`}
               >
                 <Icon size={14} />
-                <span>{label}</span>
+                <span>{t(labelKey)}</span>
                 {count > 0 ? (
                   <span
                     className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[9px] font-black ${
@@ -318,11 +327,10 @@ export default function Notifications() {
               <Lock size={20} />
             </span>
             <h2 className="text-sm font-black text-slate-900 mt-4">
-              Admin Alerts are restricted
+              {t('notifications.adminRestricted')}
             </h2>
             <p className="text-[11px] font-semibold text-slate-500 mt-1.5 max-w-sm mx-auto">
-              New user registrations, new wholesale orders and new chat enquiries are
-              only visible to the Hualink Admin console.
+              {t('notifications.adminRestrictedBody')}
             </p>
           </div>
         ) : null}
@@ -331,7 +339,7 @@ export default function Notifications() {
         {loading ? (
           <div className="py-16 flex items-center justify-center gap-2 text-slate-400">
             <Loader2 size={18} className="animate-spin text-red-600" />
-            <span className="text-xs font-bold">Loading your notifications...</span>
+            <span className="text-xs font-bold">{t('notifications.loadingYours')}</span>
           </div>
         ) : null}
 
@@ -340,11 +348,11 @@ export default function Notifications() {
             <span className="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center">
               <Inbox size={24} />
             </span>
-            <p className="text-sm font-black text-slate-900">Nothing here yet</p>
+            <p className="text-sm font-black text-slate-900">{t('notifications.nothingHere')}</p>
             <p className="text-[11px] font-semibold text-slate-500 max-w-sm text-center">
               {activeTab === 'admin'
-                ? 'Platform-wide alerts will appear here as soon as they happen.'
-                : 'Activity from your orders, purchases and account will show up here.'}
+                ? t('notifications.emptyPlatform')
+                : t('notifications.emptyAccount')}
             </p>
           </div>
         ) : null}
@@ -366,8 +374,11 @@ export default function Notifications() {
         {/* Footer note */}
         {recipient ? (
           <p className="text-center text-[10px] font-bold text-slate-400">
-            Showing {visibleNotifications.length} of {notifications.length} alerts · feed
-            bucket <span className="font-black text-slate-500">{recipient}</span>
+            {t('notifications.showingOf', {
+              count: visibleNotifications.length,
+              total: notifications.length,
+              bucket: recipient,
+            })}
           </p>
         ) : null}
       </div>

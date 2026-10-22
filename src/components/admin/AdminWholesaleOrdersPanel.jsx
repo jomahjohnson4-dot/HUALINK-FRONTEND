@@ -9,9 +9,19 @@ import {
   Inbox,
 } from 'lucide-react';
 import { getAdminOrders, updateOrderStatus } from '../../api/orderService';
+import { useTranslation } from 'react-i18next';
 
 /** Wholesale lifecycle. Order matters — it drives the progress steps. */
 const STATUSES = ['Pending', 'Processing', 'Dispatched', 'Delivered'];
+
+/** Display labels for each stage of the wholesale lifecycle. */
+const STATUS_LABEL_KEYS = {
+  Pending: 'admin.orders.statuses.pending',
+  Processing: 'admin.orders.statuses.processing',
+  Dispatched: 'admin.orders.statuses.dispatched',
+  Delivered: 'admin.orders.statuses.delivered',
+  Cancelled: 'admin.orders.statuses.cancelled',
+};
 
 const STATUS_STYLES = {
   pending: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
@@ -50,7 +60,7 @@ function countItems(raw) {
   return direct > 0 ? direct : 1;
 }
 
-function normalizeOrder(raw, index) {
+function normalizeOrder(raw, index, t) {
   const total =
     raw.total ??
     raw.totalAmount ??
@@ -58,9 +68,13 @@ function normalizeOrder(raw, index) {
     Number(raw.price || 0) * Number(raw.quantity || 1);
   return {
     id: raw.id || raw._id || raw.orderId || `ORD-${1000 + index}`,
-    clientName: raw.customerName || raw.clientName || raw.name || 'Walk-in client',
+    clientName: raw.customerName || raw.clientName || raw.name || t('admin.orders.walkIn'),
     destination:
-      raw.region || raw.destination || raw.location || raw.warehouseLocation || 'Dar es Salaam Hub',
+      raw.region ||
+      raw.destination ||
+      raw.location ||
+      raw.warehouseLocation ||
+      t('admin.orders.darHub'),
     items: countItems(raw),
     total: Number(total) || 0,
     status: normalizeStatus(raw.status),
@@ -68,6 +82,7 @@ function normalizeOrder(raw, index) {
 }
 
 export default function AdminWholesaleOrdersPanel({ onToast }) {
+  const { t } = useTranslation();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -79,11 +94,11 @@ export default function AdminWholesaleOrdersPanel({ onToast }) {
     setLoadError(null);
     try {
       const list = await getAdminOrders();
-      setOrders(list.map(normalizeOrder));
+      setOrders(list.map((raw, index) => normalizeOrder(raw, index, t)));
     } catch (err) {
       console.error('Failed to load wholesale orders:', err);
       setOrders([]);
-      setLoadError('Could not reach the order service. Please try again.');
+      setLoadError(t('admin.orders.errorService'));
     } finally {
       setLoading(false);
     }
@@ -107,11 +122,16 @@ export default function AdminWholesaleOrdersPanel({ onToast }) {
           item.id === order.id ? { ...item, status: normalizeStatus(saved?.status || status) } : item
         )
       );
-      onToast?.(`Order ${order.id} marked ${status}.`);
+      onToast?.(
+        t('admin.orders.statusUpdated', {
+          id: order.id,
+          status: t(STATUS_LABEL_KEYS[status]),
+        })
+      );
     } catch (err) {
       console.error('Order status update failed:', err);
       onToast?.(
-        err?.response?.data?.message || 'Could not update the order status. Please try again.',
+        err?.response?.data?.message || t('admin.orders.errorStatus'),
         'error'
       );
     } finally {
@@ -154,7 +174,7 @@ export default function AdminWholesaleOrdersPanel({ onToast }) {
             className="bg-slate-800/60 border border-slate-700/60 rounded-2xl px-4 py-3"
           >
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              {status}
+              {t(STATUS_LABEL_KEYS[status])}
             </p>
             <p className="text-xl font-black text-white mt-0.5">{counts[status] || 0}</p>
           </div>
@@ -169,7 +189,7 @@ export default function AdminWholesaleOrdersPanel({ onToast }) {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search orders by ID, client or destination..."
+            placeholder={t('admin.orders.searchPlaceholder')}
             className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 transition-colors"
           />
         </div>
@@ -177,11 +197,11 @@ export default function AdminWholesaleOrdersPanel({ onToast }) {
           type="button"
           onClick={load}
           disabled={loading}
-          title="Refresh orders"
+          title={t('admin.orders.refreshAria')}
           className="flex items-center justify-center gap-2 bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 hover:text-white px-4 py-3 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
         >
           <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
-          <span className="text-xs font-bold">Refresh</span>
+          <span className="text-xs font-bold">{t('admin.orders.refresh')}</span>
         </button>
       </div>
 
@@ -195,24 +215,26 @@ export default function AdminWholesaleOrdersPanel({ onToast }) {
       {loading ? (
         <div className="flex items-center justify-center gap-3 py-16 text-slate-400">
           <Loader2 size={22} className="animate-spin text-orange-500" />
-          <span className="text-xs font-bold uppercase tracking-wider">Loading orders...</span>
+          <span className="text-xs font-bold uppercase tracking-wider">
+            {t('admin.orders.loadingOrders')}
+          </span>
         </div>
       ) : !filtered.length ? (
         <div className="flex flex-col items-center gap-2 py-16 text-slate-400">
           <Inbox size={26} />
-          <p className="text-xs font-bold">No wholesale orders found.</p>
+          <p className="text-xs font-bold">{t('admin.orders.noOrders')}</p>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-slate-700/60">
           <table className="w-full min-w-[780px] text-left">
             <thead className="bg-slate-800/80">
               <tr className="text-[10px] uppercase tracking-wider text-slate-400">
-                <th className="px-4 py-3 font-bold">Order</th>
-                <th className="px-4 py-3 font-bold">Client</th>
-                <th className="px-4 py-3 font-bold">Destination</th>
-                <th className="px-4 py-3 font-bold">Total</th>
-                <th className="px-4 py-3 font-bold">Status</th>
-                <th className="px-4 py-3 font-bold text-right">Update</th>
+                <th className="px-4 py-3 font-bold">{t('admin.orders.order')}</th>
+                <th className="px-4 py-3 font-bold">{t('admin.orders.client')}</th>
+                <th className="px-4 py-3 font-bold">{t('admin.orders.destination')}</th>
+                <th className="px-4 py-3 font-bold">{t('admin.orders.total')}</th>
+                <th className="px-4 py-3 font-bold">{t('admin.orders.status')}</th>
+                <th className="px-4 py-3 font-bold text-right">{t('admin.orders.update')}</th>
               </tr>
             </thead>
             <tbody>
@@ -226,7 +248,9 @@ export default function AdminWholesaleOrdersPanel({ onToast }) {
                       <Package size={14} className="text-slate-500 shrink-0" />
                       <span className="text-xs font-bold text-white">{order.id}</span>
                     </div>
-                    <span className="text-[10px] text-slate-400">{order.items} items</span>
+                    <span className="text-[10px] text-slate-400">
+                      {t('admin.orders.itemCount', { count: order.items })}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-xs text-slate-200 font-semibold">
                     {order.clientName}
@@ -246,7 +270,7 @@ export default function AdminWholesaleOrdersPanel({ onToast }) {
                         STATUS_STYLES[order.status.toLowerCase()]
                       }`}
                     >
-                      {order.status}
+                      {t(STATUS_LABEL_KEYS[order.status])}
                     </span>
                   </td>
                   <td className="px-4 py-3">
@@ -257,8 +281,11 @@ export default function AdminWholesaleOrdersPanel({ onToast }) {
                           type="button"
                           onClick={() => updateStatus(order, status)}
                           disabled={busyId === order.id || order.status === status}
-                          aria-label={`Mark ${order.id} as ${status}`}
-                          title={status}
+                          aria-label={t('admin.orders.markAs', {
+                            id: order.id,
+                            status: t(STATUS_LABEL_KEYS[status]),
+                          })}
+                          title={t(STATUS_LABEL_KEYS[status])}
                           className={`h-7 px-2 rounded-lg border text-[10px] font-bold transition-colors cursor-pointer disabled:opacity-40 ${
                             order.status === status
                               ? 'border-orange-500 bg-orange-500/15 text-orange-400'
@@ -278,8 +305,7 @@ export default function AdminWholesaleOrdersPanel({ onToast }) {
       )}
 
       <p className="text-[11px] text-slate-400 font-medium">
-        Updating a status feeds the client&apos;s live route tracking link, so the
-        buyer sees the same stage you set here.
+        {t('admin.orders.trackingNote')}
       </p>
     </div>
   );

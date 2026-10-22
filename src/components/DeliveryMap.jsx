@@ -3,6 +3,8 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './DeliveryMap.css';
 import { AlertTriangle, Loader2, MapPin, Navigation, Radio, Truck, Warehouse } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import {
   DEFAULT_CENTER,
   DEFAULT_ZOOM,
@@ -11,13 +13,14 @@ import {
   hasMapboxToken,
 } from '../config/mapbox';
 import {
-  STATUS_LABELS,
   buildProgressGeoJSON,
   buildRouteGeoJSON,
+  placeLabelKey,
   pointAlongRoute,
   remainingSlice,
   resolveRouteForOrder,
   routeDistance,
+  stageLabelKey,
   statusProgress,
   travelledSlice,
 } from '../data/deliveryRoutes';
@@ -138,16 +141,17 @@ const escapeHtml = (value) =>
 /**
  * The markup shown in the popup that follows the truck.
  *
- * @param {object} route
- * @param {string} stageLabel
- * @param {number} progress
+ * @param {string} stageLabel the localized stage label
+ * @param {string} originLabel the localized origin city
+ * @param {string} destinationLabel the localized destination city
+ * @param {string} progressLabel the localized progress sentence
  * @returns {string} the popup HTML
  */
-const popupMarkup = (route, stageLabel, progress) => `
+const popupMarkup = (stageLabel, originLabel, destinationLabel, progressLabel) => `
   <div class="hualink-popup">
     <p class="hualink-popup__stage">${escapeHtml(stageLabel)}</p>
-    <p class="hualink-popup__route">${escapeHtml(route.origin.city)} &rarr; ${escapeHtml(route.destination.city)}</p>
-    <p class="hualink-popup__progress">${Math.round(progress * 100)}% of the corridor covered</p>
+    <p class="hualink-popup__route">${escapeHtml(originLabel)} &rarr; ${escapeHtml(destinationLabel)}</p>
+    <p class="hualink-popup__progress">${escapeHtml(progressLabel)}</p>
   </div>
 `;
 
@@ -201,6 +205,7 @@ export default function DeliveryMap({
   className = '',
   showLegend = true,
 }) {
+  const { t } = useTranslation();
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const originMarkerRef = useRef(null);
@@ -228,7 +233,22 @@ export default function DeliveryMap({
     return statusProgress(resolvedStatus);
   }, [progress, resolvedStatus]);
 
-  const stageLabel = STATUS_LABELS[resolvedStatus] || resolvedStatus;
+  const stageKey = stageLabelKey(resolvedStatus);
+  const stageLabel = stageKey ? t(stageKey) : resolvedStatus;
+
+  /** The localized name of a hub, a stop or a region. */
+  const placeLabel = (value) => {
+    const placeKey = placeLabelKey(value);
+    return placeKey ? t(placeKey) : value;
+  };
+
+  const originLabel = placeLabel(route.origin.city);
+  const destinationLabel = placeLabel(route.destination.city);
+  const routeLabel = route.labelKey ? t(route.labelKey) : route.label;
+  const progressLabel = t('deliveryMap.corridorCovered', {
+    percent: Math.round(resolvedProgress * 100),
+  });
+
   const distanceKm = useMemo(
     () => Math.round(routeDistance(route.waypoints)),
     [route]
@@ -255,7 +275,7 @@ export default function DeliveryMap({
         logoPosition: 'bottom-left',
       });
     } catch (error) {
-      const message = error?.message || 'The map could not be initialised.';
+      const message = error?.message || i18n.t('deliveryMap.errorInit');
       // Reported from a scheduled callback so the fallback renders without a
       // cascading render inside the effect body.
       const report = () => setMapError(message);
@@ -272,7 +292,7 @@ export default function DeliveryMap({
 
     // A rejected token or an unreachable style must never break the page.
     map.on('error', (event) => {
-      const message = event?.error?.message || 'The live map could not be loaded.';
+      const message = event?.error?.message || i18n.t('deliveryMap.errorLoad');
       // Style/tile errors are noisy — only surface the ones that break the map.
       if (/token|401|403|unauthorized|unauthorised|webgl/i.test(message)) {
         setMapError(message);
@@ -374,7 +394,11 @@ export default function DeliveryMap({
     // --- Markers -------------------------------------------------------
     if (!originMarkerRef.current) {
       originMarkerRef.current = new mapboxgl.Marker({
-        element: createMarkerElement('origin', 'hub', 'Dispatch Hub'),
+        element: createMarkerElement(
+          'origin',
+          'hub',
+          t('deliveryMap.dispatchHub')
+        ),
         anchor: 'center',
       })
         .setLngLat(route.origin.coordinates)
@@ -383,7 +407,11 @@ export default function DeliveryMap({
 
     if (!destinationMarkerRef.current) {
       destinationMarkerRef.current = new mapboxgl.Marker({
-        element: createMarkerElement('destination', 'pin', 'Drop-off'),
+        element: createMarkerElement(
+          'destination',
+          'pin',
+          t('deliveryMap.dropOff')
+        ),
         anchor: 'center',
       })
         .setLngLat(route.destination.coordinates)
@@ -408,7 +436,9 @@ export default function DeliveryMap({
         className: 'hualink-map-popup',
       })
         .setLngLat(truckPosition || route.origin.coordinates)
-        .setHTML(popupMarkup(route, stageLabel, resolvedProgress))
+        .setHTML(
+          popupMarkup(stageLabel, originLabel, destinationLabel, progressLabel)
+        )
         .addTo(map);
     }
 
@@ -446,10 +476,10 @@ export default function DeliveryMap({
       if (truckPopupRef.current) {
         truckPopupRef.current
           .setLngLat(target)
-          .setHTML(popupMarkup(route, stageLabel, resolvedProgress));
+          .setHTML(popupMarkup(stageLabel, originLabel, destinationLabel, progressLabel));
       }
     }
-  }, [mapReady, resolvedProgress, route, stageLabel]);
+  }, [mapReady, resolvedProgress, route, stageLabel, originLabel, destinationLabel, progressLabel]);
 
   /* ------------------------------------------------------------------ */
   /* Static fallback                                                     */
@@ -499,7 +529,7 @@ export default function DeliveryMap({
         ref={containerRef}
         className="hualink-map w-full"
         style={{ height }}
-        aria-label="Live delivery route map"
+        aria-label={t('deliveryMap.mapAria')}
       />
 
       {/* Static preview when the map cannot be loaded */}
@@ -513,7 +543,7 @@ export default function DeliveryMap({
             className="w-full h-full"
             preserveAspectRatio="xMidYMid meet"
             role="img"
-            aria-label="Schematic delivery route"
+            aria-label={t('deliveryMap.schematicAria')}
           >
             <defs>
               <linearGradient id="hualink-route-fade" x1="0" x2="1">
@@ -614,15 +644,17 @@ export default function DeliveryMap({
                 <AlertTriangle size={17} />
               </span>
               <p className="text-xs font-black text-white mt-2.5">
-                {tokenAvailable ? 'Live map unavailable' : 'Live map not configured'}
+                {tokenAvailable
+                  ? t('deliveryMap.liveMapUnavailable')
+                  : t('deliveryMap.liveMapNotConfigured')}
               </p>
               <p className="text-[11px] font-semibold text-slate-400 mt-1 leading-relaxed">
                 {tokenAvailable
                   ? mapError
-                  : 'Add VITE_MAPBOX_ACCESS_TOKEN to .env to enable the interactive Mapbox view.'}
+                  : t('deliveryMap.addMapboxToken')}
               </p>
               <p className="text-[10px] font-bold text-slate-500 mt-2">
-                Showing the route schematic · {route.label}
+                {t('deliveryMap.showingSchematic', { route: routeLabel })}
               </p>
             </div>
           </div>
@@ -637,7 +669,7 @@ export default function DeliveryMap({
         >
           <span className="inline-flex items-center gap-2 text-xs font-bold text-slate-300">
             <Loader2 size={16} className="animate-spin text-red-500" />
-            Loading the live route...
+            {t('deliveryMap.loadingRoute')}
           </span>
         </div>
       ) : null}
@@ -648,7 +680,7 @@ export default function DeliveryMap({
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl bg-slate-950/85 backdrop-blur-md border border-white/10 px-3.5 py-2.5">
             <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-200">
               <span className="h-2.5 w-2.5 rounded-full bg-red-600" />
-              {route.origin.city}
+              {originLabel}
             </span>
 
             <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-200">
@@ -658,12 +690,18 @@ export default function DeliveryMap({
 
             <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-200">
               <span className="h-2.5 w-2.5 rounded-full bg-slate-900 ring-2 ring-white/70" />
-              {route.destination.city}
+              {destinationLabel}
             </span>
 
             <span className="ml-auto inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
-              <Radio size={10} className={mapReady ? 'text-emerald-400 animate-pulse' : 'text-slate-500'} />
-              {mapReady ? 'Live' : 'Connecting'} · {distanceKm} km
+              <Radio
+                size={10}
+                className={
+                  mapReady ? 'text-emerald-400 animate-pulse' : 'text-slate-500'
+                }
+              />
+              {mapReady ? t('deliveryMap.live') : t('deliveryMap.connecting')}{' '}
+              · {distanceKm} km
             </span>
           </div>
         </div>

@@ -1,20 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Package,
-  Search,
-  RefreshCw,
-  FileText,
-  AlertCircle,
-  MapPin,
-} from 'lucide-react';
+import { Package, Search, RefreshCw, FileText, AlertCircle, MapPin } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { getMyOrders, subscribeToOrderStatus } from '../api/orderService';
 import DeliveryMap from '../components/DeliveryMap';
 import OrderStatusTimeline from '../components/OrderStatusTimeline';
 import {
   STATUS_STEP,
+  placeLabelKey,
   resolveRouteForOrder,
-  stageLabelFor,
+  stageLabelKey,
   statusTone,
 } from '../data/deliveryRoutes';
 
@@ -59,6 +54,7 @@ const readLocalOrders = () => {
 };
 
 export const Orders = () => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [dispatches, setDispatches] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -88,8 +84,8 @@ export const Orders = () => {
       console.error('Failed to load orders:', err);
       setLiveError(
         err?.response?.status === 401
-          ? 'Sign in to track your orders live.'
-          : 'Live tracking is unavailable — showing your last saved orders.'
+          ? t('orders.signInToTrack')
+          : t('orders.unavailableShowingSaved')
       );
 
       const local = readLocalOrders().map((ord) => ({
@@ -140,6 +136,18 @@ export const Orders = () => {
     loadOrders();
   };
 
+  /** The localized name of a place (hub/stop/region). */
+  const placeLabel = (value) => {
+    const placeKey = placeLabelKey(value);
+    return placeKey ? t(placeKey) : value;
+  };
+
+  /** Localizes a status label. */
+  const getStatusLabel = (status) => {
+    const key = stageLabelKey(String(status || '').toUpperCase());
+    return key ? t(key) : String(status || '').replace(/_/g, ' ');
+  };
+
   const filteredDispatches = dispatches.filter((item) =>
     [item.orderNumber, item.id, item.location, item.paymentMethod]
       .filter(Boolean)
@@ -159,11 +167,11 @@ export const Orders = () => {
               <Package size={18} />
             </div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-              Order Tracking & Distribution
+              {t('orders.pageTitle')}
             </h1>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Track active regional dispatch orders and verify real-time receipts.
+            {t('orders.pageSubtitle')}
           </p>
         </div>
 
@@ -172,7 +180,7 @@ export const Orders = () => {
             <Search className="absolute left-3 top-2.5 text-slate-400" size={16} />
             <input
               type="text"
-              placeholder="Search Order #, Item, or Payment..."
+              placeholder={t('orders.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-red-500 shadow-sm"
@@ -181,6 +189,7 @@ export const Orders = () => {
           <button
             onClick={handleRefresh}
             className="p-2 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-red-600 shadow-sm transition-colors cursor-pointer"
+            aria-label={t('orders.refreshAria')}
           >
             <RefreshCw size={16} />
           </button>
@@ -197,14 +206,14 @@ export const Orders = () => {
       {loading && dispatches.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center space-y-3">
           <RefreshCw size={32} className="mx-auto animate-spin text-red-500" />
-          <p className="text-xs font-bold text-slate-500">Loading your orders...</p>
+          <p className="text-xs font-bold text-slate-500">{t('orders.loadingOrders')}</p>
         </div>
       ) : filteredDispatches.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center space-y-3">
           <Package size={48} className="mx-auto text-slate-300" />
-          <h3 className="text-base font-bold text-slate-800">No Orders Placed Yet</h3>
+          <h3 className="text-base font-bold text-slate-800">{t('orders.noOrdersTitle')}</h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            Place an order from the checkout screen to start tracking fulfillment status.
+            {t('orders.noOrdersHint')}
           </p>
         </div>
       ) : (

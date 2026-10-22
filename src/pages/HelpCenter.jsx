@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   Search, 
   BookOpen, 
@@ -19,40 +20,42 @@ import {
 } from 'lucide-react';
 
 // Comprehensive localized articles database
-const articlesData = {
+// Every string below is resolved through i18next, so the factory receives the
+// active `t` function and returns the copy in the currently selected language.
+const buildArticlesData = (t) => ({
   'what-is-hualink': {
-    category: 'GETTING STARTED',
-    title: 'What is Hualink Distribution?',
-    updated: 'August 2026',
-    author: 'Hualink Supply Operations',
-    summary: 'Hualink Distribution is a unified regional supply and logistics network designed to eliminate traditional intermediary markups across Tanzania.',
+    category: t('help.categories.gettingStarted'),
+    title: t('help.articles.whatIsHualink.title'),
+    updated: t('help.articles.whatIsHualink.updated'),
+    author: t('help.articles.whatIsHualink.author'),
+    summary: t('help.articles.whatIsHualink.summary'),
     content: (
       <div className="space-y-6 text-slate-700 text-sm leading-relaxed">
         <p>
-          Hualink connects enterprise buyers, institutions, and businesses directly with verified hardware inventory, IT networking stock, <strong>TeKeL graphics design services</strong>, and ergonomic office furniture solutions across Tanzania.
+          {t('help.articles.whatIsHualink.content.introLead')}<strong>{t('help.articles.whatIsHualink.content.introEmphasis')}</strong>{t('help.articles.whatIsHualink.content.introTail')}
         </p>
 
         <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-6 space-y-4">
           <h4 className="font-black text-slate-900 text-xs uppercase tracking-wider">
-            Core Ecosystem Services
+            {t('help.articles.whatIsHualink.content.ecosystemTitle')}
           </h4>
           <ul className="space-y-3 text-xs sm:text-sm text-slate-600">
             <li className="flex items-start gap-3">
               <Truck size={18} className="text-red-600 shrink-0 mt-0.5" />
               <span>
-                <strong className="text-slate-900">Regional Hub Dispatch:</strong> Direct supply chain hubs located in Dar es Salaam, Mbeya, Arusha, and Mwanza for rapid freight turnaround.
+                <strong className="text-slate-900">{t('help.articles.whatIsHualink.content.hubLabel')}</strong>{t('help.articles.whatIsHualink.content.hubBody')}
               </span>
             </li>
             <li className="flex items-start gap-3">
               <Palette size={18} className="text-red-600 shrink-0 mt-0.5" />
               <span>
-                <strong className="text-slate-900">TeKeL Graphics & Brand Identity:</strong> Custom UI prototyping, visual agency branding, marketing collateral, and digital asset suites.
+                <strong className="text-slate-900">{t('help.articles.whatIsHualink.content.tekelLabel')}</strong>{t('help.articles.whatIsHualink.content.tekelBody')}
               </span>
             </li>
             <li className="flex items-start gap-3">
               <Layers size={18} className="text-red-600 shrink-0 mt-0.5" />
               <span>
-                <strong className="text-slate-900">Enterprise Hardware Stock:</strong> Laptops, networking routers/switches, desktop workstations, and office setups built for direct institutional procurement.
+                <strong className="text-slate-900">{t('help.articles.whatIsHualink.content.hardwareLabel')}</strong>{t('help.articles.whatIsHualink.content.hardwareBody')}
               </span>
             </li>
           </ul>
@@ -60,198 +63,206 @@ const articlesData = {
 
         <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-semibold">
           <ShieldCheck size={18} className="shrink-0 text-red-600" />
-          <span>All dispatches include electronic serial tracking and regional depot receipt verifications.</span>
+          <span>{t('help.articles.whatIsHualink.content.trackingNote')}</span>
         </div>
       </div>
     )
   },
   'creating-account': {
-    category: 'GETTING STARTED',
-    title: 'Creating Your Account',
-    updated: 'August 2026',
-    author: 'User Onboarding Team',
-    summary: 'How to register a business or individual account on Hualink to unlock direct wholesale pricing.',
+    category: t('help.categories.gettingStarted'),
+    title: t('help.articles.creatingAccount.title'),
+    updated: t('help.articles.creatingAccount.updated'),
+    author: t('help.articles.creatingAccount.author'),
+    summary: t('help.articles.creatingAccount.summary'),
     content: (
       <div className="space-y-6 text-slate-700 text-sm leading-relaxed">
-        <p>Establishing your procurement identity on Hualink unlocks direct access to inventory hubs and bulk pricing structures across Tanzania.</p>
+        <p>{t('help.articles.creatingAccount.content.intro')}</p>
         
         <div className="space-y-3">
-          <h4 className="font-extrabold text-slate-900 text-sm">Step-by-Step Registration:</h4>
+          <h4 className="font-extrabold text-slate-900 text-sm">{t('help.articles.creatingAccount.content.stepsTitle')}</h4>
           <ol className="space-y-3 list-decimal list-inside font-medium text-slate-800 text-xs sm:text-sm">
-            <li>Click the <strong className="text-red-600">Register</strong> button located on the top navigation bar.</li>
-            <li>Select your account classification: <strong>Individual Buyer</strong> or <strong>Enterprise Business</strong>.</li>
-            <li>Fill in your primary details, phone number (e.g., <code>0781359770</code>), and business location.</li>
-            <li>Enter your Tax Identification Number (TIN) if applying for B2B tax-exempt procurement.</li>
-            <li>Complete mobile authentication via SMS verification PIN.</li>
+            <li>{t('help.articles.creatingAccount.content.step1Lead')}<strong className="text-red-600">{t('help.articles.creatingAccount.content.step1Emphasis')}</strong>{t('help.articles.creatingAccount.content.step1Tail')}</li>
+            <li>{t('help.articles.creatingAccount.content.step2Lead')}<strong>{t('help.articles.creatingAccount.content.step2EmphasisA')}</strong>{t('help.articles.creatingAccount.content.step2Middle')}<strong>{t('help.articles.creatingAccount.content.step2EmphasisB')}</strong>{t('help.articles.creatingAccount.content.step2Tail')}</li>
+            <li>{t('help.articles.creatingAccount.content.step3Lead')}<code>0781359770</code>{t('help.articles.creatingAccount.content.step3Tail')}</li>
+            <li>{t('help.articles.creatingAccount.content.step4')}</li>
+            <li>{t('help.articles.creatingAccount.content.step5')}</li>
           </ol>
         </div>
       </div>
     )
   },
   'account-verification': {
-    category: 'GETTING STARTED',
-    title: 'Account & Business Verification',
-    updated: 'August 2026',
-    author: 'Compliance Desk',
-    summary: 'Details on compliance requirements for bulk order discounts and tax-exempt purchasing.',
+    category: t('help.categories.gettingStarted'),
+    title: t('help.articles.accountVerification.title'),
+    updated: t('help.articles.accountVerification.updated'),
+    author: t('help.articles.accountVerification.author'),
+    summary: t('help.articles.accountVerification.summary'),
     content: (
       <div className="space-y-6 text-slate-700 text-sm leading-relaxed">
-        <p>Verified business accounts gain priority warehouse dispatching, credit payment terms, and automated VAT invoicing for high-volume orders.</p>
+        <p>{t('help.articles.accountVerification.content.intro')}</p>
         
         <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
-          <h5 className="font-black text-slate-900 text-xs uppercase tracking-wider">Required Compliance Verification Documents</h5>
+          <h5 className="font-black text-slate-900 text-xs uppercase tracking-wider">{t('help.articles.accountVerification.content.documentsTitle')}</h5>
           <ul className="list-disc list-inside text-xs space-y-2 text-slate-600">
-            <li>Certificate of Incorporation or BRELA Business Registration</li>
-            <li>TIN (Tax Identification Number) Certificate</li>
-            <li>VRN (Value Added Tax Registration) Certificate where applicable</li>
-            <li>National ID (NIDA) or Passport of designated purchasing agent</li>
+            <li>{t('help.articles.accountVerification.content.document1')}</li>
+            <li>{t('help.articles.accountVerification.content.document2')}</li>
+            <li>{t('help.articles.accountVerification.content.document3')}</li>
+            <li>{t('help.articles.accountVerification.content.document4')}</li>
           </ul>
         </div>
       </div>
     )
   },
   'finding-stock-pricing': {
-    category: 'BUYERS & ORDERING',
-    title: 'Finding Stock & Pricing',
-    updated: 'August 2026',
-    author: 'Inventory Desk',
-    summary: 'How to search verified stock across localized regional hubs.',
+    category: t('help.categories.buyersOrdering'),
+    title: t('help.articles.findingStockPricing.title'),
+    updated: t('help.articles.findingStockPricing.updated'),
+    author: t('help.articles.findingStockPricing.author'),
+    summary: t('help.articles.findingStockPricing.summary'),
     content: (
       <div className="space-y-6 text-slate-700 text-sm leading-relaxed">
-        <p>Our catalog updates inventory counts in real time across main regional distribution depots.</p>
+        <p>{t('help.articles.findingStockPricing.content.intro')}</p>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
           <div className="p-4 border border-slate-200 rounded-xl bg-white space-y-1">
-            <span className="font-extrabold text-slate-900 block">Regional Depot Filtering</span>
-            <p className="text-slate-500">Filter stock by location (Dar es Salaam, Mbeya, Arusha, Mwanza) to calculate accurate freight transit times.</p>
+            <span className="font-extrabold text-slate-900 block">{t('help.articles.findingStockPricing.content.depotTitle')}</span>
+            <p className="text-slate-500">{t('help.articles.findingStockPricing.content.depotBody')}</p>
           </div>
           <div className="p-4 border border-slate-200 rounded-xl bg-white space-y-1">
-            <span className="font-extrabold text-slate-900 block">Tiered Volume Pricing</span>
-            <p className="text-slate-500">Bulk price adjustments apply automatically when adding higher item quantities to your cart.</p>
+            <span className="font-extrabold text-slate-900 block">{t('help.articles.findingStockPricing.content.tierTitle')}</span>
+            <p className="text-slate-500">{t('help.articles.findingStockPricing.content.tierBody')}</p>
           </div>
         </div>
       </div>
     )
   },
   'placing-paying-orders': {
-    category: 'BUYERS & ORDERING',
-    title: 'Placing & Paying for Orders',
-    updated: 'August 2026',
-    author: 'Finance & Payments',
-    summary: 'Accepted payment methods, automated USSD push integrations, and direct receipts.',
+    category: t('help.categories.buyersOrdering'),
+    title: t('help.articles.placingPayingOrders.title'),
+    updated: t('help.articles.placingPayingOrders.updated'),
+    author: t('help.articles.placingPayingOrders.author'),
+    summary: t('help.articles.placingPayingOrders.summary'),
     content: (
       <div className="space-y-6 text-slate-700 text-sm leading-relaxed">
-        <p>Hualink supports automated mobile money gateways for local order processing:</p>
+        <p>{t('help.articles.placingPayingOrders.content.intro')}</p>
         
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
           <div className="p-4 border border-slate-200 rounded-xl bg-slate-50 space-y-1">
-            <span className="font-black text-slate-900 block">Vodacom M-Pesa</span>
-            <p className="text-slate-500">Instant USSD payment push directly to your registered mobile line.</p>
+            <span className="font-black text-slate-900 block">{t('help.articles.placingPayingOrders.content.mPesaTitle')}</span>
+            <p className="text-slate-500">{t('help.articles.placingPayingOrders.content.mPesaBody')}</p>
           </div>
           <div className="p-4 border border-slate-200 rounded-xl bg-slate-50 space-y-1">
-            <span className="font-black text-slate-900 block">Airtel Money</span>
-            <p className="text-slate-500">Automated carrier prompt for rapid cargo processing.</p>
+            <span className="font-black text-slate-900 block">{t('help.articles.placingPayingOrders.content.airtelTitle')}</span>
+            <p className="text-slate-500">{t('help.articles.placingPayingOrders.content.airtelBody')}</p>
           </div>
           <div className="p-4 border border-slate-200 rounded-xl bg-slate-50 space-y-1">
-            <span className="font-black text-slate-900 block">AzamPay</span>
-            <p className="text-slate-500">Digital gateway integration supporting cards and banking apps.</p>
+            <span className="font-black text-slate-900 block">{t('help.articles.placingPayingOrders.content.azamTitle')}</span>
+            <p className="text-slate-500">{t('help.articles.placingPayingOrders.content.azamBody')}</p>
           </div>
         </div>
       </div>
     )
   },
   'tracking-dispatch': {
-    category: 'BUYERS & ORDERING',
-    title: 'Tracking Your Regional Dispatch',
-    updated: 'August 2026',
-    author: 'Logistics Operations',
-    summary: 'Real-time multi-step tracking for regional depot cargo transport.',
+    category: t('help.categories.buyersOrdering'),
+    title: t('help.articles.trackingDispatch.title'),
+    updated: t('help.articles.trackingDispatch.updated'),
+    author: t('help.articles.trackingDispatch.author'),
+    summary: t('help.articles.trackingDispatch.summary'),
     content: (
       <div className="space-y-6 text-slate-700 text-sm leading-relaxed">
-        <p>Every order transitions through four verified distribution phases visible in your <strong>Orders</strong> portal:</p>
+        <p>{t('help.articles.trackingDispatch.content.introLead')}<strong>{t('help.articles.trackingDispatch.content.introEmphasis')}</strong>{t('help.articles.trackingDispatch.content.introTail')}</p>
         
         <ol className="space-y-3 list-decimal list-inside text-xs sm:text-sm font-semibold text-slate-800">
-          <li><strong>Order Confirmed & Placed:</strong> Payment cleared and invoice generated.</li>
-          <li><strong>Dispatched from Central Hub:</strong> Cargo loaded onto regional freight transport.</li>
-          <li><strong>In Transit to Regional Depot:</strong> Freight arriving at target depot hub (e.g., Mbeya or Arusha).</li>
-          <li><strong>Delivered & Verified:</strong> Final delivery complete and verified with local receipt.</li>
+          <li><strong>{t('help.articles.trackingDispatch.content.phase1Label')}</strong>{t('help.articles.trackingDispatch.content.phase1Body')}</li>
+          <li><strong>{t('help.articles.trackingDispatch.content.phase2Label')}</strong>{t('help.articles.trackingDispatch.content.phase2Body')}</li>
+          <li><strong>{t('help.articles.trackingDispatch.content.phase3Label')}</strong>{t('help.articles.trackingDispatch.content.phase3Body')}</li>
+          <li><strong>{t('help.articles.trackingDispatch.content.phase4Label')}</strong>{t('help.articles.trackingDispatch.content.phase4Body')}</li>
         </ol>
       </div>
     )
   },
   'becoming-wholesale-partner': {
-    category: 'WHOLESALE & B2B',
-    title: 'Becoming a Wholesale Partner',
-    updated: 'August 2026',
-    author: 'Partner Relations Desk',
-    summary: 'Sell your verified hardware stock or design services directly on the Hualink supply hub.',
+    category: t('help.categories.wholesaleB2b'),
+    title: t('help.articles.becomingWholesalePartner.title'),
+    updated: t('help.articles.becomingWholesalePartner.updated'),
+    author: t('help.articles.becomingWholesalePartner.author'),
+    summary: t('help.articles.becomingWholesalePartner.summary'),
     content: (
       <div className="space-y-6 text-slate-700 text-sm leading-relaxed">
-        <p>Hardware importers, tech vendors, and specialized service studios can apply to list inventory or services across Hualink regional depots after passing product quality audits.</p>
+        <p>{t('help.articles.becomingWholesalePartner.content.body')}</p>
       </div>
     )
   },
   'bulk-order-management': {
-    category: 'WHOLESALE & B2B',
-    title: 'Bulk Order Management',
-    updated: 'August 2026',
-    author: 'Enterprise Operations',
-    summary: 'Custom logistics for container-load orders and institutional supply tenders.',
+    category: t('help.categories.wholesaleB2b'),
+    title: t('help.articles.bulkOrderManagement.title'),
+    updated: t('help.articles.bulkOrderManagement.updated'),
+    author: t('help.articles.bulkOrderManagement.author'),
+    summary: t('help.articles.bulkOrderManagement.summary'),
     content: (
       <div className="space-y-6 text-slate-700 text-sm leading-relaxed">
-        <p>Enterprise clients can request custom proforma invoices, scheduled multi-destination freight drops, and dedicated account handling through their B2B dashboard portal.</p>
+        <p>{t('help.articles.bulkOrderManagement.content.body')}</p>
       </div>
     )
   }
-};
+});
 
-const navigationStructure = [
+const buildNavigationStructure = (t) => [
   {
-    category: 'GETTING STARTED',
+    category: t('help.categories.gettingStarted'),
     items: [
-      { id: 'what-is-hualink', label: 'What is Hualink Distribution?' },
-      { id: 'creating-account', label: 'Creating Your Account' },
-      { id: 'account-verification', label: 'Account & Business Verification' },
+      { id: 'what-is-hualink', label: t('help.articles.whatIsHualink.title') },
+      { id: 'creating-account', label: t('help.articles.creatingAccount.title') },
+      { id: 'account-verification', label: t('help.articles.accountVerification.title') }
     ]
   },
   {
-    category: 'BUYERS & ORDERING',
+    category: t('help.categories.buyersOrdering'),
     items: [
-      { id: 'finding-stock-pricing', label: 'Finding Stock & Pricing' },
-      { id: 'placing-paying-orders', label: 'Placing & Paying for Orders' },
-      { id: 'tracking-dispatch', label: 'Tracking Your Dispatch' },
+      { id: 'finding-stock-pricing', label: t('help.articles.findingStockPricing.title') },
+      { id: 'placing-paying-orders', label: t('help.articles.placingPayingOrders.title') },
+      { id: 'tracking-dispatch', label: t('help.navigation.trackingDispatch') }
     ]
   },
   {
-    category: 'WHOLESALE & B2B',
+    category: t('help.categories.wholesaleB2b'),
     items: [
-      { id: 'becoming-wholesale-partner', label: 'Becoming a Wholesale Partner' },
-      { id: 'bulk-order-management', label: 'Bulk Order Management' },
+      { id: 'becoming-wholesale-partner', label: t('help.articles.becomingWholesalePartner.title') },
+      { id: 'bulk-order-management', label: t('help.articles.bulkOrderManagement.title') }
     ]
   }
 ];
 
 export default function HelpCenter() {
+  const { t, i18n } = useTranslation();
   const [activeArticleId, setActiveArticleId] = useState('what-is-hualink');
   const [searchQuery, setSearchQuery] = useState('');
-  const [language, setLanguage] = useState('EN'); // 'EN' | 'SW'
+
+  // The page follows the application-wide language selection, so the globe
+  // toggle simply switches between English and Swahili.
+  const language = (i18n.language || 'en').slice(0, 2).toUpperCase();
+
+  // Localized copy for the active language — rebuilt whenever it changes.
+  const articles = useMemo(() => buildArticlesData(t), [t]);
+  const navigation = useMemo(() => buildNavigationStructure(t), [t]);
 
   // Current Active Article Data
-  const currentArticle = articlesData[activeArticleId] || articlesData['what-is-hualink'];
+  const currentArticle = articles[activeArticleId] || articles['what-is-hualink'];
 
   // Live filter articles based on search query
   const filteredNavigation = useMemo(() => {
-    if (!searchQuery.trim()) return navigationStructure;
+    if (!searchQuery.trim()) return navigation;
 
     const query = searchQuery.toLowerCase();
-    return navigationStructure.map(group => ({
+    return navigation.map(group => ({
       ...group,
       items: group.items.filter(item => 
         item.label.toLowerCase().includes(query) ||
-        articlesData[item.id]?.summary.toLowerCase().includes(query)
+        articles[item.id]?.summary.toLowerCase().includes(query)
       )
     })).filter(group => group.items.length > 0);
-  }, [searchQuery]);
+  }, [searchQuery, navigation, articles]);
 
   return (
     <div className="bg-slate-50 min-h-screen text-slate-900 font-sans pb-16">
@@ -266,13 +277,13 @@ export default function HelpCenter() {
                 HL
               </div>
               <span className="font-black tracking-tight text-slate-900 text-sm sm:text-base">
-                HUALINK <span className="text-red-600">HELP</span>
+                HUALINK <span className="text-red-600">{t('help.brandHelp')}</span>
               </span>
             </Link>
 
             <div className="hidden md:flex items-center gap-2">
               <span className="px-3 py-1 text-xs font-extrabold bg-slate-100 text-slate-700 rounded-full border border-slate-200">
-                {language === 'EN' ? 'Help Centre' : 'Kituo cha Msaada'}
+                {t('common.helpCenter')}
               </span>
             </div>
           </div>
@@ -283,7 +294,7 @@ export default function HelpCenter() {
               <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input 
                 type="text" 
-                placeholder={language === 'EN' ? "Search help articles..." : "Tafuta nakala za msaada..."}
+                placeholder={t('help.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-slate-100 hover:bg-slate-100/80 focus:bg-white border border-slate-200 focus:border-red-500 text-xs rounded-full pl-9 pr-4 py-2 outline-hidden transition-all text-slate-800 placeholder-slate-400 font-medium"
@@ -291,7 +302,8 @@ export default function HelpCenter() {
             </div>
 
             <button 
-              onClick={() => setLanguage(l => l === 'EN' ? 'SW' : 'EN')}
+              onClick={() => i18n.changeLanguage(language === 'EN' ? 'sw' : 'en')}
+              aria-label={t('common.languageSelector')}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
             >
               <Globe size={14} className="text-slate-500" />
@@ -311,17 +323,17 @@ export default function HelpCenter() {
             
             <div className="mb-6 pb-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">
-                {language === 'EN' ? 'HELP DIRECTORY' : 'ORODHA YA MSAADA'}
+                {t('help.directory')}
               </h3>
               <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
-                Interactive
+                {t('help.interactive')}
               </span>
             </div>
 
             <div className="space-y-6">
               {filteredNavigation.length === 0 ? (
                 <div className="text-center py-8 text-xs text-slate-400 font-medium">
-                  No articles matched "{searchQuery}"
+                  {t('help.noArticlesFound', { query: searchQuery })}
                 </div>
               ) : (
                 filteredNavigation.map((group, idx) => (
@@ -367,7 +379,7 @@ export default function HelpCenter() {
                 className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
               >
                 <Truck size={16} />
-                <span>{language === 'EN' ? 'Track Active Order' : 'Fuatilia Oda Yako'}</span>
+                <span>{t('help.trackActiveOrder')}</span>
               </Link>
             </div>
 
@@ -392,9 +404,9 @@ export default function HelpCenter() {
               </h1>
 
               <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-400">
-                <span>Last updated: {currentArticle.updated}</span>
+                <span>{t('help.lastUpdated', { date: currentArticle.updated })}</span>
                 <span>•</span>
-                <span>Published by {currentArticle.author}</span>
+                <span>{t('help.publishedBy', { author: currentArticle.author })}</span>
               </div>
             </div>
 
@@ -406,20 +418,20 @@ export default function HelpCenter() {
             {/* Article Footer Feedback */}
             <div className="mt-12 pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
               <p className="text-xs text-slate-500 font-medium">
-                {language === 'EN' ? 'Was this article helpful?' : 'Je, nakala hii imekusaidia?'}
+                {t('help.wasHelpful')}
               </p>
               <div className="flex items-center gap-3">
                 <button 
-                  onClick={() => alert("Thank you for your feedback!")}
+                  onClick={() => alert(t('help.feedbackThanks'))}
                   className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
                 >
-                  {language === 'EN' ? 'Yes, it helped' : 'Ndiyo, imesaidia'}
+                  {t('help.yesHelped')}
                 </button>
                 <button 
-                  onClick={() => alert("Thank you! We will improve this article.")}
+                  onClick={() => alert(t('help.feedbackImprove'))}
                   className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
                 >
-                  {language === 'EN' ? 'No, I need more help' : 'Hapana, nahitaji msaada zaidi'}
+                  {t('help.needMoreHelp')}
                 </button>
               </div>
             </div>

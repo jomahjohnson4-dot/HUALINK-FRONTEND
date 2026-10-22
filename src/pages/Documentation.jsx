@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   Search, 
   ArrowRight, 
@@ -14,38 +15,41 @@ import {
 } from 'lucide-react';
 
 export default function Documentation() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [language, setLanguage] = useState('EN');
+
+  // The docs hub follows the application-wide language selection.
+  const language = (i18n.language || 'en').slice(0, 2).toUpperCase();
 
   const stats = [
-    { value: '31', label: 'Regions Covered in Tanzania', icon: MapPinIcon },
-    { value: '2', label: 'Languages (English & Swahili)', icon: Globe },
-    { value: '100%', label: 'Direct Logistics Transparency', icon: ShieldCheck }
+    { value: '31', label: t('docs.stats.regions'), icon: MapPinIcon },
+    { value: '2', label: t('docs.stats.languages'), icon: Globe },
+    { value: '100%', label: t('docs.stats.transparency'), icon: ShieldCheck }
   ];
 
   const quickCategories = [
     {
-      title: 'Platform Overview',
-      desc: 'Understand Hualink direct supply chains, verified stock listings, and regional depots.',
+      title: t('docs.categories.overview.title'),
+      desc: t('docs.categories.overview.desc'),
       icon: Layers,
       link: '/docs/help#getting-started'
     },
     {
-      title: 'Wholesale & B2B Purchasing',
-      desc: 'Guides for bulk ordering, tax clearance invoicing, and regional depot pickup.',
+      title: t('docs.categories.wholesale.title'),
+      desc: t('docs.categories.wholesale.desc'),
       icon: Building2,
       link: '/docs/help#wholesale'
     },
     {
-      title: 'Order Dispatch & Tracking',
-      desc: 'How to track live shipments across Dar es Salaam, Mbeya, Arusha, and Mwanza hubs.',
+      title: t('docs.categories.dispatch.title'),
+      desc: t('docs.categories.dispatch.desc'),
       icon: Truck,
       link: '/docs/help#tracking'
     },
     {
-      title: 'TeKeL Brand & Tech Services',
-      desc: 'Requesting custom design, UI prototyping, and hardware maintenance.',
+      title: t('docs.categories.tekel.title'),
+      desc: t('docs.categories.tekel.desc'),
       icon: BookOpen,
       link: '/docs/help#tekel'
     }
@@ -72,16 +76,16 @@ export default function Documentation() {
                 <span className="text-black italic -ml-0.5">L</span>
               </div>
               <span className="font-black text-lg tracking-tight italic">
-                <span className="text-red-600">HUA</span>LINK <span className="text-xs font-bold text-slate-500 uppercase not-italic">Docs</span>
+                <span className="text-red-600">HUA</span>LINK <span className="text-xs font-bold text-slate-500 uppercase not-italic">{t('docs.brandDocs')}</span>
               </span>
             </Link>
 
             <nav className="hidden md:flex items-center gap-2 text-xs font-bold">
               <Link to="/docs" className="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-900">
-                Documentation
+                {t('docs.nav.documentation')}
               </Link>
               <Link to="/docs/help" className="px-3 py-1.5 rounded-xl text-slate-500 hover:text-slate-900 transition-colors">
-                Help Centre
+                {t('common.helpCenter')}
               </Link>
             </nav>
           </div>
@@ -92,7 +96,7 @@ export default function Documentation() {
               <Search className="absolute left-3.5 top-2.5 text-slate-400" size={16} />
               <input
                 type="text"
-                placeholder="Search documentation..."
+                placeholder={t('docs.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 bg-slate-100 border border-transparent focus:border-red-600 focus:bg-white rounded-xl text-xs font-semibold focus:outline-none transition-all"
@@ -102,7 +106,7 @@ export default function Documentation() {
             {/* Language Switcher */}
             <div className="flex items-center bg-slate-100 p-1 rounded-xl text-[11px] font-black">
               <button
-                onClick={() => setLanguage('EN')}
+                onClick={() => i18n.changeLanguage('en')}
                 className={`px-2.5 py-1 rounded-lg transition-all ${
                   language === 'EN' ? 'bg-red-600 text-white' : 'text-slate-600'
                 }`}
@@ -110,7 +114,7 @@ export default function Documentation() {
                 EN
               </button>
               <button
-                onClick={() => setLanguage('SW')}
+                onClick={() => i18n.changeLanguage('sw')}
                 className={`px-2.5 py-1 rounded-lg transition-all ${
                   language === 'SW' ? 'bg-red-600 text-white' : 'text-slate-600'
                 }`}
@@ -123,7 +127,7 @@ export default function Documentation() {
               to="/"
               className="hidden lg:inline-flex items-center gap-1.5 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold rounded-xl transition-all"
             >
-              <span>Visit Portal</span>
+              <span>{t('docs.visitPortal')}</span>
               <ExternalLink size={14} />
             </Link>
           </div>
@@ -135,15 +139,17 @@ export default function Documentation() {
       <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 text-center max-w-4xl mx-auto space-y-6">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-red-50 border border-red-200 text-red-600 text-xs font-black uppercase tracking-wider">
           <ShieldCheck size={14} />
-          <span>Official Distribution Knowledgebase</span>
+          <span>{t('docs.badge')}</span>
         </div>
 
         <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
-          Everything You Need to Know About <span className="text-red-600 italic">Hualink Distribution</span>
+          {t('docs.hero.titleLead')}{' '}
+          <span className="text-red-600 italic">{t('docs.hero.titleBrand')}</span>
+          {t('docs.hero.titleTail')}
         </h1>
 
         <p className="text-base sm:text-lg font-semibold text-slate-500 max-w-2xl mx-auto leading-relaxed">
-          Comprehensive operational guides, regional delivery schedules, wholesale registration details, and technical maintenance reference manuals.
+          {t('docs.hero.subtitle')}
         </p>
 
         <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
@@ -151,7 +157,7 @@ export default function Documentation() {
             to="/docs/help"
             className="inline-flex items-center gap-2 px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-xl shadow-red-600/25 transition-all"
           >
-            <span>Browse Help Centre</span>
+            <span>{t('docs.cta.browseHelp')}</span>
             <ArrowRight size={18} />
           </Link>
         </div>
@@ -171,7 +177,7 @@ export default function Documentation() {
 
       {/* Category Guides */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
-        <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Explore Documentation Hubs</h2>
+        <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">{t('docs.exploreHeading')}</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {quickCategories.map((cat, idx) => {
@@ -195,7 +201,7 @@ export default function Documentation() {
                 </div>
 
                 <div className="flex items-center gap-2 text-xs font-extrabold text-red-600 pt-2">
-                  <span>Read Guides</span>
+                  <span>{t('docs.readGuides')}</span>
                   <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                 </div>
               </Link>

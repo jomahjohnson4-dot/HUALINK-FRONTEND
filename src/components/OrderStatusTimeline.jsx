@@ -1,9 +1,11 @@
 import { Truck, MapPin, PackageCheck, Flag } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import {
   STATUS_STEP,
   corridorStops,
+  placeLabelKey,
+  stageLabelKey,
   stepTone,
-  stageLabelFor,
 } from '../data/deliveryRoutes';
 
 /**
@@ -13,6 +15,9 @@ import {
  * surfaces describe a shipment in exactly the same way. The copy is corridor
  * aware — "Dispatched from Dar es Salaam", "In Transit via Morogoro / Iringa"
  * — because the route is what makes the map legible.
+ *
+ * Every string is resolved through i18next, so the timeline follows the
+ * active language.
  */
 export default function OrderStatusTimeline({
   status = 'PENDING',
@@ -20,47 +25,59 @@ export default function OrderStatusTimeline({
   route = null,
   className = '',
 }) {
+  const { t } = useTranslation();
+
   const key = String(status || 'PENDING').toUpperCase();
   const activeStep = STATUS_STEP[key] ?? 1;
 
-  const origin = route?.origin?.city || 'Central Hub';
-  const destination = route?.destination?.city || 'Regional Depot';
-  const stops = corridorStops(route);
+  /** The localized name of a hub, a stop or a region. */
+  const placeLabel = (value) => {
+    const placeKey = placeLabelKey(value);
+    return placeKey ? t(placeKey) : value;
+  };
+
+  const origin = placeLabel(route?.origin?.city) || t('timeline.centralHub');
+  const destination =
+    placeLabel(route?.destination?.city) || t('timeline.regionalDepot');
+  const stops = corridorStops(route, t);
+
+  const labelKey = stageLabelKey(key);
+  const stageLabel = labelKey ? t(labelKey) : key.replace(/_/g, ' ');
 
   const steps = [
     {
       step: 1,
-      title: 'Order Confirmed & Placed',
-      detail: orderDate || 'Awaiting confirmation',
+      title: t('timeline.step1Title'),
+      detail: orderDate || t('timeline.awaitingConfirmation'),
       done: activeStep >= 1,
     },
     {
       step: 2,
-      title: `Dispatched from ${origin}`,
+      title: t('timeline.step2Title', { origin }),
       detail:
         activeStep >= 2
-          ? `Package processed & handed to carrier at ${origin}`
-          : 'Pending verification',
+          ? t('timeline.step2Detail', { origin })
+          : t('timeline.pendingVerification'),
       done: activeStep >= 2,
     },
     {
       step: 3,
       title: stops
-        ? `In Transit via ${stops}`
-        : `In Transit to ${destination}`,
+        ? t('timeline.step3TitleVia', { stops })
+        : t('timeline.step3TitleTo', { destination }),
       detail:
         activeStep >= 3
-          ? `En route to ${destination}`
-          : 'Pending transit',
+          ? t('timeline.enRouteTo', { destination })
+          : t('timeline.pendingTransit'),
       done: activeStep >= 3,
     },
     {
       step: 4,
-      title: 'Delivered & Customer Verification',
+      title: t('timeline.step4Title'),
       detail:
         activeStep >= 4
-          ? 'Order delivered and verified successfully'
-          : 'Pending delivery',
+          ? t('timeline.step4Detail')
+          : t('timeline.pendingDelivery'),
       done: activeStep >= 4,
     },
   ];
@@ -76,9 +93,9 @@ export default function OrderStatusTimeline({
     <div className={className}>
       <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-6">
         <Truck size={16} className="text-red-500" />
-        <span>DISPATCH & FULFILL PROGRESS</span>
+        <span>{t('timeline.heading')}</span>
         <span className="ml-auto normal-case tracking-normal text-slate-400 font-semibold">
-          {stageLabelFor(key)}
+          {stageLabel}
         </span>
       </div>
 
@@ -123,7 +140,7 @@ export default function OrderStatusTimeline({
                 >
                   <span className="inline-flex items-center gap-1">
                     <Icon size={11} />
-                    {stageLabelFor(key)}
+                    {stageLabel}
                   </span>
                 </span>
               ) : null}

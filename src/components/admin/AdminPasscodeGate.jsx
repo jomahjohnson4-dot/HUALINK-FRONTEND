@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Lock, ShieldCheck, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import {
   ADMIN_PASSCODE,
@@ -19,6 +20,7 @@ import {
  */
 export default function AdminPasscodeGate({ children }) {
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
   const [unlocked, setUnlocked] = useState(isAdminPasscodeUnlocked);
   const [passcode, setPasscode] = useState('');
   const [error, setError] = useState('');
@@ -28,12 +30,12 @@ export default function AdminPasscodeGate({ children }) {
     event.preventDefault();
 
     if (!passcode.trim()) {
-      setError('Enter the admin passcode to continue.');
+      setError(t('admin.gate.errorEmpty'));
       return;
     }
 
     if (passcode !== ADMIN_PASSCODE) {
-      setError('Incorrect passcode. Access denied.');
+      setError(t('admin.gate.errorIncorrect'));
       setPasscode('');
       return;
     }
@@ -56,14 +58,14 @@ export default function AdminPasscodeGate({ children }) {
         <div className="bg-slate-900 border-b border-slate-800 px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3">
           <span className="flex items-center gap-2 text-[11px] font-bold text-emerald-400">
             <ShieldCheck size={14} />
-            Admin controls unlocked
+            {t('admin.gate.unlocked')}
           </span>
           <button
             type="button"
             onClick={handleLock}
             className="text-[11px] font-bold text-slate-400 hover:text-white transition-colors cursor-pointer"
           >
-            Lock controls
+            {t('admin.gate.lock')}
           </button>
         </div>
         {children}
@@ -78,13 +80,13 @@ export default function AdminPasscodeGate({ children }) {
           <span className="h-14 w-14 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-500 mb-4 shadow-[0_0_24px_-4px] shadow-orange-500/40">
             <Lock size={24} strokeWidth={2.2} />
           </span>
-          <h1 className="text-lg font-black text-white tracking-tight">Admin Portal Access</h1>
+          <h1 className="text-lg font-black text-white tracking-tight">{t('admin.gate.title')}</h1>
           <p className="text-xs text-slate-400 font-medium mt-1.5">
-            Enter the passcode to reveal dashboard controls.
+            {t('admin.gate.subtitle')}
           </p>
           {user?.email ? (
             <p className="text-[11px] font-bold text-slate-500 mt-2">
-              Signed in as {user.name || user.email}
+              {t('admin.gate.signedInAs', { name: user.name || user.email })}
             </p>
           ) : null}
         </div>
@@ -92,7 +94,7 @@ export default function AdminPasscodeGate({ children }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="admin-passcode" className="block text-[11px] font-bold text-slate-400 mb-1.5">
-              Admin Passcode
+              {t('admin.gate.passcodeLabel')}
             </label>
             <div className="relative">
               <input
@@ -110,7 +112,7 @@ export default function AdminPasscodeGate({ children }) {
               <button
                 type="button"
                 onClick={() => setShowPasscode((value) => !value)}
-                aria-label={showPasscode ? 'Hide passcode' : 'Show passcode'}
+                aria-label={showPasscode ? t('admin.gate.hidePasscode') : t('admin.gate.showPasscode')}
                 className="absolute right-3 top-3.5 text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
               >
                 {showPasscode ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -127,7 +129,7 @@ export default function AdminPasscodeGate({ children }) {
             type="submit"
             className="w-full bg-orange-500 hover:bg-orange-600 text-slate-950 font-extrabold text-sm py-3 rounded-xl transition-colors cursor-pointer shadow-md shadow-orange-500/20"
           >
-            Unlock Admin Controls
+            {t('admin.gate.unlock')}
           </button>
         </form>
 
@@ -137,14 +139,14 @@ export default function AdminPasscodeGate({ children }) {
             className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 hover:text-white transition-colors"
           >
             <ArrowLeft size={13} />
-            Back to site
+            {t('admin.gate.backToSite')}
           </Link>
           <button
             type="button"
             onClick={logout}
             className="text-[11px] font-bold text-slate-400 hover:text-red-400 transition-colors cursor-pointer"
           >
-            Sign out
+            {t('admin.gate.signOut')}
           </button>
         </div>
       </div>

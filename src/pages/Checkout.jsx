@@ -11,12 +11,15 @@ import {
   Phone, 
   User,
   ArrowRight,
-  AlertCircle
+  AlertCircle,
+  Check
 } from 'lucide-react';
 import API from '../api/axios';
 import { requestOrderPin, verifyOrderPin } from '../api/verificationService';
 import OtpVerificationModal from '../components/modals/OtpVerificationModal';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
+import { ProviderTile } from '../components/PaymentProviderBadges';
 
 /**
  * Orders above this value (TZS) always require a PIN confirmation.
@@ -24,8 +27,45 @@ import { useAuth } from '../context/AuthContext';
  */
 const HIGH_VALUE_THRESHOLD = 500000;
 
+/** The delivery regions offered at checkout. */
+const REGIONS = [
+  { id: 'Dar es Salaam', labelKey: 'checkout.regions.darEsSalaam' },
+  { id: 'Mbeya', labelKey: 'checkout.regions.mbeya' },
+  { id: 'Arusha', labelKey: 'checkout.regions.arusha' },
+  { id: 'Mwanza', labelKey: 'checkout.regions.mwanza' },
+  { id: 'Dodoma', labelKey: 'checkout.regions.dodoma' },
+];
+
+/**
+ * The mobile-money gateways offered at checkout.
+ *
+ * `value` is the stable provider code sent to the backend — only the display
+ * names are translated.
+ */
+const PAYMENT_OPTIONS = [
+  {
+    value: 'M-PESA',
+    providerId: 'MPESA',
+    nameKey: 'checkout.providers.vodacom',
+    methodKey: 'checkout.providers.ussdPush',
+  },
+  {
+    value: 'AZAM-PAY',
+    providerId: 'AZAMPAY',
+    nameKey: 'checkout.providers.azamPay',
+    methodKey: 'checkout.providers.digitalGateway',
+  },
+  {
+    value: 'AIRTEL-MONEY',
+    providerId: 'AIRTEL',
+    nameKey: 'checkout.providers.airtel',
+    methodKey: 'checkout.providers.ussdPush',
+  },
+];
+
 export default function Checkout({ cartItems = [], user, onClearCart }) {
   const { isAuthenticated } = useAuth();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
   const [orderId, setOrderId] = useState('');
@@ -142,8 +182,7 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
       } catch (err) {
         console.error('Checkout PIN request error:', err);
         setErrorMsg(
-          err.response?.data?.message ||
-            'Could not send the confirmation PIN. Please try again.'
+          err.response?.data?.message || t('checkout.errorPinSend')
         );
       } finally {
         setLoading(false);
@@ -194,8 +233,8 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
         step: 1,
         amount: `${finalAmount.toLocaleString()} TZS`,
         items: formattedItems.length > 0 ? formattedItems : [
-          { name: 'Bulk Order Item', quantity: 1, price: `${finalAmount.toLocaleString()} TZS` },
-          { name: 'Standard Delivery Fee', quantity: 1, price: '15,000 TZS' }
+          { name: t('checkout.bulkOrderItem'), quantity: 1, price: `${finalAmount.toLocaleString()} TZS` },
+          { name: t('checkout.standardDeliveryFee'), quantity: 1, price: '15,000 TZS' }
         ]
       };
 
@@ -221,7 +260,7 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
       }
 
       if (responseBody?.paymentWarning) {
-        setErrorMsg(`Order was placed successfully, but the USSD prompt failed to send: ${responseBody.paymentWarning}`);
+        setErrorMsg(t('checkout.errorUssdFailed', { reason: responseBody.paymentWarning }));
       }
 
     } catch (err) {
@@ -236,8 +275,7 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
           setPinOpen(true);
         } catch (pinError) {
           setErrorMsg(
-            pinError.response?.data?.message ||
-              'Could not send the confirmation PIN. Please try again.'
+            pinError.response?.data?.message || t('checkout.errorPinSend')
           );
         }
         setLoading(false);
@@ -249,7 +287,7 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
         err.response?.data?.message ||
         (typeof err.response?.data === 'string' ? err.response.data : null) ||
         err.message ||
-        'Server connection failed. Order created locally.';
+        t('checkout.errorServerConnection');
 
       setErrorMsg(backendMessage);
     }
@@ -270,12 +308,12 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
       });
 
       if (!result.success) {
-        throw new Error(result.message || 'The confirmation PIN is incorrect.');
+        throw new Error(result.message || t('checkout.errorPinIncorrect'));
       }
 
       const { orderPayload, finalAmount, formattedItems } = pendingOrder || {};
       if (!orderPayload) {
-        throw new Error('The order session expired. Please place the order again.');
+        throw new Error(t('checkout.errorSessionExpiredOrder'));
       }
 
       // The confirmed PIN id travels with the order so the backend can
@@ -298,9 +336,7 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
       const session = await requestOrderPin({ amount: pendingOrder?.finalAmount });
       setPinSession(session);
     } catch (err) {
-      setErrorMsg(
-        err.response?.data?.message || 'Could not resend the confirmation PIN.'
-      );
+      setErrorMsg(err.response?.data?.message || t('checkout.errorResendPin'));
     } finally {
       setPinResendLoading(false);
     }
@@ -317,13 +353,14 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
 
           <div className="space-y-2">
             <span className="text-[11px] font-black uppercase tracking-widest text-emerald-600 block">
-              Order Placed Successfully
+              {t('checkout.successEyebrow')}
             </span>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
-              Thank You for Your Order!
+              {t('checkout.successTitle')}
             </h1>
             <p className="text-xs text-slate-500 font-medium">
-              Reference Number: <span className="font-extrabold text-slate-900">{orderId}</span>
+              {t('checkout.referenceNumber')}{' '}
+              <span className="font-extrabold text-slate-900">{orderId}</span>
             </p>
           </div>
 
@@ -336,26 +373,26 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
 
           <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 text-left space-y-2 text-xs">
             <div className="flex justify-between font-semibold text-slate-700">
-              <span>Delivery To:</span>
+              <span>{t('checkout.deliveryTo')}</span>
               <span className="font-bold text-slate-900">{shippingData.fullName}</span>
             </div>
             <div className="flex justify-between font-semibold text-slate-700">
-              <span>Destination Region:</span>
+              <span>{t('checkout.region')}</span>
               <span className="font-bold text-slate-900">{shippingData.region}</span>
             </div>
             <div className="flex justify-between font-semibold text-slate-700">
-              <span>Payment Option:</span>
+              <span>{t('checkout.paymentOption')}</span>
               <span className="font-bold text-slate-900">{shippingData.paymentMethod}</span>
             </div>
             <div className="flex justify-between font-semibold text-slate-700 border-t border-slate-200 pt-2">
-              <span>Total Amount:</span>
+              <span>{t('checkout.totalAmountLabel')}</span>
               <span className="font-black text-red-600">{Number(confirmedTotal).toLocaleString()} TZS</span>
             </div>
           </div>
 
           {!errorMsg && (
             <p className="text-[11px] text-slate-500">
-              A payment push request has been dispatched to <strong className="text-slate-800">{shippingData.phone}</strong>. Please complete the USSD popup on your phone.
+              {t('checkout.ussdNote', { phone: shippingData.phone })}
             </p>
           )}
 
@@ -364,14 +401,14 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
               to="/orders"
               className="w-full py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-red-600/20 transition-all"
             >
-              <span>View Order Status</span>
+              <span>{t('checkout.viewOrderStatus')}</span>
               <ArrowRight size={16} />
             </Link>
             <Link
               to="/shop"
               className="block text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors"
             >
-              Continue Shopping
+              {t('checkout.continueShopping')}
             </Link>
           </div>
         </div>
@@ -386,16 +423,16 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
         <div className="p-4 rounded-2xl bg-white border border-slate-200 text-slate-400">
           <ShoppingBag size={40} />
         </div>
-        <h2 className="text-xl font-bold text-slate-900">Your Cart is Empty</h2>
+        <h2 className="text-xl font-bold text-slate-900">{t('checkout.emptyCart')}</h2>
         <p className="text-xs text-slate-500 max-w-sm">
-          Add items from our inventory catalog before proceeding to checkout.
+          {t('checkout.emptyCartHint')}
         </p>
         <Link
           to="/shop"
           className="py-3 px-6 bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl flex items-center gap-2 transition-all"
         >
           <ArrowLeft size={16} />
-          <span>Return to Marketplace</span>
+          <span>{t('checkout.returnToMarketplace')}</span>
         </Link>
       </div>
     );
@@ -412,11 +449,11 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
             className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-red-600 transition-colors"
           >
             <ArrowLeft size={16} />
-            <span>Back to Shopping</span>
+            <span>{t('checkout.backToShopping')}</span>
           </Link>
           <div className="flex items-center gap-2 text-xs font-extrabold text-slate-700">
             <ShieldCheck size={16} className="text-red-600" />
-            <span>Secure Direct Checkout</span>
+            <span>{t('checkout.secureCheckout')}</span>
           </div>
         </div>
 
@@ -435,13 +472,13 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
             <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
               <div className="flex items-center gap-2 border-b border-slate-100 pb-4">
                 <Truck size={20} className="text-red-600" />
-                <h2 className="text-base font-black text-slate-900">1. Delivery & Contact Details</h2>
+                <h2 className="text-base font-black text-slate-900">{t('checkout.step1')}</h2>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-black uppercase tracking-wider text-slate-600 block">
-                    Full Name
+                    {t('checkout.fullName')}
                   </label>
                   <div className="relative">
                     <User className="absolute left-3.5 top-3 text-slate-400" size={18} />
@@ -451,7 +488,7 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
                       required
                       value={shippingData.fullName}
                       onChange={handleChange}
-                      placeholder="Johnson John"
+                      placeholder={t('checkout.fullNamePlaceholderLong')}
                       className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:border-red-600 focus:outline-none transition-all"
                     />
                   </div>
@@ -459,7 +496,7 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
 
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-black uppercase tracking-wider text-slate-600 block">
-                    Phone Number (M-Pesa / Mobile)
+                    {t('checkout.phoneNumberLabel')}
                   </label>
                   <div className="relative">
                     <Phone className="absolute left-3.5 top-3 text-slate-400" size={18} />
@@ -470,7 +507,7 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
                       pattern="^[0-9+]{10,13}$"
                       value={shippingData.phone}
                       onChange={handleChange}
-                      placeholder="0781359770"
+                      placeholder={t('checkout.phonePlaceholder')}
                       className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:border-red-600 focus:outline-none transition-all"
                     />
                   </div>
@@ -480,7 +517,7 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-black uppercase tracking-wider text-slate-600 block">
-                    Destination Region
+                    {t('checkout.region')}
                   </label>
                   <div className="relative">
                     <MapPin className="absolute left-3.5 top-3 text-slate-400" size={18} />
@@ -490,18 +527,18 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
                       onChange={handleChange}
                       className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:border-red-600 focus:outline-none transition-all cursor-pointer"
                     >
-                      <option value="Dar es Salaam">Dar es Salaam</option>
-                      <option value="Mbeya">Mbeya</option>
-                      <option value="Arusha">Arusha</option>
-                      <option value="Mwanza">Mwanza</option>
-                      <option value="Dodoma">Dodoma</option>
+                      {REGIONS.map((region) => (
+                        <option key={region.id} value={region.id}>
+                          {t(region.labelKey)}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-black uppercase tracking-wider text-slate-600 block">
-                    Street Address / Landmark
+                    {t('checkout.addressLabel')}
                   </label>
                   <input
                     type="text"
@@ -509,7 +546,7 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
                     required
                     value={shippingData.address}
                     onChange={handleChange}
-                    placeholder="Building, Street, Office"
+                    placeholder={t('checkout.addressPlaceholderShort')}
                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:border-red-600 focus:outline-none transition-all"
                   />
                 </div>
@@ -519,54 +556,43 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
             <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
               <div className="flex items-center gap-2 border-b border-slate-100 pb-4">
                 <CreditCard size={20} className="text-red-600" />
-                <h2 className="text-base font-black text-slate-900">2. Select Payment Provider</h2>
+                <h2 className="text-base font-black text-slate-900">{t('checkout.step2')}</h2>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <label className={`border p-4 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${
-                  shippingData.paymentMethod === 'M-PESA' ? 'border-red-600 bg-red-50/40 text-red-600' : 'border-slate-200 bg-slate-50 text-slate-600'
-                }`}>
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="M-PESA"
-                    checked={shippingData.paymentMethod === 'M-PESA'}
-                    onChange={handleChange}
-                    className="sr-only"
-                  />
-                  <span className="text-xs font-extrabold text-slate-900">Vodacom M-Pesa</span>
-                  <span className="text-[10px] text-slate-500 font-medium">USSD Push</span>
-                </label>
-
-                <label className={`border p-4 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${
-                  shippingData.paymentMethod === 'AZAM-PAY' ? 'border-red-600 bg-red-50/40 text-red-600' : 'border-slate-200 bg-slate-50 text-slate-600'
-                }`}>
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="AZAM-PAY"
-                    checked={shippingData.paymentMethod === 'AZAM-PAY'}
-                    onChange={handleChange}
-                    className="sr-only"
-                  />
-                  <span className="text-xs font-extrabold text-slate-900">AzamPay</span>
-                  <span className="text-[10px] text-slate-500 font-medium">Digital Gateway</span>
-                </label>
-
-                <label className={`border p-4 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${
-                  shippingData.paymentMethod === 'AIRTEL-MONEY' ? 'border-red-600 bg-red-50/40 text-red-600' : 'border-slate-200 bg-slate-50 text-slate-600'
-                }`}>
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="AIRTEL-MONEY"
-                    checked={shippingData.paymentMethod === 'AIRTEL-MONEY'}
-                    onChange={handleChange}
-                    className="sr-only"
-                  />
-                  <span className="text-xs font-extrabold text-slate-900">Airtel Money</span>
-                  <span className="text-[10px] text-slate-500 font-medium">USSD Push</span>
-                </label>
+                {PAYMENT_OPTIONS.map((option) => (
+                  <label
+                    key={option.value}
+                    className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
+                      shippingData.paymentMethod === option.value
+                        ? 'border-red-600 bg-red-50/50 shadow-sm'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value={option.value}
+                      checked={shippingData.paymentMethod === option.value}
+                      onChange={handleChange}
+                      className="sr-only"
+                    />
+                    <ProviderTile
+                      provider={{ id: option.providerId, label: t(option.nameKey) }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-slate-900">{t(option.nameKey)}</p>
+                      <p className="text-[10px] text-slate-500 font-medium">
+                        {t(option.methodKey)}
+                      </p>
+                    </div>
+                    {shippingData.paymentMethod === option.value && (
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-white">
+                        <Check size={12} />
+                      </span>
+                    )}
+                  </label>
+                ))}
               </div>
             </div>
 
@@ -576,7 +602,7 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
           <div className="lg:col-span-5 space-y-6">
             <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6 sticky top-28">
               <h2 className="text-base font-black text-slate-900 border-b border-slate-100 pb-4">
-                Order Summary ({cartItems.length} items)
+                {t('checkout.orderSummary', { count: cartItems.length })}
               </h2>
 
               <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
@@ -593,7 +619,9 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
                         )}
                         <div>
                           <h4 className="font-bold text-slate-900 line-clamp-1">{itemTitle}</h4>
-                          <span className="text-slate-500 text-[11px]">Qty: {itemQty}</span>
+                          <span className="text-slate-500 text-[11px]">
+                            {t('checkout.qty', { count: itemQty })}
+                          </span>
                         </div>
                       </div>
                       <span className="font-black text-slate-900 shrink-0">
@@ -606,15 +634,15 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
 
               <div className="border-t border-slate-100 pt-4 space-y-2 text-xs">
                 <div className="flex justify-between text-slate-600">
-                  <span>Subtotal</span>
+                  <span>{t('checkout.subtotal')}</span>
                   <span className="font-bold text-slate-900">{Number(subtotal).toLocaleString()} TZS</span>
                 </div>
                 <div className="flex justify-between text-slate-600">
-                  <span>Regional Shipping Fee</span>
+                  <span>{t('checkout.shippingFee')}</span>
                   <span className="font-bold text-slate-900">{Number(shippingFee).toLocaleString()} TZS</span>
                 </div>
                 <div className="border-t border-slate-200 pt-3 flex justify-between text-sm font-black text-slate-900">
-                  <span>Grand Total</span>
+                  <span>{t('checkout.grandTotal')}</span>
                   <span className="text-red-600">{Number(grandTotal).toLocaleString()} TZS</span>
                 </div>
               </div>
@@ -626,10 +654,10 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
               >
                 <span>
                   {loading
-                    ? 'Sending Request...'
+                    ? t('checkout.sendingRequest')
                     : requiresPin(grandTotal)
-                      ? 'Confirm with PIN & Place Order'
-                      : 'Confirm & Place Order'}
+                      ? t('checkout.confirmWithPin')
+                      : t('checkout.confirmPlaceOrder')}
                 </span>
                 <ArrowRight size={16} />
               </button>
@@ -639,8 +667,7 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
                 <p className="text-[10px] font-semibold text-slate-500 leading-relaxed flex items-start gap-2">
                   <ShieldCheck size={13} className="text-red-600 shrink-0 mt-px" />
                   <span>
-                    This purchase request is confirmed with a 4-digit PIN sent to
-                    your registered email and phone before the order is placed.
+                    {t('checkout.pinNotice')}
                   </span>
                 </p>
               ) : null}
@@ -657,8 +684,8 @@ export default function Checkout({ cartItems = [], user, onClearCart }) {
         onClose={() => setPinOpen(false)}
         onVerify={handleVerifyPin}
         onResend={handleResendPin}
-        title="Confirm Your Purchase Request"
-        subtitle="Enter the 4-digit PIN we sent to your registered contact to authorise this wholesale order."
+        title={t('checkout.confirmTitle')}
+        subtitle={t('checkout.confirmSubtitle')}
         length={pinSession?.length || 4}
         demoCode={pinSession?.demoCode || null}
         isDemo={Boolean(pinSession?.isDemo)}

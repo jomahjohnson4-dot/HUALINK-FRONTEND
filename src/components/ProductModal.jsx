@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Check,
   Eye,
@@ -25,7 +26,8 @@ import { useCart } from '../context/CartContext';
  *
  * The modal is the full product record: imagery, specifications and the
  * complete purchase block — quantity selection, cart / order actions and the
- * dual WhatsApp + live-chat inquiry bar.
+ * dual WhatsApp + live-chat inquiry bar. Every label is resolved through
+ * i18next so it follows the active language.
  */
 export default function ProductModal({
   product,
@@ -36,6 +38,7 @@ export default function ProductModal({
   const navigate = useNavigate();
   const { push } = useToast();
   const { addToCart, openCart } = useCart();
+  const { t } = useTranslation();
 
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
@@ -79,7 +82,7 @@ export default function ProductModal({
     };
   }, [product, onClose]);
 
-  const name = product?.name || product?.title || 'Product';
+  const name = product?.name || product?.title || t('product.product');
   const priceLabel = formatPrice(product?.price ?? product?.basePrice);
   const unitPrice = numericPrice(product?.price ?? product?.basePrice);
 
@@ -122,8 +125,8 @@ export default function ProductModal({
     openCart();
 
     push({
-      title: 'Added to cart',
-      message: `${name} × ${quantity} added to your cart.`,
+      title: t('product.addedToCartTitle'),
+      message: t('product.addedToCartMessage', { name, quantity }),
       tone: 'success',
     });
     setAdded(true);
@@ -147,7 +150,7 @@ export default function ProductModal({
         className="fixed inset-0 z-[70] flex items-center justify-center p-4"
         role="dialog"
         aria-modal="true"
-        aria-label={`${name} details`}
+        aria-label={t('product.detailsAria', { name })}
       >
         {/* Blurred backdrop — clicking it closes the modal cleanly */}
         <div
@@ -161,7 +164,7 @@ export default function ProductModal({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close product details"
+            aria-label={t('product.closeDetails')}
             className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-white/80 hover:bg-white flex items-center justify-center shadow-md text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
           >
             <X size={15} />
@@ -196,7 +199,7 @@ export default function ProductModal({
               <div className="flex items-center gap-3 flex-wrap mb-4">
                 <RatingStars rating={product.rating} reviews={product.reviews} />
                 <span className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded inline-block font-semibold">
-                  MOQ: {product.moq}
+                  {t('product.moq')}: {product.moq}
                 </span>
                 {product.sold ? (
                   <span className="text-[11px] text-gray-500 font-semibold flex items-center gap-1">
@@ -210,7 +213,7 @@ export default function ProductModal({
                   className="text-[11px] font-bold text-gray-500 hover:text-red-600 transition-colors cursor-pointer inline-flex items-center gap-1"
                 >
                   <Eye size={12} />
-                  Full details
+                  {t('product.fullDetails')}
                 </button>
               </div>
 
@@ -218,7 +221,7 @@ export default function ProductModal({
               {product.specs?.length ? (
                 <div className="mb-4">
                   <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 block mb-2">
-                    About this item
+                    {t('product.aboutThisItem')}
                   </span>
                   <ul className="space-y-1.5">
                     {product.specs.map((spec) => (
@@ -258,7 +261,7 @@ export default function ProductModal({
                       type="button"
                       onClick={() => setQuantity((current) => Math.max(1, current - 1))}
                       disabled={quantity <= 1}
-                      aria-label="Decrease quantity"
+                      aria-label={t('product.decreaseQuantity')}
                       className="w-6 h-6 rounded-md flex items-center justify-center text-gray-600 hover:text-[#E50914] hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-gray-600 transition-colors cursor-pointer"
                     >
                       <Minus size={13} />
@@ -272,7 +275,7 @@ export default function ProductModal({
                         setQuantity((current) => Math.min(maxQuantity, current + 1))
                       }
                       disabled={quantity >= maxQuantity}
-                      aria-label="Increase quantity"
+                      aria-label={t('product.increaseQuantity')}
                       className="w-6 h-6 rounded-md flex items-center justify-center text-gray-600 hover:text-[#E50914] hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-gray-600 transition-colors cursor-pointer"
                     >
                       <Plus size={13} />
@@ -285,7 +288,7 @@ export default function ProductModal({
                     className="flex-1 min-w-[140px] bg-[#E50914] hover:bg-[#C0040F] text-white text-xs font-bold py-3 rounded-xl transition-colors duration-300 flex items-center justify-center gap-2 shadow-sm cursor-pointer"
                   >
                     {added ? <Check size={15} /> : <ShoppingCart size={15} />}
-                    <span>{added ? 'Added to Cart!' : 'Add to Cart'}</span>
+                    <span>{added ? t('product.addedToCart') : t('product.addToCart')}</span>
                   </button>
 
                   <button
@@ -294,34 +297,34 @@ export default function ProductModal({
                     className="flex-1 min-w-[120px] bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold py-3 rounded-xl transition-colors duration-300 flex items-center justify-center gap-2 shadow-sm cursor-pointer"
                   >
                     <Zap size={15} />
-                    <span>Order Now</span>
+                    <span>{t('product.orderNow')}</span>
                   </button>
                 </div>
 
                 {/* Dual inquiry actions: WhatsApp + in-app live chat */}
                 <div className="mt-3 pt-3 border-t border-gray-100">
                   <p className="text-[10px] font-black uppercase tracking-wider text-gray-400 mb-2">
-                    Contact Hualink Sales
+                    {t('product.contactSales')}
                   </p>
                   <div className="flex items-center gap-2 flex-wrap">
                     <button
                       type="button"
                       onClick={openWhatsApp}
-                      aria-label={`Inquiry about ${name} on WhatsApp`}
+                      aria-label={t('product.whatsappAbout', { name })}
                       className="flex-1 min-w-[140px] bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <MessageCircle size={14} />
-                      <span>WhatsApp Inquiry</span>
+                      <span>{t('product.whatsappInquiry')}</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setChatOpen(true)}
-                      aria-label={`Live chat about ${name}`}
+                      aria-label={t('product.liveChatAbout', { name })}
                       className="flex-1 min-w-[140px] bg-[#DC2626] hover:bg-red-700 text-white text-xs font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <MessageSquare size={14} />
-                      <span>Live Chat</span>
+                      <span>{t('product.liveChat')}</span>
                     </button>
                   </div>
                 </div>
@@ -345,7 +348,7 @@ export default function ProductModal({
         <ChatModal
           product={product}
           currentUser={currentUser}
-          initialMessage={`Hello! I'd like to know more about ${name}.`}
+          initialMessage={t('product.chatGreeting', { name })}
           onClose={() => setChatOpen(false)}
         />
       ) : null}

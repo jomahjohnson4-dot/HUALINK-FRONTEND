@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Store, Star, RefreshCw, Truck, Package, MessageCircle, MessageSquare } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import ServiceContactModal from '../components/modals/ServiceContactModal';
 import {
   VERIFIED_SUPPLIERS,
@@ -49,6 +50,7 @@ const metricIcon = (metric) => {
 };
 
 export default function ShopsPage() {
+  const { t } = useTranslation();
   const [activeChat, setActiveChat] = useState(null);
 
   const openWhatsApp = (supplier) => {
@@ -68,7 +70,7 @@ export default function ShopsPage() {
         {/* Hero Header */}
         <div className="text-center mb-12">
           <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-4">
-            Verified Hualink Shops &amp; Supplier Storefronts
+            {t('shops.title')}
           </h1>
           <p className="text-slate-600 text-sm">
             Connect directly with quality-checked shops and verified factory partners
@@ -87,7 +89,7 @@ export default function ShopsPage() {
                 <SupplierBanner
                   src={supplier.image}
                   fallbackSrc={supplier.fallbackImage}
-                  alt={supplier.name}
+                  alt={t(supplier.nameKey)}
                 />
                 <span className="absolute top-3 left-3 z-10 bg-[#E50914] text-white px-2.5 py-1 text-[11px] font-bold uppercase rounded-md shadow-sm">
                   {supplier.badge}
@@ -98,7 +100,7 @@ export default function ShopsPage() {
                 <div className="flex items-start justify-between mb-2 gap-2">
                   <div>
                     <h3 className="text-lg font-black text-gray-900 leading-tight group-hover:text-[#E50914] transition-colors">
-                      {supplier.name}
+                      {t(supplier.nameKey)}
                     </h3>
                     <p className="text-xs text-slate-500 font-medium">
                       {supplier.location}
@@ -106,7 +108,7 @@ export default function ShopsPage() {
                   </div>
                   <div className="flex items-center gap-1 mt-1 shrink-0">
                     <Store size={14} className="text-[#E50914]" />
-                    <span className="text-xs font-bold text-[#E50914]">Verified</span>
+                    <span className="text-xs font-bold text-[#E50914]">{t('shops.verified')}</span>
                   </div>
                 </div>
 
@@ -135,8 +137,8 @@ export default function ShopsPage() {
                   <button
                     type="button"
                     onClick={() => openWhatsApp(supplier)}
-                    title={`Contact Supplier via WhatsApp: ${supplier.name}`}
-                    aria-label={`Contact Supplier via WhatsApp: ${supplier.name}`}
+                    title={t('shops.contactViaWhatsApp') + supplier.name}
+                    aria-label={t('shops.contactViaWhatsApp') + supplier.name}
                     className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1EBE5B] text-white rounded-full px-4 py-2.5 text-xs font-bold transition-colors shadow-sm cursor-pointer"
                   >
                     <span className="flex items-center justify-center w-4 h-4 rounded-full bg-white/25">

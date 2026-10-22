@@ -1,6 +1,7 @@
 import React from 'react';
 import DeliveryMap from '../components/DeliveryMap';
 import OrderStatusTimeline from '../components/OrderStatusTimeline';
+import { useTranslation } from 'react-i18next';
 import { resolveRouteForOrder } from '../data/deliveryRoutes';
 
 /**
@@ -8,6 +9,7 @@ import { resolveRouteForOrder } from '../data/deliveryRoutes';
  * Removed once the screenshots have been captured.
  */
 export default function MapPreview() {
+  const { t } = useTranslation();
   const order = {
     id: 'preview',
     orderNumber: 'HL-PREVIEW',
@@ -27,7 +29,7 @@ export default function MapPreview() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 font-sans bg-slate-50 min-h-screen">
-      <h1 className="text-xl font-black text-slate-900 mb-4">Delivery map preview</h1>
+      <h1 className="text-xl font-black text-slate-900 mb-4">{t('mapPreview.title')}</h1>
       <DeliveryMap order={order} route={route} height="420px" />
       <div className="bg-white border border-slate-200 rounded-3xl p-6 mt-6">
         <OrderStatusTimeline

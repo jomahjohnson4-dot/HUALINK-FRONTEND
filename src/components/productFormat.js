@@ -5,13 +5,16 @@
  * without the component files having to export plain functions alongside
  * their React components.
  */
+import i18n from '../i18n';
 
 /**
  * Price as it should read on screen. Catalogue rows already carry a display
  * string ("TSh 25,000") while live API rows carry a raw number.
  */
 export const formatPrice = (value) => {
-  if (value === null || value === undefined || value === '') return 'Price on request';
+  if (value === null || value === undefined || value === '') {
+    return i18n.t('product.priceOnRequest');
+  }
   if (typeof value === 'number') return `TSh ${value.toLocaleString('en-US')}`;
   return String(value);
 };
@@ -29,4 +32,4 @@ export const numericPrice = (value) => {
  * Pre-written WhatsApp inquiry for a product, ready to be URL-encoded.
  */
 export const buildProductInquiryMessage = (name, priceLabel) =>
-  `Hello Hualink Distribution! I would like to order/inquire about ${name} (Price: ${priceLabel}).`;
+  i18n.t('product.orderInquiryMessage', { name, price: priceLabel });

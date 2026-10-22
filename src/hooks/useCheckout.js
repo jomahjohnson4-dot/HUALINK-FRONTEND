@@ -1,6 +1,7 @@
 // src/hooks/useCheckout.js
 import { useState } from 'react';
 import API from '../api/axios';
+import i18n from '../i18n';
 
 export function useCheckout() {
   const [loading, setLoading] = useState(false);
@@ -42,7 +43,7 @@ export function useCheckout() {
     } catch (err) {
       console.error('Order creation error:', err);
       const errorMessage =
-        err.response?.data?.message || err.message || 'Failed to place order';
+        err.response?.data?.message || err.message || i18n.t('checkout.errorFailedOrder');
       setError(errorMessage);
       throw new Error(errorMessage, { cause: err });
     } finally {

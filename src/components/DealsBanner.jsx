@@ -34,7 +34,7 @@ export default function DealsBanner() {
               {t('common.todayDeals')}
             </span>
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              Limited Time Offers
+              {t('deals.limitedTimeOffers')}
             </h2>
           </div>
           <Link
@@ -57,7 +57,7 @@ export default function DealsBanner() {
                 <div className="aspect-video relative overflow-hidden">
                   <img
                     src={deal.image}
-                    alt={deal.title}
+                    alt={t(deal.titleKey)}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute top-3 left-3 z-10">
@@ -75,12 +75,12 @@ export default function DealsBanner() {
                 <div className="p-4">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="text-sm sm:text-base font-bold text-slate-900 leading-tight group-hover:text-brand-red transition-colors">
-                      {deal.title}
+                      {t(deal.titleKey)}
                     </h3>
                     <div className="flex items-center gap-1">
                       <Zap size={12} className="text-amber-500" />
                       <span className="text-[10px] font-black text-amber-600 uppercase">
-                        Flash Deal
+                        {t('deals.flashDeal')}
                       </span>
                     </div>
                   </div>

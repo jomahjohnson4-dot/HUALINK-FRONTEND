@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { RefreshCw, WifiOff } from 'lucide-react';
 import { getProducts } from '../api/productService';
 import ProductCard, { ViewToggle } from './ProductCard';
@@ -17,6 +18,9 @@ import { PRODUCTS, normalizeProduct } from './productsData';
  * scale animation and the #E50914 brand accents survive a view toggle.
  */
 export default function ProductList({ products: productsProp, onInquiry }) {
+  // Every label, notice and empty state follows the active language.
+  const { t } = useTranslation();
+
   const [remoteProducts, setRemoteProducts] = useState([]);
   const [remoteStatus, setRemoteStatus] = useState(productsProp ? 'ready' : 'loading');
   const [remoteError, setRemoteError] = useState(null);
@@ -44,7 +48,7 @@ export default function ProductList({ products: productsProp, onInquiry }) {
       })
       .catch((err) => {
         if (cancelled) return;
-        setRemoteError(err.response?.data?.message || 'Failed to fetch products');
+        setRemoteError(err.response?.data?.message || t('catalog.loadError'));
         setRemoteProducts([]);
         setRemoteStatus('error');
       });
@@ -52,7 +56,7 @@ export default function ProductList({ products: productsProp, onInquiry }) {
     return () => {
       cancelled = true;
     };
-  }, [productsProp]);
+  }, [productsProp, t]);
 
   const products = useMemo(() => {
     const source = productsProp ?? (remoteProducts.length ? remoteProducts : PRODUCTS);
@@ -87,7 +91,7 @@ export default function ProductList({ products: productsProp, onInquiry }) {
     return (
       <div className="py-20 text-center flex flex-col items-center justify-center space-y-3">
         <RefreshCw size={28} className="animate-spin text-[#E50914]" />
-        <p className="text-xs font-bold text-gray-500">Loading products...</p>
+        <p className="text-xs font-bold text-gray-500">{t('catalog.loadingProducts')}</p>
       </div>
     );
   }
@@ -96,9 +100,13 @@ export default function ProductList({ products: productsProp, onInquiry }) {
     <div className="w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">Products</h2>
+          <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">
+            {t('shop.products')}
+          </h2>
           <p className="text-sm text-gray-600 mt-1">
-            {products.length} item{products.length === 1 ? '' : 's'} from verified Hualink suppliers.
+            {products.length === 1
+              ? t('catalog.itemCountOne', { count: products.length })
+              : t('catalog.itemCountOther', { count: products.length })}
           </p>
         </div>
 
@@ -108,15 +116,13 @@ export default function ProductList({ products: productsProp, onInquiry }) {
       {remoteError ? (
         <div className="flex items-center gap-2 mb-5 bg-[#E50914]/5 border border-[#E50914]/20 text-[#E50914] text-xs font-bold px-3 py-2.5 rounded-xl">
           <WifiOff size={14} />
-          <span>
-            Live catalogue unavailable — showing the bundled Hualink catalogue instead.
-          </span>
+          <span>{t('shop.liveCatalogueOffline')}</span>
         </div>
       ) : null}
 
       {products.length === 0 ? (
         <p className="text-sm font-bold text-gray-600 py-10 text-center">
-          No products found matching your search criteria.
+          {t('shop.noProductsFound')}
         </p>
       ) : (
         <div

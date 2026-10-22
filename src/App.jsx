@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate, Link } from 'react-router-dom';
-import { I18nextProvider } from 'react-i18next';
+import { I18nextProvider, useTranslation } from 'react-i18next';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { CartProvider, useCart } from './context/CartContext';
@@ -20,6 +20,7 @@ import MapPreview from './pages/__MapPreview';
 import Users from './pages/Users';
 import Register from './pages/Register';
 import Login from './pages/Login';
+import AdminLogin from './pages/AdminLogin';
 import ForgotPassword from './pages/ForgotPassword';
 import Outlets from './pages/Outlets';
 import Services from './pages/Services';
@@ -50,11 +51,12 @@ const CustomerDashboard = CustomerDashboardImport || CustomerDashboardNamed;
 // Never returns null: failed auth checks render the login form directly.
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { isAuthenticated, user, loading } = useAuth();
+  const { t } = useTranslation();
 
   if (loading) {
     return (
       <div className="p-10 text-center font-bold text-slate-400 bg-slate-900 min-h-screen flex items-center justify-center">
-        Loading system profile...
+        {t('common.loading')}
       </div>
     );
   }
@@ -82,41 +84,46 @@ const DashboardRedirect = () => {
 };
 
 // Unauthorized Access View Component
-const UnauthorizedView = () => (
-  <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center font-sans">
-    <div className="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center font-black text-2xl mb-4">
-      !
+const UnauthorizedView = () => {
+  const { t } = useTranslation();
+
+  return (
+    <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center font-sans">
+      <div className="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center font-black text-2xl mb-4">
+        !
+      </div>
+      <h1 className="text-2xl font-black text-slate-900">{t('common.accessRestricted')}</h1>
+      <p className="text-xs text-slate-500 max-w-md mt-2 mb-6 font-semibold">
+        {t('common.accessRestrictedBody')}
+      </p>
+      <Link
+        to="/dashboard"
+        className="px-6 py-3 bg-red-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-red-700 transition-all"
+      >
+        {t('common.returnToDashboard')}
+      </Link>
     </div>
-    <h1 className="text-2xl font-black text-slate-900">Access Restricted</h1>
-    <p className="text-xs text-slate-500 max-w-md mt-2 mb-6 font-semibold">
-      Your account role does not have permission to access this dashboard view.
-    </p>
-    <Link
-      to="/dashboard"
-      className="px-6 py-3 bg-red-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-red-700 transition-all"
-    >
-      Return to My Dashboard
-    </Link>
-  </div>
-);
+  );
+};
 
 // Dynamic Live Chat Page Wrapper for Branch Support & Customer Inquiries
 const ProviderChatPage = ({ user }) => {
   const location = useLocation();
+  const { t } = useTranslation();
   const branchData = location.state || {};
 
   const bookingDetails = {
     id: branchData.branchId ? `branch_${branchData.branchId}` : 'general_inquiry',
-    serviceTitle: branchData.branchName || 'Live Support & Branch Inquiries',
+    serviceTitle: branchData.branchName || t('common.liveSupportBranch'),
     serviceId: branchData.phone ? `Phone: ${branchData.phone}` : 'service_general',
   };
 
   return (
     <div className="p-6 bg-slate-950 min-h-screen text-white flex flex-col items-center justify-center font-sans">
       <div className="w-full max-w-2xl mb-4">
-        <h1 className="text-2xl font-bold text-orange-500">Branch & Service Communications Desk</h1>
+        <h1 className="text-2xl font-bold text-orange-500">{t('common.branchServiceDesk')}</h1>
         <p className="text-xs text-slate-400">
-          Inquire about depot inventory, services, and active branch operations in real time.
+          {t('common.branchServiceDeskBody')}
         </p>
       </div>
       <ProviderChatPanel
@@ -131,6 +138,7 @@ const ProviderChatPage = ({ user }) => {
 const AppLayout = ({ user }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // The cart lives in the shared context so every surface (header badge,
   // drawer, cards, quick view) reads and mutates the same basket.
@@ -165,13 +173,18 @@ const AppLayout = ({ user }) => {
     }
   };
 
+  // The auth surfaces (login, register, password recovery and the discreet
+  // admin entry) render their own minimal header, so the site navigation is
+  // hidden on those routes.
+  const isAuthSurface = ['/login', '/register', '/forgot-password', '/admin/login'].includes(
+    location.pathname
+  );
+
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col justify-between pb-16 md:pb-0 relative font-sans">
       <div>
         {/* Hide the full navigation bar on auth pages so only the clean minimal auth header remains */}
-        {location.pathname !== '/login' && location.pathname !== '/register' && location.pathname !== '/forgot-password' && (
-          <Navbar user={user} />
-        )}
+        {!isAuthSurface && <Navbar user={user} />}
         <Routes>
           <Route path="/" element={<Landing />} />
           
@@ -228,6 +241,8 @@ const AppLayout = ({ user }) => {
           {/* Auth & Access Control Routes */}
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          {/* Discreet admin entry — reachable from the login shortcut / shield */}
+          <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/unauthorized" element={<UnauthorizedView />} />
 
@@ -311,9 +326,9 @@ const AppLayout = ({ user }) => {
             path="*" 
             element={
               <div className="p-12 text-center text-slate-500 font-bold min-h-[50vh] flex items-center justify-center">
-                404 - Page Not Found
+                {t('common.notFoundTitle')}
               </div>
-            } 
+            }
           />
         </Routes>
       </div>

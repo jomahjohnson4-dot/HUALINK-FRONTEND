@@ -1,9 +1,29 @@
 import { useState, useEffect, useRef } from 'react';
 import { Loader2, CheckCircle, AlertCircle, Lock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
+/** Delivery regions offered by the checkout form. */
+const REGIONS = [
+  { id: 'Dar es Salaam', labelKey: 'checkout.regions.darEsSalaam' },
+  { id: 'Mbeya', labelKey: 'checkout.regions.mbeya' },
+  { id: 'Arusha', labelKey: 'checkout.regions.arusha' },
+  { id: 'Dodoma', labelKey: 'checkout.regions.dodoma' },
+  { id: 'Mwanza', labelKey: 'checkout.regions.mwanza' },
+];
+
+/** Mobile-money gateways offered by the checkout form. */
+const PAYMENT_METHODS = [
+  { id: 'M-PESA', labelKey: 'checkout.providers.vodacom' },
+  { id: 'AZAM-PAY', labelKey: 'checkout.providers.azamPayGateway' },
+  { id: 'AIRTEL-MONEY', labelKey: 'checkout.providers.airtel' },
+  { id: 'HALOPESA', labelKey: 'checkout.providers.halo' },
+  { id: 'MIXX-BY-YAS', labelKey: 'checkout.providers.mixx' },
+];
+
 export default function CheckoutForm({ cartItems = [], clearCart }) {
+  const { t } = useTranslation();
   const [customerName, setCustomerName] = useState('Johnson John');
   const [customerPhone, setCustomerPhone] = useState('0781359770');
   const [deliveryRegion, setDeliveryRegion] = useState('Dar es Salaam');
@@ -52,7 +72,7 @@ export default function CheckoutForm({ cartItems = [], clearCart }) {
         if (['COMPLETED', 'PAID', 'SUCCESS'].includes((data.status || '').toUpperCase())) {
           setStatus({
             type: 'success',
-            message: 'Payment received! Your order is confirmed.',
+            message: t('checkout.paymentSuccess'),
           });
           setLoading(false);
           if (clearCart) clearCart();
@@ -60,7 +80,7 @@ export default function CheckoutForm({ cartItems = [], clearCart }) {
         } else if (['FAILED', 'CANCELLED', 'DECLINED'].includes((data.status || '').toUpperCase())) {
           setStatus({
             type: 'error',
-            message: 'Payment transaction failed or timed out. Please try again.',
+            message: t('checkout.paymentFailed'),
           });
           setLoading(false);
           eventSourceRef.current.close();
@@ -88,7 +108,7 @@ export default function CheckoutForm({ cartItems = [], clearCart }) {
     if (!token) {
       setStatus({
         type: 'error',
-        message: 'Authentication required. Please sign in to place an order.',
+        message: t('checkout.errorAuthRequired'),
       });
       setLoading(false);
       return;
@@ -97,7 +117,7 @@ export default function CheckoutForm({ cartItems = [], clearCart }) {
     // Standardize phone number for USSD Push (convert 0781... to 255781...)
     const digitsOnly = customerPhone.replace(/[^0-9]/g, '');
     if (digitsOnly.length < 9) {
-      setStatus({ type: 'error', message: 'Enter a valid phone number (e.g., 0781359770).' });
+      setStatus({ type: 'error', message: t('checkout.errorInvalidPhone') });
       setLoading(false);
       return;
     }
@@ -136,14 +156,14 @@ export default function CheckoutForm({ cartItems = [], clearCart }) {
 
       if (orderRes.status === 401 || orderRes.status === 403) {
         localStorage.removeItem('token');
-        throw new Error('Your session has expired. Please sign in again.');
+        throw new Error(t('checkout.errorSessionExpiredOrder'));
       }
 
       const orderText = await orderRes.text();
       const orderResult = orderText ? JSON.parse(orderText) : {};
 
       if (!orderRes.ok) {
-        throw new Error(orderResult.message || 'Failed to place order.');
+        throw new Error(orderResult.message || t('checkout.errorFailedOrder'));
       }
 
       const createdOrder = orderResult.data || orderResult;
@@ -152,7 +172,7 @@ export default function CheckoutForm({ cartItems = [], clearCart }) {
       // Step B: Dispatch Mobile Money Payment Prompt
       setStatus({
         type: 'info',
-        message: 'Order created! Dispatching payment push request to your phone...',
+        message: t('checkout.orderCreated'),
       });
 
       const providerCode = paymentMethod.replace('-MONEY', '').replace('-', '');
@@ -177,14 +197,14 @@ export default function CheckoutForm({ cartItems = [], clearCart }) {
 
       setStatus({
         type: 'info',
-        message: 'Payment prompt sent! Please enter your PIN on your mobile device...',
+        message: t('checkout.promptSent'),
       });
 
       // Step C: Listen for Webhook status changes over SSE stream
       subscribeToPaymentUpdates(targetOrderId);
     } catch (error) {
       console.error('Checkout Form Submission Error:', error);
-      setStatus({ type: 'error', message: error.message || 'Server error occurred during checkout.' });
+      setStatus({ type: 'error', message: error.message || t('checkout.serverError') });
       setLoading(false);
     }
   };
@@ -193,7 +213,7 @@ export default function CheckoutForm({ cartItems = [], clearCart }) {
     <form onSubmit={handleSubmit} className="space-y-4 bg-slate-900 text-white p-6 rounded-2xl border border-slate-800 shadow-xl">
       <div>
         <label htmlFor="customerName" className="block text-xs uppercase font-bold text-slate-400 mb-1">
-          Full Name
+          {t('checkout.fullName')}
         </label>
         <input
           id="customerName"
@@ -208,14 +228,14 @@ export default function CheckoutForm({ cartItems = [], clearCart }) {
 
       <div>
         <label htmlFor="customerPhone" className="block text-xs uppercase font-bold text-slate-400 mb-1">
-          Phone Number (Mobile Money)
+          {t('checkout.phoneNumberLabel')}
         </label>
         <input
           id="customerPhone"
           type="tel"
           value={customerPhone}
           onChange={(e) => setCustomerPhone(e.target.value)}
-          placeholder="0781359770"
+          placeholder={t('checkout.phonePlaceholder')}
           disabled={loading}
           required
           className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:border-orange-500 text-xs font-semibold text-white placeholder-slate-500 disabled:opacity-50"
@@ -225,7 +245,7 @@ export default function CheckoutForm({ cartItems = [], clearCart }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label htmlFor="deliveryRegion" className="block text-xs uppercase font-bold text-slate-400 mb-1">
-            Region
+            {t('checkout.region')}
           </label>
           <select
             id="deliveryRegion"
@@ -234,17 +254,17 @@ export default function CheckoutForm({ cartItems = [], clearCart }) {
             disabled={loading}
             className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:border-orange-500 text-xs font-semibold text-white disabled:opacity-50"
           >
-            <option value="Dar es Salaam">Dar es Salaam</option>
-            <option value="Mbeya">Mbeya</option>
-            <option value="Arusha">Arusha</option>
-            <option value="Dodoma">Dodoma</option>
-            <option value="Mwanza">Mwanza</option>
+            {REGIONS.map((region) => (
+              <option key={region.id} value={region.id}>
+                {t(region.labelKey)}
+              </option>
+            ))}
           </select>
         </div>
 
         <div>
           <label htmlFor="paymentMethod" className="block text-xs uppercase font-bold text-slate-400 mb-1">
-            Payment Gateway
+            {t('checkout.paymentGateway')}
           </label>
           <select
             id="paymentMethod"
@@ -253,18 +273,18 @@ export default function CheckoutForm({ cartItems = [], clearCart }) {
             disabled={loading}
             className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:border-orange-500 text-xs font-semibold text-white disabled:opacity-50"
           >
-            <option value="M-PESA">Vodacom M-Pesa</option>
-            <option value="AZAM-PAY">AzamPay Gateway</option>
-            <option value="AIRTEL-MONEY">Airtel Money</option>
-            <option value="HALOPESA">HaloPesa</option>
-            <option value="MIXX-BY-YAS">Mixx by Yas (Tigo Pesa)</option>
+            {PAYMENT_METHODS.map((method) => (
+              <option key={method.id} value={method.id}>
+                {t(method.labelKey)}
+              </option>
+            ))}
           </select>
         </div>
       </div>
 
       <div>
         <label htmlFor="deliveryAddress" className="block text-xs uppercase font-bold text-slate-400 mb-1">
-          Delivery Address / Landmark
+          {t('checkout.deliveryAddress')}
         </label>
         <textarea
           id="deliveryAddress"
@@ -273,7 +293,7 @@ export default function CheckoutForm({ cartItems = [], clearCart }) {
           onChange={(e) => setDeliveryAddress(e.target.value)}
           disabled={loading}
           required
-          placeholder="Building, street name, or landmark"
+          placeholder={t('checkout.deliveryAddressPlaceholder')}
           className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:border-orange-500 text-xs font-semibold text-white placeholder-slate-500 disabled:opacity-50"
         />
       </div>
@@ -286,12 +306,12 @@ export default function CheckoutForm({ cartItems = [], clearCart }) {
         {loading ? (
           <>
             <Loader2 size={16} className="animate-spin" />
-            <span>Waiting for Handset PIN...</span>
+            <span>{t('checkout.waitingForPin')}</span>
           </>
         ) : (
           <>
             <Lock size={14} />
-            <span>Pay TZS {totalAmount.toLocaleString()}</span>
+            <span>{t('checkout.payAmount', { amount: totalAmount.toLocaleString() })}</span>
           </>
         )}
       </button>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Mail, Lock, ArrowRight, CheckCircle2, AlertCircle, AlertTriangle, Loader2 } from 'lucide-react';
 import api from '../api/axios';
 
@@ -7,6 +8,7 @@ const OTP_LENGTH = 6;
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [step, setStep] = useState('request'); // 'request' | 'verify' | 'success'
   const [email, setEmail] = useState('');
   const [otpInputs, setOtpInputs] = useState(Array(OTP_LENGTH).fill(''));
@@ -26,7 +28,7 @@ export default function ForgotPassword() {
     setMessage(null);
 
     if (!email || !emailRegex.test(email)) {
-      setMessage({ type: 'error', text: 'Please enter a valid email address.' });
+      setMessage({ type: 'error', text: t('forgot.errorInvalidEmail') });
       return;
     }
 
@@ -38,7 +40,7 @@ export default function ForgotPassword() {
       setStep('verify');
       setMessage({
         type: 'success',
-        text: `A 6-digit verification code has been sent to ${email}. Please check your inbox (and spam folder).`,
+        text: t('forgot.codeSent', { email }),
       });
     } catch (err) {
       const isNetworkError = !err.response;
@@ -47,7 +49,7 @@ export default function ForgotPassword() {
       if (isNetworkError || isNotFound) {
         setMessage({
           type: 'error',
-          text: 'Backend API unreachable on port 5000. Saving session locally...',
+          text: t('auth.backendUnreachable'),
         });
         setFallbackBanner(true);
         setTimeout(() => setFallbackBanner(false), 6000);
@@ -75,7 +77,7 @@ export default function ForgotPassword() {
         setMessage({
           type: 'error',
           text:
-            err.response?.data?.message || err.message || 'Failed to send verification code. Please try again.',
+            err.response?.data?.message || err.message || t('forgot.errorSendFailed'),
         });
       }
     } finally {
@@ -90,7 +92,7 @@ export default function ForgotPassword() {
 
     try {
       await api.post('/auth/request-otp', { email });
-      setMessage({ type: 'success', text: 'A new passcode has been sent.' });
+      setMessage({ type: 'success', text: t('forgot.newPasscodeSent') });
     } catch (err) {
       const isNetworkError = !err.response;
       const isNotFound = err.response?.status === 404;
@@ -98,7 +100,7 @@ export default function ForgotPassword() {
       if (isNetworkError || isNotFound) {
         setMessage({
           type: 'error',
-          text: 'Backend API unreachable on port 5000. Saving session locally...',
+          text: t('auth.backendUnreachable'),
         });
         setFallbackBanner(true);
         setTimeout(() => setFallbackBanner(false), 6000);
@@ -125,7 +127,7 @@ export default function ForgotPassword() {
         setMessage({
           type: 'error',
           text:
-            err.response?.data?.message || err.message || 'Failed to resend verification code.',
+            err.response?.data?.message || err.message || t('forgot.errorResendFailed'),
         });
       }
     } finally {
@@ -157,17 +159,17 @@ export default function ForgotPassword() {
     setMessage(null);
 
     if (otpCode.length !== OTP_LENGTH) {
-      setMessage({ type: 'error', text: 'Please enter the full 6-digit passcode.' });
+      setMessage({ type: 'error', text: t('forgot.errorFullPasscode') });
       return;
     }
 
     if (newPassword.length < 6) {
-      setMessage({ type: 'error', text: 'New password must be at least 6 characters.' });
+      setMessage({ type: 'error', text: t('forgot.errorPasswordShort') });
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setMessage({ type: 'error', text: 'Passwords do not match.' });
+      setMessage({ type: 'error', text: t('forgot.errorPasswordMismatch') });
       return;
     }
 
@@ -189,7 +191,7 @@ export default function ForgotPassword() {
       if (isNetworkError || isNotFound) {
         setMessage({
           type: 'success',
-          text: 'Backend API unreachable on port 5000. Password reset saved locally.',
+          text: t('forgot.fallbackSaved'),
         });
 
         // Persist local fallback session so flow is never blocked
@@ -217,7 +219,7 @@ export default function ForgotPassword() {
         setMessage({
           type: 'error',
           text:
-            err.response?.data?.message || err.message || 'Password reset failed. Please try again.',
+            err.response?.data?.message || err.message || t('forgot.errorResetFailed'),
         });
       }
     } finally {
@@ -245,7 +247,7 @@ export default function ForgotPassword() {
               to="/login"
               className="text-[#E50914] font-bold text-xs uppercase tracking-wider hover:text-[#C0040F]"
             >
-              Back to Sign In
+              {t('forgot.backToSignIn')}
             </Link>
           </div>
         </div>
@@ -263,12 +265,12 @@ export default function ForgotPassword() {
         <div className="relative w-full h-full min-h-[550px] flex overflow-hidden">
           <img
             src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&q=80&w=1200"
-            alt="Account recovery support"
+            alt={t('forgot.altRecovery')}
             className="w-full h-full object-cover rounded-none md:rounded-r-3xl"
             style={{ animation: 'kenBurns 20s ease-in-out infinite alternate' }}
           />
           <div className="absolute bottom-3 left-6 text-[10px] text-white/80">
-            *Password reset codes are valid for 10 minutes.
+            {t('forgot.codeValidity')}
           </div>
         </div>
 
@@ -281,24 +283,24 @@ export default function ForgotPassword() {
                   <CheckCircle2 size={28} />
                 </div>
                 <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">
-                  Password Reset
+                  {t('forgot.successTitle')}
                 </h2>
                 <p className="text-sm font-semibold text-slate-500">
-                  Your password has been updated successfully.
+                  {t('forgot.successBody')}
                 </p>
                 <p className="mt-2 text-xs text-slate-400">
-                  You will be redirected to sign in shortly…
+                  {t('forgot.redirectNotice')}
                 </p>
               </div>
             ) : (
               <>
                 <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">
-                  {step === 'request' ? 'Forgot Password' : 'Enter Passcode'}
+                  {step === 'request' ? t('forgot.title') : t('forgot.passcodeTitle')}
                 </h2>
                 <p className="text-sm font-semibold text-slate-500">
                   {step === 'request'
-                    ? 'Enter your email to receive a 6-digit reset passcode.'
-                    : 'We sent a 6-digit passcode to your email. Enter it below along with your new password.'}
+                    ? t('forgot.requestSubtitle')
+                    : t('forgot.verifySubtitle')}
                 </p>
               </>
             )}
@@ -328,7 +330,7 @@ export default function ForgotPassword() {
             <form className="space-y-5 fade-in" onSubmit={handleSendPasscode}>
               <div>
                 <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
-                  Email Address
+                  {t('forgot.emailAddress')}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
@@ -339,7 +341,7 @@ export default function ForgotPassword() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@example.com"
+                    placeholder={t('forgot.emailPlaceholder')}
                     className="block w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold focus:bg-white focus:border-[#E50914] focus:outline-none transition-colors"
                   />
                 </div>
@@ -353,11 +355,11 @@ export default function ForgotPassword() {
                 {loading ? (
                   <>
                     <Loader2 size={16} className="animate-spin" />
-                    <span>Sending Passcode...</span>
+                    <span>{t('forgot.sending')}</span>
                   </>
                 ) : (
                   <>
-                    <span>Send 6-Digit Passcode</span>
+                    <span>{t('forgot.sendPasscode')}</span>
                     <ArrowRight size={16} />
                   </>
                 )}
@@ -370,7 +372,7 @@ export default function ForgotPassword() {
               {/* OTP Input */}
               <div>
                 <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-3">
-                  6-Digit Passcode
+                  {t('forgot.passcodeLabel')}
                 </label>
                 <div className="flex gap-3 justify-center">
                   {Array.from({ length: OTP_LENGTH }).map((_, index) => (
@@ -389,20 +391,20 @@ export default function ForgotPassword() {
                   ))}
                 </div>
                 <p className="mt-3 text-xs text-center text-slate-500 font-medium">
-                  Didn&rsquo;t receive it?{' '}
+                  {t('forgot.didntReceive')}{' '}
                   <button
                     type="button"
                     onClick={handleResend}
                     className="text-[#E50914] font-black hover:text-[#C0040F] underline decoration-1 decoration-[#E50914]/40 hover:underline-offset-2"
                   >
-                    Resend passcode
+                    {t('forgot.resendPasscode')}
                   </button>
                 </p>
               </div>
 
               <div>
                 <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
-                  New Password
+                  {t('forgot.newPassword')}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
@@ -421,7 +423,7 @@ export default function ForgotPassword() {
 
               <div>
                 <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
-                  Confirm Password
+                  {t('forgot.confirmPassword')}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
@@ -446,11 +448,11 @@ export default function ForgotPassword() {
                 {loading ? (
                   <>
                     <Loader2 size={16} className="animate-spin" />
-                    <span>Verifying...</span>
+                    <span>{t('forgot.verifying')}</span>
                   </>
                 ) : (
                   <>
-                    <span>Verify Passcode &amp; Reset Password</span>
+                    <span>{t('forgot.verifyReset')}</span>
                     <ArrowRight size={16} />
                   </>
                 )}
@@ -465,16 +467,16 @@ export default function ForgotPassword() {
                 className="w-full bg-[#E50914] text-white font-bold py-3.5 rounded-xl hover:bg-[#C0040F] transition-all flex items-center justify-center gap-2 cursor-pointer"
                 onClick={goBackToLogin}
               >
-                Go to Sign In <ArrowRight size={16} />
+                {t('forgot.goToSignIn')} <ArrowRight size={16} />
               </button>
             </div>
           )}
 
           {step !== 'success' && (
             <p className="mt-8 text-center text-xs text-slate-600 font-medium">
-              Remember your password?{' '}
+              {t('forgot.rememberPassword')}{' '}
               <Link to="/login" className="font-extrabold text-[#E50914] hover:text-[#C0040F]">
-                Sign in instead
+                {t('forgot.signInInstead')}
               </Link>
             </p>
           )}

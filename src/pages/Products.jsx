@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Search,
   SlidersHorizontal,
@@ -25,6 +26,11 @@ export default function Products() {
   // The signed-in shopper is passed to the chat widget so inquiries carry a
   // real name instead of a generic guest label.
   const { user } = useAuth();
+
+  // Every label on this page is resolved through i18next, so switching the
+  // header language instantly re-renders the categories, filters and buttons
+  // in the selected language.
+  const { t } = useTranslation();
 
   // The verified local catalogue is the guaranteed default state, so /shop
   // shows every inventory item immediately — never "No Inventory Items found".
@@ -117,14 +123,13 @@ export default function Products() {
           <div className="relative z-10 max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-black/50 border border-red-500/30 rounded-full px-3 py-1 text-xs font-bold text-red-400 mb-4 uppercase tracking-wider">
               <Zap size={14} />
-              <span>Direct Wholesale & Retail Inventory</span>
+              <span>{t('shop.eyebrow')}</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-black italic tracking-tight text-white uppercase">
-              Hualink Supply Marketplace
+              {t('shop.title')}
             </h1>
             <p className="text-xs sm:text-sm text-gray-300 mt-2 font-medium">
-              Verified product distribution directly from regional depots & trusted supply channels
-              across Tanzania.
+              {t('shop.subtitle')}
             </p>
           </div>
         </div>
@@ -138,7 +143,7 @@ export default function Products() {
               <Search size={18} className="absolute left-3.5 top-3.5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search inventory, SKUs..."
+                placeholder={t('shop.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 className="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-4 py-3 text-xs text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:border-[#E50914] focus:ring-2 focus:ring-[#E50914]/10 transition-colors"
@@ -149,7 +154,7 @@ export default function Products() {
             <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
               <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-gray-500 mb-4 px-2">
                 <Filter size={14} className="text-[#E50914]" />
-                <span>Categories</span>
+                <span>{t('shop.categories')}</span>
               </div>
               <div className="space-y-1">
                 {CATEGORIES.map((category) => {
@@ -168,7 +173,7 @@ export default function Products() {
                     >
                       <div className="flex items-center gap-2.5">
                         <Icon size={16} />
-                        <span>{category.name}</span>
+                        <span>{t(category.nameKey)}</span>
                       </div>
                       <ChevronRight
                         size={14}
@@ -186,11 +191,10 @@ export default function Products() {
                 <ShieldCheck className="text-[#E50914] shrink-0 mt-0.5" size={20} />
                 <div>
                   <h4 className="text-xs font-extrabold text-gray-900 uppercase">
-                    Guaranteed Quality
+                    {t('shop.guaranteedQuality')}
                   </h4>
                   <p className="text-[11px] text-gray-500 mt-1">
-                    Every batch item listed on Hualink is quality checked at local hubs before
-                    dispatch.
+                    {t('shop.guaranteedQualityDesc')}
                   </p>
                 </div>
               </div>
@@ -202,13 +206,13 @@ export default function Products() {
             {/* Header bar for product list */}
             <div className="flex items-center justify-between mb-6 pb-3 border-b border-gray-200">
               <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                Showing{' '}
+                {t('shop.showing')}{' '}
                 <span className="text-gray-900 font-extrabold">{filteredProducts.length}</span>{' '}
-                Products
+                {t('shop.products')}
               </div>
               <div className="flex items-center gap-2 text-xs text-gray-400">
                 <SlidersHorizontal size={14} />
-                <span>Default Sort: Direct Supply First</span>
+                <span>{t('shop.sortLabel')}</span>
               </div>
             </div>
 
@@ -217,7 +221,7 @@ export default function Products() {
               <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-gray-200 rounded-xl px-4 py-3 mb-5 shadow-sm">
                 <div className="flex items-center gap-2 text-xs font-semibold text-gray-600">
                   <WifiOff size={15} className="text-amber-500 shrink-0" />
-                  <span>Live inventory feed offline — showing the full local catalogue.</span>
+                  <span>{t('shop.offlineNotice')}</span>
                 </div>
                 <button
                   type="button"
@@ -225,7 +229,7 @@ export default function Products() {
                   className="inline-flex items-center gap-1.5 text-[11px] font-extrabold text-[#E50914] hover:underline cursor-pointer"
                 >
                   <RefreshCw size={12} />
-                  <span>Retry</span>
+                  <span>{t('shop.retry')}</span>
                 </button>
               </div>
             )}
@@ -233,9 +237,9 @@ export default function Products() {
             {/* Empty State */}
             {filteredProducts.length === 0 && (
               <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
-                <p className="text-gray-700 font-bold text-sm">No inventory items found.</p>
+                <p className="text-gray-700 font-bold text-sm">{t('shop.emptyTitle')}</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  Try searching for a different item or switching categories.
+                  {t('shop.emptyHint')}
                 </p>
               </div>
             )}

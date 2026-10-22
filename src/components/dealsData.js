@@ -2,6 +2,7 @@ export const DEALS = [
   {
     id: 'bundle',
     title: 'Bundle Deals',
+    titleKey: 'deals.items.bundle.title',
     image:
       'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=900',
     price: 'TSh 45,000',
@@ -16,6 +17,7 @@ export const DEALS = [
   {
     id: 'super',
     title: 'Super Deals',
+    titleKey: 'deals.items.super.title',
     image:
       'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&q=80&w=900',
     price: 'TSh 89,000',

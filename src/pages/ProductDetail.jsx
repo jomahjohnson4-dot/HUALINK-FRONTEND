@@ -11,8 +11,10 @@ import {
   Plus,
   Layers
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function ProductDetail() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -54,7 +56,7 @@ export default function ProductDetail() {
     return (
       <div className="bg-slate-50 min-h-[70vh] flex flex-col items-center justify-center space-y-3">
         <RefreshCw size={32} className="animate-spin text-red-600" />
-        <p className="text-xs font-bold text-slate-500">Loading product specifications...</p>
+        <p className="text-xs font-bold text-slate-500">{t('productDetailLegacy.loading')}</p>
       </div>
     );
   }
@@ -62,7 +64,7 @@ export default function ProductDetail() {
   if (!product) {
     return (
       <div className="bg-slate-50 min-h-[70vh] flex flex-col items-center justify-center space-y-4">
-        <h2 className="text-xl font-bold text-slate-800">Product Not Found</h2>
+        <h2 className="text-xl font-bold text-slate-800">{t('productDetailLegacy.notFound')}</h2>
         <Link to="/shop" className="text-xs font-bold text-red-600 hover:underline flex items-center gap-2">
           <ArrowLeft size={16} /> Back to Catalog
         </Link>
@@ -81,7 +83,7 @@ export default function ProductDetail() {
             className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-red-600 transition-colors"
           >
             <ArrowLeft size={16} />
-            <span>Back to Inventory Catalog</span>
+            <span>{t('productDetailLegacy.backToCatalog')}</span>
           </Link>
         </div>
 
@@ -107,7 +109,7 @@ export default function ProductDetail() {
             <div className="space-y-4">
               <div className="inline-block border-l-4 border-red-600 pl-3">
                 <span className="text-[11px] font-black uppercase tracking-widest text-red-600">
-                  Hualink Verified Item
+                  {t('productDetailLegacy.hualinkVerifiedItem')}
                 </span>
               </div>
 
@@ -122,7 +124,7 @@ export default function ProductDetail() {
                 <span className={`text-xs font-bold px-3 py-1 rounded-full ${
                   product.stock > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-rose-50 text-rose-600 border border-rose-200'
                 }`}>
-                  {product.stock > 0 ? `In Stock (${product.stock} available)` : 'Out of Stock'}
+                  {product.stock > 0 ? `${t('productDetailLegacy.inStock')} (${product.stock} ${t('productDetailLegacy.available')})` : t('productDetailLegacy.outOfStock')}
                 </span>
               </div>
 
@@ -134,7 +136,7 @@ export default function ProductDetail() {
             {/* Specifications Box */}
             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-2">
               <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 block">
-                Item Features
+                {t('productDetailLegacy.itemFeatures')}
               </span>
               <ul className="space-y-1.5 text-xs text-slate-700 font-semibold">
                 {product.specs?.map((spec, i) => (
@@ -149,7 +151,7 @@ export default function ProductDetail() {
             {/* Quantity Selector & Add To Cart Button */}
             <div className="space-y-4 pt-2">
               <div className="flex items-center gap-4">
-                <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Quantity:</span>
+                <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">{t('productDetailLegacy.quantity')}</span>
                 <div className="flex items-center border border-slate-200 rounded-xl bg-slate-50 p-1">
                   <button 
                     onClick={() => handleQuantity('decrease')}
@@ -173,13 +175,13 @@ export default function ProductDetail() {
                   className="w-full py-3.5 bg-red-600 hover:bg-red-700 disabled:bg-slate-300 text-white font-bold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-red-600/20 transition-all cursor-pointer"
                 >
                   <ShoppingCart size={16} />
-                  <span>Add To Order Cart</span>
+                  <span>{t('productDetailLegacy.addToOrderCart')}</span>
                 </button>
                 <Link 
                   to="/checkout" 
                   className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 transition-all"
                 >
-                  <span>Direct Order</span>
+                  <span>{t('productDetailLegacy.directOrder')}</span>
                 </Link>
               </div>
             </div>
@@ -188,15 +190,15 @@ export default function ProductDetail() {
             <div className="grid grid-cols-3 gap-2 border-t border-slate-100 pt-4 text-center">
               <div className="flex flex-col items-center gap-1">
                 <ShieldCheck size={16} className="text-slate-600" />
-                <span className="text-[10px] font-bold text-slate-600">Verified Quality</span>
+                <span className="text-[10px] font-bold text-slate-600">{t('productDetailLegacy.verifiedQuality')}</span>
               </div>
               <div className="flex flex-col items-center gap-1 border-x border-slate-100">
                 <Truck size={16} className="text-slate-600" />
-                <span className="text-[10px] font-bold text-slate-600">Tanzania Delivery</span>
+                <span className="text-[10px] font-bold text-slate-600">{t('productDetailLegacy.tanzaniaDelivery')}</span>
               </div>
               <div className="flex flex-col items-center gap-1">
                 <Layers size={16} className="text-slate-600" />
-                <span className="text-[10px] font-bold text-slate-600">TeKeL Support</span>
+                <span className="text-[10px] font-bold text-slate-600">{t('productDetailLegacy.teKelSupport')}</span>
               </div>
             </div>
 

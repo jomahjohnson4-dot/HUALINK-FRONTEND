@@ -16,6 +16,7 @@ import {
   subscribeToNotifications,
 } from '../../api/notificationService';
 import { relativeTime } from '../../utils/time';
+import { useTranslation } from 'react-i18next';
 
 const TYPE_STYLES = {
   ORDER: { Icon: ShoppingBag, tint: 'bg-orange-500/15 text-orange-400' },
@@ -32,6 +33,7 @@ const TYPE_STYLES = {
  * fills up in real time without a manual refresh.
  */
 export default function AdminActivityStream({ limit = 12 }) {
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -107,20 +109,21 @@ export default function AdminActivityStream({ limit = 12 }) {
         <div>
           <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
             <Activity size={16} className="text-orange-500" />
-            System Activity Stream
+            {t('admin.activity.title')}
           </h3>
           <p className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5">
             <Radio
               size={10}
               className={`${live ? 'text-emerald-400 animate-pulse' : 'text-slate-500'}`}
             />
-            {live ? 'Live' : 'Polling'} — every action performed across the platform
+            {live ? t('admin.activity.live') : t('admin.activity.polling')}
+            {t('admin.activity.description')}
           </p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
           <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-slate-300 bg-slate-900/70 border border-slate-700/60 rounded-lg px-2.5 py-1.5">
-            {unreadCount} unread
+            {t('admin.activity.unread', { count: unreadCount })}
           </span>
           <button
             type="button"
@@ -133,7 +136,7 @@ export default function AdminActivityStream({ limit = 12 }) {
             ) : (
               <CheckCheck size={11} />
             )}
-            <span>Mark all read</span>
+            <span>{t('admin.activity.markAllRead')}</span>
           </button>
         </div>
       </div>
@@ -141,14 +144,14 @@ export default function AdminActivityStream({ limit = 12 }) {
       {loading && !notifications.length ? (
         <div className="py-10 flex items-center justify-center gap-2 text-slate-400">
           <Loader2 size={16} className="animate-spin text-orange-500" />
-          <span className="text-xs font-bold">Loading the activity log...</span>
+          <span className="text-xs font-bold">{t('admin.activity.loading')}</span>
         </div>
       ) : null}
 
       {!loading && !notifications.length ? (
         <div className="py-10 flex flex-col items-center gap-2 text-slate-400">
           <Activity size={24} />
-          <p className="text-xs font-bold">No system activity recorded yet.</p>
+          <p className="text-xs font-bold">{t('admin.activity.empty')}</p>
         </div>
       ) : null}
 
@@ -191,7 +194,7 @@ export default function AdminActivityStream({ limit = 12 }) {
                 {!notification.isRead ? (
                   <span
                     className="shrink-0 mt-1.5 h-2 w-2 rounded-full bg-orange-500"
-                    aria-label="Unread"
+                    aria-label={t('admin.activity.unreadAria')}
                   />
                 ) : null}
               </button>

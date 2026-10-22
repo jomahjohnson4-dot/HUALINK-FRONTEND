@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, Clock, XCircle, RefreshCw, Loader2, MessageSquare } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const AdminOrders = ({ onSelectBookingForChat }) => {
+  const { t } = useTranslation();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
@@ -71,17 +72,17 @@ export const AdminOrders = ({ onSelectBookingForChat }) => {
       <div className="flex justify-between items-center border-b border-gray-800 pb-4">
         <div>
           <h2 className="text-xl font-black text-orange-500 uppercase tracking-wider">
-            Booking Requests & Orders
+            {t('admin.orders.title')}
           </h2>
           <p className="text-xs text-gray-400">
-            Manage incoming client service bookings and trigger SMS notifications
+            {t('admin.orders.subtitle')}
           </p>
         </div>
-        <button 
-          onClick={fetchOrders} 
+        <button
+          onClick={fetchOrders}
           disabled={loading}
           className="bg-gray-800 p-2.5 rounded-xl hover:bg-gray-700 text-gray-300 hover:text-white transition-colors disabled:opacity-50 cursor-pointer"
-          title="Refresh Orders"
+          title={t('admin.orders.refreshAria')}
         >
           <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
         </button>

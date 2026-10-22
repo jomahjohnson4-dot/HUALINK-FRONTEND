@@ -11,12 +11,14 @@ import {
   CheckCheck,
   CircleCheck,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { getProducts } from '../../api/productService';
 import { getAdminOrders } from '../../api/orderService';
 import { getInquiries, updateInquiryStatus } from '../../api/inquiryService';
 import AdminActivityStream from './AdminActivityStream';
 
-const HUBS = ['Mbeya Hub', 'Dar es Salaam Hub'];
+/** Translation keys for the stock hubs shown on the overview card. */
+const HUBS = ['admin.overview.hubMbeya', 'admin.overview.hubDar'];
 
 const INQUIRY_STATUS_STYLES = {
   NEW: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
@@ -24,7 +26,15 @@ const INQUIRY_STATUS_STYLES = {
   RESOLVED: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
 };
 
+/** Display labels for the inquiry lifecycle statuses. */
+const INQUIRY_STATUS_LABELS = {
+  NEW: 'common.new',
+  REPLIED: 'admin.overview.replied',
+  RESOLVED: 'admin.overview.resolved',
+};
+
 export default function AdminOverviewPanel() {
+  const { t } = useTranslation();
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
   const [inquiries, setInquiries] = useState([]);
@@ -82,7 +92,7 @@ export default function AdminOverviewPanel() {
   /** Product distribution across categories, for the bar visualiser. */
   const distribution = useMemo(() => {
     const groups = products.reduce((acc, product) => {
-      const key = product.category || 'Uncategorised';
+      const key = product.category || t('admin.overview.uncategorised');
       acc[key] = (acc[key] || 0) + 1;
       return acc;
     }, {});
@@ -94,7 +104,7 @@ export default function AdminOverviewPanel() {
         percent: Math.round((count / max) * 100),
       }))
       .sort((a, b) => b.count - a.count);
-  }, [products]);
+  }, [products, t]);
 
   const openInquiryCount = useMemo(
     () => inquiries.filter((inquiry) => inquiry.status === 'NEW').length,
@@ -123,28 +133,28 @@ export default function AdminOverviewPanel() {
 
   const metrics = [
     {
-      label: 'Total Products',
+      label: t('admin.overview.totalProducts'),
       value: products.length.toLocaleString(),
       Icon: Package,
       accent: 'text-blue-400',
       badge: 'bg-blue-500/10 border-blue-500/30',
     },
     {
-      label: 'Total Wholesale Orders',
+      label: t('admin.overview.totalOrders'),
       value: orderCount.toLocaleString(),
       Icon: ShoppingBag,
       accent: 'text-orange-400',
       badge: 'bg-orange-500/10 border-orange-500/30',
     },
     {
-      label: 'Open Inquiries',
+      label: t('admin.overview.openInquiries'),
       value: openInquiryCount.toLocaleString(),
       Icon: MessageSquare,
       accent: 'text-amber-400',
       badge: 'bg-amber-500/10 border-amber-500/30',
     },
     {
-      label: 'Estimated Revenue',
+      label: t('admin.overview.estimatedRevenue'),
       value: `TSh ${revenue.toLocaleString()}`,
       Icon: TrendingUp,
       accent: 'text-emerald-400',
@@ -178,8 +188,8 @@ export default function AdminOverviewPanel() {
         <p className="flex items-center gap-2 text-[11px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-2.5">
           <AlertCircle size={14} />
           {loading
-            ? 'Loading order data...'
-            : 'No live orders returned by the server yet.'}
+            ? t('admin.overview.loadingOrders')
+            : t('admin.overview.noOrders')}
         </p>
       ) : null}
 
@@ -192,10 +202,10 @@ export default function AdminOverviewPanel() {
           <div>
             <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
               <MessageSquare size={16} className="text-orange-500" />
-              Incoming Client Inquiries
+              {t('admin.overview.incomingInquiries')}
             </h3>
             <p className="text-[11px] text-slate-400 mt-0.5">
-              {inquiries.length} live message{inquiries.length === 1 ? '' : 's'} from the in-app chat
+              {t('admin.overview.liveMessages', { count: inquiries.length })}
             </p>
           </div>
           {loading ? <Loader2 size={16} className="animate-spin text-orange-500" /> : null}
@@ -204,7 +214,7 @@ export default function AdminOverviewPanel() {
         {!inquiries.length ? (
           <div className="flex flex-col items-center gap-2 py-10 text-slate-400">
             <Inbox size={24} />
-            <p className="text-xs font-bold">No client inquiries yet.</p>
+            <p className="text-xs font-bold">{t('admin.overview.noInquiries')}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -225,7 +235,10 @@ export default function AdminOverviewPanel() {
                           INQUIRY_STATUS_STYLES[inquiry.status] || INQUIRY_STATUS_STYLES.NEW
                         }`}
                       >
-                        {inquiry.status}
+                        {t(
+                          INQUIRY_STATUS_LABELS[inquiry.status] ||
+                            INQUIRY_STATUS_LABELS.NEW
+                        )}
                       </span>
                     </div>
                     <p className="text-[11px] text-orange-400 font-bold mt-1">
@@ -247,7 +260,7 @@ export default function AdminOverviewPanel() {
                       className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:border-blue-500 hover:text-white text-[10px] font-bold transition-colors cursor-pointer disabled:opacity-40"
                     >
                       <MessageSquare size={11} />
-                      <span>Replied</span>
+                      <span>{t('admin.overview.replied')}</span>
                     </button>
                     <button
                       type="button"
@@ -256,7 +269,7 @@ export default function AdminOverviewPanel() {
                       className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:border-emerald-500 hover:text-white text-[10px] font-bold transition-colors cursor-pointer disabled:opacity-40"
                     >
                       <CheckCheck size={11} />
-                      <span>Resolve</span>
+                      <span>{t('admin.overview.resolve')}</span>
                     </button>
                   </div>
                 </div>
@@ -270,9 +283,14 @@ export default function AdminOverviewPanel() {
       <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5 sm:p-6">
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h3 className="text-sm font-extrabold text-white">Product Distribution by Category</h3>
+            <h3 className="text-sm font-extrabold text-white">
+              {t('admin.overview.distribution')}
+            </h3>
             <p className="text-[11px] text-slate-400 mt-0.5">
-              {products.length} catalog items across {distribution.length} categories
+              {t('admin.overview.distributionSummary', {
+                count: products.length,
+                total: distribution.length,
+              })}
             </p>
           </div>
           {loading ? <Loader2 size={16} className="animate-spin text-orange-500" /> : null}
@@ -281,7 +299,7 @@ export default function AdminOverviewPanel() {
         {distribution.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-10 text-slate-400">
             <CircleCheck size={24} />
-            <p className="text-xs font-bold">No products in the catalog yet.</p>
+            <p className="text-xs font-bold">{t('admin.overview.noProducts')}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -290,7 +308,7 @@ export default function AdminOverviewPanel() {
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-xs font-bold text-slate-200">{category}</span>
                   <span className="text-[11px] font-bold text-slate-400">
-                    {count} {count === 1 ? 'item' : 'items'}
+                    {t('admin.overview.itemCount', { count })}
                   </span>
                 </div>
                 <div className="h-2.5 w-full bg-slate-900/70 rounded-full overflow-hidden">
@@ -307,7 +325,9 @@ export default function AdminOverviewPanel() {
 
       {/* Stock hubs */}
       <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5 sm:p-6">
-        <h3 className="text-sm font-extrabold text-white mb-4">Active Stock Hubs</h3>
+        <h3 className="text-sm font-extrabold text-white mb-4">
+          {t('admin.overview.activeHubs')}
+        </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {HUBS.map((hub) => (
             <div
@@ -316,9 +336,9 @@ export default function AdminOverviewPanel() {
             >
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_2px] shadow-emerald-400/50" />
               <div>
-                <p className="text-xs font-bold text-white">{hub}</p>
+                <p className="text-xs font-bold text-white">{t(hub)}</p>
                 <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
-                  Operational
+                  {t('admin.overview.operational')}
                 </p>
               </div>
             </div>

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ShieldCheck,
   X,
@@ -27,8 +28,8 @@ export default function OtpVerificationModal({
   onClose,
   onVerify,
   onResend,
-  title = 'Verify Your Account',
-  subtitle = 'Enter the 6-digit verification code we sent to your email address.',
+  title,
+  subtitle,
   length = 6,
   demoCode = null,
   isDemo = false,
@@ -37,6 +38,8 @@ export default function OtpVerificationModal({
   resendLoading = false,
   expiresAt = null,
 }) {
+  const { t } = useTranslation();
+
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [secondsLeft, setSecondsLeft] = useState(0);
@@ -94,6 +97,10 @@ export default function OtpVerificationModal({
 
   const expired = Boolean(expiresAt) && secondsLeft === 0;
   const isComplete = code.length === length;
+
+  // Fallback copy for callers that do not supply their own wording.
+  const modalTitle = title || t('otp.verifyTitle');
+  const modalSubtitle = subtitle || t('otp.verifySubtitle');
 
   /** Writes a character into the box at `index`. */
   const setDigitAt = useCallback(
@@ -181,7 +188,7 @@ export default function OtpVerificationModal({
     event.preventDefault();
 
     if (!isComplete) {
-      setError(`Please enter all ${length} digits of the verification code.`);
+      setError(t('otp.incompleteCode', { count: length }));
       return;
     }
 
@@ -192,7 +199,7 @@ export default function OtpVerificationModal({
       setError(
         submitError?.response?.data?.message ||
           submitError?.message ||
-          'The verification code could not be confirmed.'
+          t('otp.confirmFailed')
       );
     }
   };
@@ -214,7 +221,7 @@ export default function OtpVerificationModal({
             type="button"
             onClick={onClose}
             disabled={loading}
-            aria-label="Close verification dialog"
+            aria-label={t('otp.closeDialog')}
             className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors cursor-pointer disabled:opacity-50"
           >
             <X size={16} />
@@ -225,10 +232,10 @@ export default function OtpVerificationModal({
           </span>
 
           <h3 id="otp-modal-title" className="text-lg font-black mt-3">
-            {title}
+            {modalTitle}
           </h3>
           <p className="text-[11px] font-semibold text-white/80 mt-1 leading-relaxed">
-            {subtitle}
+            {modalSubtitle}
           </p>
           {destination ? (
             <p className="text-[11px] font-black text-white mt-2 flex items-center gap-1.5">
@@ -264,7 +271,7 @@ export default function OtpVerificationModal({
                   setCode(pasted);
                   inputsRef.current[Math.min(pasted.length, length - 1)]?.focus();
                 }}
-                aria-label={`Verification digit ${index + 1} of ${length}`}
+                aria-label={t('otp.digitAria', { index: index + 1, length })}
                 className={`w-full max-w-[52px] h-14 text-center text-xl font-black rounded-xl border-2 bg-slate-50 text-slate-900 outline-none transition-all focus:bg-white focus:border-red-600 focus:ring-4 focus:ring-red-500/10 ${
                   error ? 'border-red-300' : 'border-slate-200'
                 }`}
@@ -276,10 +283,10 @@ export default function OtpVerificationModal({
           {expiresAt ? (
             <p className="text-center text-[11px] font-bold text-slate-500">
               {expired ? (
-                <span className="text-red-600">This code has expired — request a new one.</span>
+                <span className="text-red-600">{t('otp.expired')}</span>
               ) : (
                 <>
-                  Code expires in{' '}
+                  {t('otp.expiresIn')}{' '}
                   <span className="text-slate-900 tabular-nums">{countdown}</span>
                 </>
               )}
@@ -300,10 +307,10 @@ export default function OtpVerificationModal({
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-[10px] font-black uppercase tracking-wider text-amber-700">
-                    Demo mode — fast testing
+                    {t('otp.demoMode')}
                   </p>
                   <p className="text-[11px] font-bold text-amber-900 mt-0.5">
-                    Default code:{' '}
+                    {t('otp.defaultCode')}{' '}
                     <span className="font-black tracking-widest">{demoCode}</span>
                   </p>
                 </div>
@@ -314,7 +321,7 @@ export default function OtpVerificationModal({
                     className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg border border-amber-300 bg-white text-[10px] font-black text-amber-800 hover:bg-amber-100 transition-colors cursor-pointer"
                   >
                     {copied ? <CheckCircle2 size={11} /> : <Copy size={11} />}
-                    <span>{copied ? 'Copied' : 'Copy'}</span>
+                    <span>{copied ? t('otp.copied') : t('otp.copy')}</span>
                   </button>
                   <button
                     type="button"
@@ -322,7 +329,7 @@ export default function OtpVerificationModal({
                     className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg bg-amber-500 text-white text-[10px] font-black hover:bg-amber-600 transition-colors cursor-pointer"
                   >
                     <CheckCircle2 size={11} />
-                    <span>Autofill</span>
+                    <span>{t('otp.autofill')}</span>
                   </button>
                 </div>
               </div>
@@ -343,7 +350,7 @@ export default function OtpVerificationModal({
                 ) : (
                   <RefreshCw size={13} />
                 )}
-                <span>Resend code</span>
+                <span>{t('otp.resendCode')}</span>
               </button>
             ) : null}
 
@@ -355,10 +362,10 @@ export default function OtpVerificationModal({
               {loading ? (
                 <>
                   <Loader2 size={14} className="animate-spin" />
-                  <span>Verifying...</span>
+                  <span>{t('otp.verifying')}</span>
                 </>
               ) : (
-                <span>Verify &amp; continue</span>
+                <span>{t('otp.verifyContinue')}</span>
               )}
             </button>
           </div>

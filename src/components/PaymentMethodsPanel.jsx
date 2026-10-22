@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Check, Loader2, PhoneCall, ShieldCheck, TriangleAlert, Wallet } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -29,6 +30,7 @@ export default function PaymentMethodsPanel({
   onSelectProvider,
 }) {
   const { user, isAuthenticated } = useAuth();
+  const { t } = useTranslation();
 
   const [phoneInput, setPhoneInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -56,7 +58,7 @@ export default function PaymentMethodsPanel({
     if (provider.id === 'CASH') {
       setStatus({
         type: 'success',
-        message: 'Cash on delivery selected. Inspect the items before you pay the agent.',
+        message: t('payment.cashSelected'),
       });
       return;
     }
@@ -64,7 +66,7 @@ export default function PaymentMethodsPanel({
     if (!isAuthenticated) {
       setStatus({
         type: 'error',
-        message: 'Please sign in to pay with mobile money.',
+        message: t('payment.signInRequired'),
       });
       return;
     }
@@ -73,7 +75,7 @@ export default function PaymentMethodsPanel({
     if (msisdn.length < 12) {
       setStatus({
         type: 'error',
-        message: 'Enter a valid phone number (e.g. 0781359770) to receive the payment prompt.',
+        message: t('payment.invalidPhone'),
       });
       return;
     }
@@ -82,7 +84,7 @@ export default function PaymentMethodsPanel({
       setLoading(true);
       setStatus({
         type: 'info',
-        message: `Sending a ${provider.shortLabel} payment prompt to ${msisdn}...`,
+        message: t('payment.sendingPrompt', { provider: provider.shortLabel, phone: msisdn }),
       });
 
       const order = await createOrderService({
@@ -112,18 +114,18 @@ export default function PaymentMethodsPanel({
 
       setStatus({
         type: 'success',
-        message: `Payment prompt sent successfully via ${provider.label}! Check your phone and enter your PIN.`,
+        message: t('payment.promptSent', { provider: provider.label }),
       });
 
       // Follow the webhook driven status updates for this order
       streamRef.current?.();
       streamRef.current = subscribeToPaymentStatusService(orderId, (data) => {
         if (data.status === 'PAID') {
-          setStatus({ type: 'success', message: 'Payment received! Your order is confirmed.' });
+          setStatus({ type: 'success', message: t('checkout.paymentSuccess') });
         } else if (data.status === 'FAILED' || data.status === 'CANCELLED') {
           setStatus({
             type: 'error',
-            message: 'Payment was declined or timed out. You can retry or choose cash on delivery.',
+            message: t('payment.declined'),
           });
         }
       });
@@ -131,9 +133,7 @@ export default function PaymentMethodsPanel({
       console.error('Payment initialization failed:', err);
       setStatus({
         type: 'error',
-        message:
-          err?.response?.data?.message ||
-          'Payment initialization failed. Falling back to Cash on Delivery.',
+        message: err?.response?.data?.message || t('payment.initializationFailed'),
       });
     } finally {
       setLoading(false);
@@ -151,7 +151,7 @@ export default function PaymentMethodsPanel({
   return (
     <div className="mt-6 bg-white rounded-2xl p-5 shadow-sm space-y-4">
       <h3 className="text-sm font-extrabold text-gray-900 pb-2">
-        Payment Methods & Security
+        {t('payment.title')}
       </h3>
 
       {/* Cash on Delivery / Lipa */}
@@ -168,8 +168,8 @@ export default function PaymentMethodsPanel({
           <CashMark className="w-5 h-5" />
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-bold text-orange-900">Pay by Cash / Lipa kwa Cash</p>
-          <p className="text-[11px] text-orange-700">Inspect items upon delivery</p>
+          <p className="text-xs font-bold text-orange-900">{t('payment.cashLabel')}</p>
+          <p className="text-[11px] text-orange-700">{t('payment.cashHint')}</p>
         </div>
         {activeId === 'CASH' ? (
           <Check size={15} className="ml-auto text-orange-600 shrink-0" />
@@ -178,7 +178,7 @@ export default function PaymentMethodsPanel({
 
       {/* Mobile Money Networks */}
       <div>
-        <p className="text-xs font-semibold text-gray-500 mb-2">Mobile Money Networks</p>
+        <p className="text-xs font-semibold text-gray-500 mb-2">{t('payment.mobileMoneyNetworks')}</p>
         <div className="grid grid-cols-2 gap-2">
           {MOBILE_MONEY_PROVIDERS.map((provider) => {
             const isSelected = activeId === provider.id;
@@ -206,7 +206,7 @@ export default function PaymentMethodsPanel({
             htmlFor="payment-phone"
             className="text-[11px] font-semibold text-gray-500 block mb-1"
           >
-            Mobile money number
+            {t('payment.mobileMoneyNumber')}
           </label>
           <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 focus-within:border-[#E50914] transition-colors">
             <PhoneCall size={14} className="text-gray-400 shrink-0" />
@@ -232,7 +232,9 @@ export default function PaymentMethodsPanel({
               ) : (
                 <Wallet size={14} />
               )}
-              {loading ? 'Sending prompt...' : `Pay TSh ${amount.toLocaleString('en-US')}`}
+              {loading
+                ? t('payment.sendingPromptShort')
+                : t('payment.payAmount', { amount: amount.toLocaleString('en-US') })}
             </button>
           ) : null}
         </div>
@@ -240,21 +242,21 @@ export default function PaymentMethodsPanel({
 
       {/* Bank Cards */}
       <div>
-        <p className="text-xs font-semibold text-gray-500 mb-2">Bank Cards &amp; Transfers</p>
+        <p className="text-xs font-semibold text-gray-500 mb-2">{t('payment.bankCards')}</p>
         <div className="flex flex-wrap items-center gap-2">
           {CARD_NETWORKS.map((network) => (
             <CardBadge key={network} network={network} />
           ))}
         </div>
         <p className="text-[11px] text-gray-500 mt-2">
-          Card details are captured on the secure checkout page and never stored on this product.
+          {t('payment.cardDetailsNote')}
         </p>
         <Link
           to={`/shop?add=${product.id}`}
           className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-bold text-[#E50914] hover:text-[#C0040F] transition-colors"
         >
           <ShieldCheck size={12} />
-          Pay by card at secure checkout
+          {t('payment.payByCard')}
         </Link>
       </div>
 
@@ -280,9 +282,9 @@ export default function PaymentMethodsPanel({
       {/* TRA & Delivery Guarantee */}
       <div className="pt-2 border-t border-gray-100 space-y-1.5 text-xs text-gray-600">
         {[
-          'TRA Fiscalized EFD Receipt Included',
-          'Secure Checkout & Instant Verification',
-          'Fast Regional Delivery (Dar es Salaam & Mbeya Hubs)',
+          t('payment.traReceiptIncluded'),
+          t('payment.secureCheckoutInstant'),
+          t('payment.fastRegionalDelivery'),
         ].map((item) => (
           <div key={item} className="flex items-center gap-2">
             <span className="text-green-600 font-bold">✓</span>

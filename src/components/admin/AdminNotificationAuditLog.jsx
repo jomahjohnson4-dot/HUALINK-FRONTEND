@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { getAdminAuditLog, subscribeToNotifications } from '../../api/notificationService';
 import { relativeTime, absoluteTime } from '../../utils/time';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Admin "Notifications & Audit Log" panel.
@@ -43,12 +44,12 @@ const TYPE_STYLES = {
 
 /** The filter chips shown above the stream. */
 const FILTERS = [
-  { id: 'ALL', label: 'All Events' },
-  { id: 'SIGNUP', label: 'Sign-ups' },
-  { id: 'ORDERS', label: 'Orders' },
-  { id: 'VERIFICATION', label: 'Verification' },
-  { id: 'INQUIRIES', label: 'Inquiries' },
-  { id: 'CATALOGUE', label: 'Catalogue' },
+  { id: 'ALL', labelKey: 'admin.audit.filters.all' },
+  { id: 'SIGNUP', labelKey: 'admin.audit.filters.signups' },
+  { id: 'ORDERS', labelKey: 'admin.audit.filters.orders' },
+  { id: 'VERIFICATION', labelKey: 'admin.audit.filters.verification' },
+  { id: 'INQUIRIES', labelKey: 'admin.audit.filters.inquiries' },
+  { id: 'CATALOGUE', labelKey: 'admin.audit.filters.catalogue' },
 ];
 
 /** Colour for each verification status. */
@@ -60,6 +61,7 @@ const VERIFICATION_STATUS = {
 };
 
 export default function AdminNotificationAuditLog({ limit = 60 }) {
+  const { t } = useTranslation();
   const [events, setEvents] = useState([]);
   const [verificationCodes, setVerificationCodes] = useState([]);
   const [summary, setSummary] = useState({ total: 0, byType: {}, verifications: 0 });
@@ -133,12 +135,32 @@ export default function AdminNotificationAuditLog({ limit = 60 }) {
 
   const statCards = useMemo(
     () => [
-      { label: 'Total events', value: summary.total || 0, Icon: BellRing, tint: 'text-orange-400' },
-      { label: 'Sign-ups', value: summary.byType?.SIGNUP || 0, Icon: UserPlus, tint: 'text-emerald-400' },
-      { label: 'Orders', value: summary.byType?.ORDER || 0, Icon: ShoppingBag, tint: 'text-sky-400' },
-      { label: 'Verifications', value: summary.verifications || 0, Icon: ShieldCheck, tint: 'text-violet-400' },
+      {
+        label: t('admin.audit.totalEvents'),
+        value: summary.total || 0,
+        Icon: BellRing,
+        tint: 'text-orange-400',
+      },
+      {
+        label: t('admin.audit.signups'),
+        value: summary.byType?.SIGNUP || 0,
+        Icon: UserPlus,
+        tint: 'text-emerald-400',
+      },
+      {
+        label: t('admin.audit.orders'),
+        value: summary.byType?.ORDER || 0,
+        Icon: ShoppingBag,
+        tint: 'text-sky-400',
+      },
+      {
+        label: t('admin.audit.verifications'),
+        value: summary.verifications || 0,
+        Icon: ShieldCheck,
+        tint: 'text-violet-400',
+      },
     ],
-    [summary]
+    [summary, t]
   );
 
   return (
@@ -170,14 +192,15 @@ export default function AdminNotificationAuditLog({ limit = 60 }) {
             <div>
               <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
                 <BellRing size={16} className="text-orange-500" />
-                Notifications &amp; Audit Log
+                {t('admin.audit.title')}
               </h3>
               <p className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5">
                 <Radio
                   size={10}
                   className={`${live ? 'text-emerald-400 animate-pulse' : 'text-slate-500'}`}
                 />
-                {live ? 'Live' : 'Polling'} — every sign-up, order and verification event
+                {live ? t('admin.audit.live') : t('admin.audit.polling')}
+                {t('admin.audit.description')}
               </p>
             </div>
 
@@ -188,7 +211,7 @@ export default function AdminNotificationAuditLog({ limit = 60 }) {
               className="inline-flex items-center gap-1.5 text-[10px] font-black text-slate-300 hover:text-white border border-slate-700 hover:border-orange-500 bg-slate-900/70 rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer disabled:opacity-40"
             >
               <RefreshCw size={11} className={refreshing ? 'animate-spin' : ''} />
-              <span>Refresh</span>
+              <span>{t('admin.audit.refresh')}</span>
             </button>
           </div>
 
@@ -208,7 +231,7 @@ export default function AdminNotificationAuditLog({ limit = 60 }) {
                       : 'bg-slate-900/60 text-slate-400 hover:text-white'
                   }`}
                 >
-                  {item.label}
+                  {t(item.labelKey)}
                 </button>
               );
             })}
@@ -217,14 +240,14 @@ export default function AdminNotificationAuditLog({ limit = 60 }) {
           {loading && !events.length ? (
             <div className="py-10 flex items-center justify-center gap-2 text-slate-400">
               <Loader2 size={16} className="animate-spin text-orange-500" />
-              <span className="text-xs font-bold">Loading the audit trail...</span>
+              <span className="text-xs font-bold">{t('admin.audit.loading')}</span>
             </div>
           ) : null}
 
           {!loading && !visibleEvents.length ? (
             <div className="py-10 flex flex-col items-center gap-2 text-slate-400">
               <BellRing size={24} />
-              <p className="text-xs font-bold">No events recorded for this filter yet.</p>
+              <p className="text-xs font-bold">{t('admin.audit.empty')}</p>
             </div>
           ) : null}
 
@@ -276,24 +299,24 @@ export default function AdminNotificationAuditLog({ limit = 60 }) {
           <div className="mb-4">
             <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
               <KeyRound size={16} className="text-violet-400" />
-              Verification Code Audit
+              {t('admin.audit.verificationAudit')}
             </h3>
             <p className="text-[11px] text-slate-400 mt-0.5">
-              Every OTP and PIN issued, confirmed or expired
+              {t('admin.audit.verificationAuditDesc')}
             </p>
           </div>
 
           {loading && !verificationCodes.length ? (
             <div className="py-10 flex items-center justify-center gap-2 text-slate-400">
               <Loader2 size={16} className="animate-spin text-violet-400" />
-              <span className="text-xs font-bold">Loading codes...</span>
+              <span className="text-xs font-bold">{t('admin.audit.loadingCodes')}</span>
             </div>
           ) : null}
 
           {!loading && !verificationCodes.length ? (
             <div className="py-10 flex flex-col items-center gap-2 text-slate-400">
               <KeyRound size={24} />
-              <p className="text-xs font-bold">No verification codes issued yet.</p>
+              <p className="text-xs font-bold">{t('admin.audit.emptyCodes')}</p>
             </div>
           ) : null}
 
@@ -328,7 +351,7 @@ export default function AdminNotificationAuditLog({ limit = 60 }) {
 
                     <div className="text-[10px] font-semibold text-slate-400 space-y-0.5">
                       <p>
-                        <span className="text-slate-500">Purpose:</span>{' '}
+                        <span className="text-slate-500">{t('admin.audit.purpose')}</span>{' '}
                         {record.purpose || 'SIGNUP'}
                         {record.amount
                           ? ` · TSh ${Number(record.amount).toLocaleString()}`
@@ -336,14 +359,17 @@ export default function AdminNotificationAuditLog({ limit = 60 }) {
                       </p>
                       {record.email ? (
                         <p className="truncate">
-                          <span className="text-slate-500">Recipient:</span> {record.email}
+                          <span className="text-slate-500">{t('admin.audit.recipient')}</span>{' '}
+                          {record.email}
                         </p>
                       ) : null}
                       <p>
-                        <span className="text-slate-500">Issued:</span>{' '}
+                        <span className="text-slate-500">{t('admin.audit.issued')}</span>{' '}
                         {relativeTime(record.createdAt)}
                         {record.verifiedAt
-                          ? ` · confirmed ${relativeTime(record.verifiedAt)}`
+                          ? t('admin.audit.confirmedAgo', {
+                              time: relativeTime(record.verifiedAt),
+                            })
                           : ''}
                       </p>
                     </div>

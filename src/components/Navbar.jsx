@@ -185,7 +185,7 @@ export default function Navbar({ user: userProp }) {
                   setIsLangMenuOpen((o) => !o);
                 }}
                 className="flex items-center gap-1.5 px-4 py-1.5 border border-gray-200 bg-gray-50 rounded-full text-xs font-semibold cursor-pointer hover:bg-gray-100 transition-colors focus:outline-none"
-                aria-label="Language selector"
+                aria-label={t('common.languageSelector')}
               >
                 <Globe size={14} className="text-gray-500" />
                 <span className="font-bold text-gray-900">
@@ -221,7 +221,7 @@ export default function Navbar({ user: userProp }) {
             <button
               onClick={openCart}
               className="relative w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center bg-gray-50 text-gray-900 hover:text-brand-red hover:bg-red-50 transition-all cursor-pointer"
-              aria-label="Open Order Cart"
+              aria-label={t('common.openCart')}
             >
               <ShoppingCart size={17} />
               {cartCount > 0 && (
@@ -255,10 +255,10 @@ export default function Navbar({ user: userProp }) {
                     <div className="px-4 py-3">
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-bold text-gray-900 truncate">
-                          {user?.name || user?.fullName || 'User Account'}
+                          {user?.name || user?.fullName || t('common.userAccount')}
                         </p>
                         <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 border border-gray-200">
-                          {userRole || 'CUSTOMER'}
+                          {userRole || t('common.roleCustomer')}
                         </span>
                       </div>
                       <p className="text-[10px] text-gray-500 truncate mt-1">{user?.email}</p>
@@ -291,7 +291,7 @@ export default function Navbar({ user: userProp }) {
                           onClick={() => setIsUserMenuOpen(false)}
                           className="block px-4 py-2.5 text-xs text-gray-800 hover:bg-gray-50 font-bold"
                         >
-                          Supplier Portal
+                          {t('common.supplierPortal')}
                         </Link>
                         {userRole === 'ADMIN' && (
                           <Link
@@ -299,7 +299,7 @@ export default function Navbar({ user: userProp }) {
                             onClick={() => setIsUserMenuOpen(false)}
                             className="block px-4 py-2.5 text-xs text-brand-red hover:bg-red-50 font-bold"
                           >
-                            Admin Console
+                            {t('common.adminConsole')}
                           </Link>
                         )}
                       </div>
@@ -313,7 +313,7 @@ export default function Navbar({ user: userProp }) {
                           className="flex items-center gap-2 px-4 py-2.5 text-xs text-brand-red hover:bg-red-50 font-bold"
                         >
                           <ShieldAlert size={15} />
-                          <span>User Management</span>
+                          <span>{t('common.userManagement')}</span>
                         </Link>
                       </div>
                     )}

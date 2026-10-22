@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   MapPin, 
   Phone, 
@@ -13,63 +14,63 @@ import {
 } from 'lucide-react';
 
 const REGIONS = [
-  { id: 'all', name: 'All Distribution Hubs' },
-  { id: 'dar', name: 'Dar es Salaam' },
-  { id: 'mbeya', name: 'Mbeya' },
-  { id: 'mwanza', name: 'Mwanza' },
-  { id: 'arusha', name: 'Arusha' },
+  { id: 'all', nameKey: 'outlets.allDistributionHubs' },
+  { id: 'dar', nameKey: 'outlets.darEsSalaam' },
+  { id: 'mbeya', nameKey: 'outlets.mbeya' },
+  { id: 'mwanza', nameKey: 'outlets.mwanza' },
+  { id: 'arusha', nameKey: 'outlets.arusha' },
 ];
 
 const MOCK_BRANCHES = [
   {
     id: 1,
-    name: 'Hualink Main Supply Depot — Dar es Salaam',
+    nameKey: 'outlets.branchNameDar',
     regionId: 'dar',
-    regionName: 'Dar es Salaam (HQ)',
-    address: 'Kariakoo Commercial District, Lumumba Street Hub',
+    regionNameKey: 'outlets.branchRegionDarHQ',
+    addressKey: 'outlets.branchAddressDar',
     phone: '+255 700 000 001',
-    status: 'Operational Depot',
-    stockCapacity: 'Over 10,000+ Wholesale Units',
-    services: ['Bulk Stock Delivery', 'Electronics Distribution', 'Regional Cargo Dispatch'],
+    statusKey: 'outlets.branchStatusOperational',
+    stockCapacityKey: 'outlets.branchStockDar',
+    serviceKeys: ['outlets.branchServiceBulkDelivery', 'outlets.branchServiceElectronics', 'outlets.branchServiceRegionalCargo'],
     image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80',
     isHQ: true,
   },
   {
     id: 2,
-    name: 'Hualink Southern Highlands Branch — Mbeya',
+    nameKey: 'outlets.branchNameMbeya',
     regionId: 'mbeya',
-    regionName: 'Mbeya Region',
-    address: 'Iyunga Industrial Area, Mbalizi Road',
+    regionNameKey: 'outlets.branchRegionMbeya',
+    addressKey: 'outlets.branchAddressMbeya',
     phone: '+255 700 000 002',
-    status: 'Operational Depot',
-    stockCapacity: '3,500+ Regional Stock Units',
-    services: ['TeKeL Graphics Station', 'Hardware Depot', 'Local Express Dispatch'],
+    statusKey: 'outlets.branchStatusOperational',
+    stockCapacityKey: 'outlets.branchStockMbeya',
+    serviceKeys: ['outlets.branchServiceTeKel', 'outlets.branchServiceHardware', 'outlets.branchServiceLocalExpress'],
     image: 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=600&q=80',
     isHQ: false,
   },
   {
     id: 3,
-    name: 'Hualink Lake Zone Hub — Mwanza',
+    nameKey: 'outlets.branchNameMwanza',
     regionId: 'mwanza',
-    regionName: 'Mwanza Region',
-    address: 'Nyamagana Commercial Center, Makongoro Road',
+    regionNameKey: 'outlets.branchRegionMwanza',
+    addressKey: 'outlets.branchAddressMwanza',
     phone: '+255 700 000 003',
-    status: 'Operational Depot',
-    stockCapacity: '4,000+ Regional Stock Units',
-    services: ['Smartphones Supply', 'Home Appliance Fulfillment', 'Cargo Shipping'],
+    statusKey: 'outlets.branchStatusOperational',
+    stockCapacityKey: 'outlets.branchStockMwanza',
+    serviceKeys: ['outlets.branchServiceSmartphones', 'outlets.branchServiceAppliances', 'outlets.branchServiceCargoShipping'],
     image: 'https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=600&q=80',
     isHQ: false,
   },
   {
     id: 4,
-    name: 'Hualink Northern Zone Branch — Arusha',
+    nameKey: 'outlets.branchNameArusha',
     regionId: 'arusha',
-    regionName: 'Arusha Region',
-    address: 'Central Plaza Complex, Sokoine Road',
+    regionNameKey: 'outlets.branchRegionArusha',
+    addressKey: 'outlets.branchAddressArusha',
     phone: '+255 700 000 004',
-    status: 'Operational Depot',
-    stockCapacity: '2,800+ Regional Stock Units',
-    services: ['Office & Furniture Logistics', 'B2B Wholesale Fulfillment'],
+    statusKey: 'outlets.branchStatusOperational',
+    stockCapacityKey: 'outlets.branchStockArusha',
+    serviceKeys: ['outlets.branchServiceOfficeFurniture', 'outlets.branchServiceB2BWholesale'],
     image: 'https://images.unsplash.com/photo-1565891741441-64926e441838?auto=format&fit=crop&w=600&q=80',
     isHQ: false,
   },
@@ -77,6 +78,7 @@ const MOCK_BRANCHES = [
 
 export default function Outlets() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [selectedRegion, setSelectedRegion] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -94,10 +96,11 @@ export default function Outlets() {
   const filteredBranches = MOCK_BRANCHES.filter((branch) => {
     const matchesRegion =
       selectedRegion === 'all' || branch.regionId === selectedRegion;
+    const search = searchQuery.toLowerCase();
     const matchesSearch =
-      branch.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      branch.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      branch.regionName.toLowerCase().includes(searchQuery.toLowerCase());
+      t(branch.nameKey).toLowerCase().includes(search) ||
+      t(branch.addressKey).toLowerCase().includes(search) ||
+      (branch.regionNameKey ? t(branch.regionNameKey).toLowerCase().includes(search) : false);
     return matchesRegion && matchesSearch;
   });
 
@@ -110,13 +113,13 @@ export default function Outlets() {
           <div className="relative z-10 max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-black/50 border border-red-500/30 rounded-full px-3 py-1 text-xs font-bold text-red-400 mb-4 uppercase tracking-wider">
               <Zap size={14} />
-              <span>Unified Branch Logistics Network</span>
+              <span>{t('outlets.bannerBadge')}</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-black italic tracking-tight text-white uppercase">
-              Hualink Regional Depots
+              {t('outlets.bannerTitle')}
             </h1>
             <p className="text-xs sm:text-sm text-gray-300 mt-2 font-medium">
-              One central supply company with dedicated distribution branches and warehouses located across major regions in Tanzania.
+              {t('outlets.bannerSubtitle')}
             </p>
           </div>
         </div>
@@ -132,7 +135,7 @@ export default function Outlets() {
               <Search size={18} className="absolute left-3.5 top-3.5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search branch or region..."
+                placeholder={t('outlets.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-gray-800 border border-gray-700 rounded-2xl pl-10 pr-4 py-3 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-red-600 transition-colors"
@@ -143,7 +146,7 @@ export default function Outlets() {
             <div className="bg-gray-800/80 border border-gray-700/80 rounded-2xl p-4 shadow-lg">
               <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-gray-400 mb-4 px-2">
                 <Navigation size={14} className="text-red-500" />
-                <span>Filter By Region</span>
+                <span>{t('outlets.filterByRegion')}</span>
               </div>
               <div className="space-y-1">
                 {REGIONS.map((reg) => {
@@ -158,7 +161,7 @@ export default function Outlets() {
                           : 'text-gray-300 hover:bg-gray-700/60 hover:text-white'
                       }`}
                     >
-                      <span>{reg.name}</span>
+                      <span>{t(reg.nameKey)}</span>
                     </button>
                   );
                 })}
@@ -170,9 +173,9 @@ export default function Outlets() {
               <div className="flex items-start gap-3">
                 <ShieldCheck className="text-red-500 shrink-0 mt-0.5" size={20} />
                 <div>
-                  <h4 className="text-xs font-extrabold text-white uppercase">Inter-Depot Transfer</h4>
+                  <h4 className="text-xs font-extrabold text-white uppercase">{t('outlets.interDepotTransfer')}</h4>
                   <p className="text-[11px] text-gray-400 mt-1">
-                    Inventory is synced across all regional hubs for fast order fulfillment and local pickup options.
+                    {t('outlets.networkDesc')}
                   </p>
                 </div>
               </div>
@@ -185,7 +188,7 @@ export default function Outlets() {
             
             <div className="flex items-center justify-between mb-6 pb-3 border-b border-gray-800">
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                Active Branch Hubs: <span className="text-white font-extrabold">{filteredBranches.length}</span>
+                {t('outlets.activeBranchHubs')} <span className="text-white font-extrabold">{filteredBranches.length}</span>
               </div>
             </div>
 
@@ -200,7 +203,7 @@ export default function Outlets() {
                     <div className="relative h-48 bg-gray-900 overflow-hidden">
                       <img
                         src={branch.image}
-                        alt={branch.name}
+                        alt={t(branch.nameKey)}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       <span className={`absolute top-3 left-3 text-[10px] font-extrabold px-2.5 py-1 rounded-full border uppercase tracking-wider ${
@@ -208,20 +211,20 @@ export default function Outlets() {
                           ? 'bg-red-600 text-white border-red-500/50' 
                           : 'bg-black/80 backdrop-blur-md text-red-400 border-red-500/30'
                       }`}>
-                        {branch.isHQ ? 'Central Headquarters' : branch.regionName}
+                        {branch.isHQ ? t('outlets.centralHeadquarters') : t(branch.regionNameKey)}
                       </span>
                     </div>
 
                     {/* Branch Details */}
                     <div className="p-5">
                       <h3 className="text-base font-bold text-white leading-snug">
-                        {branch.name}
+                        {t(branch.nameKey)}
                       </h3>
 
                       <div className="mt-3 space-y-2 text-xs text-gray-300">
                         <div className="flex items-start gap-2">
                           <MapPin size={15} className="text-red-500 shrink-0 mt-0.5" />
-                          <span>{branch.address}</span>
+                          <span>{t(branch.addressKey)}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Phone size={15} className="text-red-500 shrink-0" />
@@ -229,23 +232,23 @@ export default function Outlets() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Package size={15} className="text-red-500 shrink-0" />
-                          <span className="text-gray-400">{branch.stockCapacity}</span>
+                          <span className="text-gray-400">{t(branch.stockCapacityKey)}</span>
                         </div>
                       </div>
 
                       {/* Capabilities List */}
                       <div className="mt-4 pt-3 border-t border-gray-700/50">
                         <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block mb-2">
-                          Depot Features & Services:
+                          {t('outlets.depotFeaturesServices')}
                         </span>
                         <div className="flex flex-wrap gap-1.5">
-                          {branch.services.map((service, idx) => (
+                          {(branch.serviceKeys || []).map((serviceKey, idx) => (
                             <span 
                               key={idx}
                               className="inline-flex items-center gap-1 bg-gray-900/80 border border-gray-700/80 text-gray-300 text-[10px] font-bold px-2 py-1 rounded-lg"
                             >
                               <CheckCircle2 size={12} className="text-red-500" />
-                              <span>{service}</span>
+                              <span>{t(serviceKey)}</span>
                             </span>
                           ))}
                         </div>
@@ -259,7 +262,7 @@ export default function Outlets() {
                       onClick={() => handleContactManager(branch)}
                       className="w-full bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs py-3 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-2"
                     >
-                      <span>Contact Branch Manager</span>
+                      <span>{t('outlets.contactBranchManager')}</span>
                       <ArrowRight size={14} />
                     </button>
                   </div>

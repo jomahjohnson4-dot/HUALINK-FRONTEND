@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Search,
   SlidersHorizontal,
@@ -14,14 +15,20 @@ import ProductCard from '../components/ProductCard';
 import { ProductQuickView } from '../components/ProductModal';
 import HorizontalProductShowcase from '../components/HorizontalProductShowcase';
 
-/** Category pills — they mirror the catalogue's category values exactly. */
+/**
+ * Category pills — they mirror the catalogue's category values exactly.
+ *
+ * `value` is the *stable* English catalogue value used for filtering and
+ * must never be translated (the catalogue stores English category strings),
+ * while `nameKey` points at the translated label shown to the shopper.
+ */
 const CATEGORIES = [
-  'All Categories',
-  'Chargers & Cables',
-  'Audio & Sound',
-  'Smartphones',
-  'Home Appliances',
-  'Accessories',
+  { id: 'all', value: 'All Categories', nameKey: 'categories.allCategories' },
+  { id: 'chargers-cables', value: 'Chargers & Cables', nameKey: 'categories.chargersCables' },
+  { id: 'audio', value: 'Audio & Sound', nameKey: 'categories.audioSound' },
+  { id: 'smartphones', value: 'Smartphones', nameKey: 'categories.smartphones' },
+  { id: 'home-appliances', value: 'Home Appliances', nameKey: 'categories.homeAppliances' },
+  { id: 'accessories', value: 'Accessories', nameKey: 'categories.accessories' },
 ];
 
 export default function Marketplace() {
@@ -29,11 +36,15 @@ export default function Marketplace() {
   // real name instead of a generic guest label.
   const { user } = useAuth();
 
+  // All labels are resolved through i18next so the header language switcher
+  // instantly re-renders the marketplace in the selected language.
+  const { t } = useTranslation();
+
   // The verified local catalogue is the guaranteed default state, so the
   // marketplace renders every inventory item immediately.
   const [products, setProducts] = useState(() => productsCatalog);
   const [feedOffline, setFeedOffline] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('All Categories');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [wishlist, setWishlist] = useState(() => new Set());
   const [quickView, setQuickView] = useState(null);
@@ -86,10 +97,13 @@ export default function Marketplace() {
     const categoryName = String(product.category || '').toLowerCase().trim();
     const categorySlug = String(product.categorySlug || '').toLowerCase().trim();
 
+    const activeCategory =
+      CATEGORIES.find((category) => category.id === selectedCategory) || CATEGORIES[0];
+
     const matchesCategory =
-      selectedCategory === 'All Categories' ||
-      categoryName === selectedCategory.toLowerCase().trim() ||
-      categorySlug === selectedCategory.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+      activeCategory.id === 'all' ||
+      categoryName === activeCategory.value.toLowerCase().trim() ||
+      categorySlug === activeCategory.value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
 
     if (!matchesCategory) return false;
 
@@ -108,14 +122,13 @@ export default function Marketplace() {
         <div className="bg-gradient-to-r from-red-600 to-black rounded-3xl p-6 sm:p-10 mb-8 border border-red-900/40 shadow-2xl relative overflow-hidden">
           <div className="relative z-10 max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-black/50 border border-red-500/30 rounded-full px-3 py-1 text-xs font-bold text-red-400 mb-4 uppercase tracking-wider">
-              <span>Direct Wholesale & Retail Inventory</span>
+              <span>{t('shop.eyebrow')}</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-black italic tracking-tight text-white uppercase">
-              Hualink Supply Marketplace
+              {t('shop.title')}
             </h1>
             <p className="text-xs sm:text-sm text-gray-300 mt-2 font-medium">
-              Verified product distribution directly from regional depots & trusted supply channels
-              across Tanzania.
+              {t('shop.subtitle')}
             </p>
           </div>
         </div>
@@ -129,7 +142,7 @@ export default function Marketplace() {
               <Search size={18} className="absolute left-3.5 top-3.5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search inventory, SKUs..."
+                placeholder={t('shop.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 className="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-4 py-3 text-xs text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:border-[#E50914] focus:ring-2 focus:ring-[#E50914]/10 transition-colors"
@@ -140,21 +153,21 @@ export default function Marketplace() {
             <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
               <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-gray-500 mb-4 px-2">
                 <Filter size={14} className="text-[#E50914]" />
-                <span>Categories</span>
+                <span>{t('shop.categories')}</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {CATEGORIES.map((category) => (
                   <button
-                    key={category}
+                    key={category.id}
                     type="button"
-                    onClick={() => setSelectedCategory(category)}
+                    onClick={() => setSelectedCategory(category.id)}
                     className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                      selectedCategory === category
+                      selectedCategory === category.id
                         ? 'bg-[#E50914] text-white shadow-md shadow-[#E50914]/25'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900'
                     }`}
                   >
-                    {category}
+                    {t(category.nameKey)}
                   </button>
                 ))}
               </div>
@@ -166,11 +179,10 @@ export default function Marketplace() {
                 <ShieldCheck className="text-[#E50914] shrink-0 mt-0.5" size={20} />
                 <div>
                   <h4 className="text-xs font-extrabold text-gray-900 uppercase">
-                    Guaranteed Quality
+                    {t('shop.guaranteedQuality')}
                   </h4>
                   <p className="text-[11px] text-gray-500 mt-1">
-                    Every batch item listed on Hualink is quality checked at local hubs before
-                    dispatch.
+                    {t('shop.guaranteedQualityDesc')}
                   </p>
                 </div>
               </div>
@@ -182,13 +194,13 @@ export default function Marketplace() {
             {/* Header bar for product list */}
             <div className="flex items-center justify-between mb-6 pb-3 border-b border-gray-200">
               <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                Showing{' '}
+                {t('shop.showing')}{' '}
                 <span className="text-gray-900 font-extrabold">{filteredProducts.length}</span>{' '}
-                Products
+                {t('shop.products')}
               </div>
               <div className="flex items-center gap-2 text-xs text-gray-400">
                 <SlidersHorizontal size={14} />
-                <span>Default Sort: Direct Supply First</span>
+                <span>{t('shop.sortLabel')}</span>
               </div>
             </div>
 
@@ -197,7 +209,7 @@ export default function Marketplace() {
               <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-gray-200 rounded-xl px-4 py-3 mb-5 shadow-sm">
                 <div className="flex items-center gap-2 text-xs font-semibold text-gray-600">
                   <WifiOff size={15} className="text-amber-500 shrink-0" />
-                  <span>Live inventory feed offline — showing the full local catalogue.</span>
+                  <span>{t('shop.offlineNotice')}</span>
                 </div>
                 <button
                   type="button"
@@ -205,7 +217,7 @@ export default function Marketplace() {
                   className="inline-flex items-center gap-1.5 text-[11px] font-extrabold text-[#E50914] hover:underline cursor-pointer"
                 >
                   <RefreshCw size={12} />
-                  <span>Retry</span>
+                  <span>{t('shop.retry')}</span>
                 </button>
               </div>
             )}
@@ -213,9 +225,9 @@ export default function Marketplace() {
             {/* Empty State */}
             {filteredProducts.length === 0 && (
               <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
-                <p className="text-gray-700 font-bold text-sm">No inventory items found.</p>
+                <p className="text-gray-700 font-bold text-sm">{t('shop.emptyTitle')}</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  Try searching for a different item or switching categories.
+                  {t('shop.emptyHint')}
                 </p>
               </div>
             )}

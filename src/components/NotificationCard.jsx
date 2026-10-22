@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   ArrowRight,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { relativeTime, absoluteTime } from '../utils/time';
 
 /**
@@ -71,19 +72,19 @@ const TONE_STYLES = {
     Icon: CheckCircle2,
     wrap: 'bg-emerald-50 text-emerald-600 border-emerald-100',
     dot: 'bg-emerald-500',
-    label: 'Success',
+    labelKey: 'notifications.tones.success',
   },
   alert: {
     Icon: AlertTriangle,
     wrap: 'bg-red-50 text-red-600 border-red-100',
     dot: 'bg-red-500',
-    label: 'Alert',
+    labelKey: 'notifications.tones.alert',
   },
   order: {
     Icon: Truck,
     wrap: 'bg-blue-50 text-blue-600 border-blue-100',
     dot: 'bg-blue-500',
-    label: 'Order',
+    labelKey: 'notifications.tones.order',
   },
 };
 
@@ -102,25 +103,25 @@ const TYPE_ICONS = {
  *
  * @param {object} notification
  * @param {object} options
+ * @param {Function} options.t the i18next translate function
  * @param {boolean} [options.isAdmin]
  * @returns {{label: string, to: string}|null}
  */
-const resolveAction = (notification, { isAdmin = false } = {}) => {
+const resolveAction = (notification, { t, isAdmin = false } = {}) => {
   switch (notification?.type) {
     case 'ORDER':
-      return { label: 'View Order Details', to: '/orders' };
+      return { label: t('notifications.actions.viewOrder'), to: '/orders' };
     case 'SIGNUP':
-      return { label: 'Verify Account', to: '/notifications?tab=account' };
     case 'VERIFY':
-      return { label: 'Verify Account', to: '/notifications?tab=account' };
+      return { label: t('notifications.actions.verify'), to: '/notifications?tab=account' };
     case 'INQUIRY':
       return isAdmin
-        ? { label: 'Reply in Chat', to: '/dashboard/chat' }
-        : { label: 'View Inquiry', to: '/notifications' };
+        ? { label: t('notifications.actions.replyChat'), to: '/dashboard/chat' }
+        : { label: t('notifications.actions.viewInquiry'), to: '/notifications' };
     case 'PRODUCT':
-      return { label: 'View Catalogue', to: '/shop' };
+      return { label: t('notifications.actions.viewCatalogue'), to: '/shop' };
     default:
-      return { label: 'View Notifications', to: '/notifications' };
+      return { label: t('notifications.actions.viewNotifications'), to: '/notifications' };
   }
 };
 
@@ -131,10 +132,12 @@ const resolveAction = (notification, { isAdmin = false } = {}) => {
  * the detailed message, the relative timestamp and the action button.
  */
 export default function NotificationCard({ notification, onSelect, onAction, isAdmin = false }) {
+  const { t } = useTranslation();
   const tone = resolveTone(notification);
-  const { Icon, wrap, dot, label } = TONE_STYLES[tone];
+  const { Icon, wrap, dot, labelKey } = TONE_STYLES[tone];
+  const label = t(labelKey);
   const TypeIcon = TYPE_ICONS[notification.type] || Bell;
-  const action = resolveAction(notification, { isAdmin });
+  const action = resolveAction(notification, { t, isAdmin });
 
   return (
     <article
@@ -186,7 +189,7 @@ export default function NotificationCard({ notification, onSelect, onAction, isA
               {!notification.isRead ? (
                 <span
                   className={`block w-2 h-2 rounded-full ml-auto mt-1.5 ${dot}`}
-                  aria-label="Unread"
+                  aria-label={t('notifications.unreadAria')}
                 />
               ) : null}
             </div>
@@ -211,7 +214,7 @@ export default function NotificationCard({ notification, onSelect, onAction, isA
                 onClick={() => onSelect?.(notification)}
                 className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-wider hover:bg-slate-50 transition-colors cursor-pointer"
               >
-                <span>Mark as read</span>
+                <span>{t('notifications.markAsRead')}</span>
               </button>
             ) : null}
           </div>

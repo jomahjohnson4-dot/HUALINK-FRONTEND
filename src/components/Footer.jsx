@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   MapPin, 
   Phone, 
@@ -6,11 +7,12 @@ import {
   Globe, 
   Share2, 
   MessageSquare, 
-  ArrowRight,
-  Lock
+  ArrowRight
 } from 'lucide-react';
 
 export default function Footer() {
+  const { t } = useTranslation();
+
   return (
     <footer className="hidden md:block bg-black text-white pt-12 pb-8 border-t border-gray-800">
       <div className="max-w-7xl mx-auto px-6">
@@ -31,13 +33,13 @@ export default function Footer() {
                   <span className="text-white">LINK</span>
                 </div>
                 <span className="text-[9px] text-gray-400 font-extrabold tracking-[0.25em] uppercase">
-                  DISTRIBUTION
+                  {t('footer.brandTag')}
                 </span>
               </div>
             </Link>
 
             <p className="text-xs text-gray-400 leading-relaxed">
-              Redefining direct product distribution through quality-checked stock, verified inventory management, and a unified regional supply network.
+              {t('footer.aboutDesc')}
             </p>
 
             {/* Social Icons */}
@@ -57,48 +59,38 @@ export default function Footer() {
           {/* Column 2: Quick Links */}
           <div className="space-y-4">
             <h4 className="text-xs font-black uppercase tracking-widest text-red-500">
-              Quick Links
+              {t('footer.quickLinks')}
             </h4>
             <ul className="space-y-2.5 text-xs text-gray-400 font-medium">
               <li>
                 <Link to="/shop" className="hover:text-white transition-colors flex items-center gap-1.5">
                   <ArrowRight size={12} className="text-red-500" />
-                  <span>Marketplace Catalog</span>
+                  <span>{t('footer.marketplaceCatalog')}</span>
                 </Link>
               </li>
               <li>
                 <Link to="/outlets" className="hover:text-white transition-colors flex items-center gap-1.5">
                   <ArrowRight size={12} className="text-red-500" />
-                  <span>Regional Depots & Outlets</span>
+                  <span>{t('footer.regionalDepots')}</span>
                 </Link>
               </li>
               <li>
                 <Link to="/services" className="hover:text-white transition-colors flex items-center gap-1.5">
                   <ArrowRight size={12} className="text-red-500" />
-                  <span>Services & TeKeL Graphics</span>
+                  <span>{t('footer.servicesTeKel')}</span>
                 </Link>
               </li>
               <li>
                 <Link to="/explore" className="hover:text-white transition-colors flex items-center gap-1.5">
                   <ArrowRight size={12} className="text-red-500" />
-                  <span>Explore Network</span>
+                  <span>{t('footer.exploreNetwork')}</span>
                 </Link>
               </li>
               <li>
                 <a href="#terms" className="hover:text-white transition-colors flex items-center gap-1.5">
                   <ArrowRight size={12} className="text-red-500" />
-                  <span>Terms & Conditions</span>
+                  <span>{t('footer.termsConditions')}</span>
                 </a>
-              </li>
-              <li>
-                <Link
-                  to="/admin"
-                  className="hover:text-white text-gray-500 transition-colors flex items-center gap-1.5"
-                  title="Hualink Admin Portal"
-                >
-                  <Lock size={11} className="text-gray-600" />
-                  <span>Admin Portal</span>
-                </Link>
               </li>
             </ul>
           </div>
@@ -106,21 +98,21 @@ export default function Footer() {
           {/* Column 3: Hualink Supply Scope */}
           <div className="space-y-4">
             <h4 className="text-xs font-black uppercase tracking-widest text-red-500">
-              Hualink Supply Scope
+              {t('footer.supplyScope')}
             </h4>
             <ul className="space-y-2.5 text-xs text-gray-400 font-medium">
-              <li className="hover:text-white transition-colors">Electronics & Hardware Stock</li>
-              <li className="hover:text-white transition-colors">TeKeL Graphics & Brand Design</li>
-              <li className="hover:text-white transition-colors">Custom Office & Home Furniture</li>
-              <li className="hover:text-white transition-colors">Computers & Networking Maintenance</li>
-              <li className="hover:text-white transition-colors">Bulk Order Cargo Dispatch</li>
+              <li className="hover:text-white transition-colors">{t('footer.electronicsHardware')}</li>
+              <li className="hover:text-white transition-colors">{t('footer.teKelGraphics')}</li>
+              <li className="hover:text-white transition-colors">{t('footer.officeFurniture')}</li>
+              <li className="hover:text-white transition-colors">{t('footer.computersNetworking')}</li>
+              <li className="hover:text-white transition-colors">{t('footer.bulkCargo')}</li>
             </ul>
           </div>
 
           {/* Column 4: Vertical Contact Info */}
           <div className="space-y-4">
             <h4 className="text-xs font-black uppercase tracking-widest text-red-500">
-              Contact Information
+              {t('footer.contactInfo')}
             </h4>
             
             <div className="space-y-4 pt-1">
@@ -130,8 +122,8 @@ export default function Footer() {
                   <MapPin size={16} />
                 </div>
                 <div>
-                  <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider">Main Address</span>
-                  <span className="font-medium text-white">Dar es Salaam, Tanzania</span>
+                  <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider">{t('footer.mainAddress')}</span>
+                  <span className="font-medium text-white">{t('footer.darEsSalaam')}</span>
                 </div>
               </div>
 
@@ -141,8 +133,8 @@ export default function Footer() {
                   <Phone size={16} />
                 </div>
                 <div>
-                  <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider">Direct Hotline</span>
-                  <span className="font-medium text-white">+255 760 706 872</span>
+                  <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider">{t('footer.directHotline')}</span>
+                  <span className="font-medium text-white">{t('footer.hotlineNumber')}</span>
                 </div>
               </div>
 
@@ -152,8 +144,8 @@ export default function Footer() {
                   <Mail size={16} />
                 </div>
                 <div>
-                  <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider">Official Email</span>
-                  <span className="font-medium text-white">info@hualink.co.tz</span>
+                  <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider">{t('footer.officialEmail')}</span>
+                  <span className="font-medium text-white">{t('footer.emailAddress')}</span>
                 </div>
               </div>
             </div>
@@ -163,7 +155,7 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="pt-6 text-center text-xs text-gray-500 font-medium">
-          All rights reserved. © 2026 HUALINK DISTRIBUTION.
+          {t('footer.copyright')}
         </div>
 
       </div>

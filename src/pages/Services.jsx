@@ -17,14 +17,15 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import ServiceContactModal from '../components/modals/ServiceContactModal';
 
 const SERVICE_CATEGORIES = [
-  { id: 'all', name: 'All Services', icon: Sparkles },
-  { id: 'web', name: 'Web & App Development', icon: Monitor },
-  { id: 'graphic', name: 'TeKeL Graphics & Branding', icon: Palette },
-  { id: 'furniture', name: 'Custom Furniture', icon: Armchair },
-  { id: 'tech', name: 'Technical Support', icon: Wrench },
+  { id: 'all', nameKey: 'servicesAlt.allServices', icon: Sparkles },
+  { id: 'web', nameKey: 'servicesAlt.webAppDevelopment', icon: Monitor },
+  { id: 'graphic', nameKey: 'servicesAlt.teKelGraphicsBranding', icon: Palette },
+  { id: 'furniture', nameKey: 'servicesAlt.customFurniture', icon: Armchair },
+  { id: 'tech', nameKey: 'servicesAlt.technicalSupport', icon: Wrench },
 ];
 
 const MOCK_SERVICES = [
@@ -115,6 +116,7 @@ const MOCK_SERVICES = [
 ];
 
 export default function Services() {
+  const { t } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -186,10 +188,10 @@ export default function Services() {
         setSubmittedBooking(data.data);
         setIsSubmitted(true);
       } else {
-        setErrorMessage(data.message || 'Failed to send booking request. Please try again.');
+        setErrorMessage(data.message || t('servicesAlt.bookingFailed'));
       }
     } catch (error) {
-      setErrorMessage('Network connection error. Check your server status and try again.');
+      setErrorMessage(t('servicesAlt.networkError'));
     } finally {
       setIsLoading(false);
     }
@@ -204,13 +206,13 @@ export default function Services() {
           <div className="relative z-10 max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-black/50 border border-red-500/30 rounded-full px-3 py-1 text-xs font-bold text-red-400 mb-4 uppercase tracking-wider">
               <Zap size={14} />
-              <span>Professional Creative & Technical Services</span>
+              <span>{t('servicesAlt.bannerBadge')}</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-black italic tracking-tight text-white uppercase">
-              Hualink & TeKeL Services Hub
+              {t('servicesAlt.bannerTitle')}
             </h1>
             <p className="text-xs sm:text-sm text-gray-300 mt-2 font-medium">
-              Expert digital solutions, TeKeL graphics branding, custom furniture supply, and technical maintenance delivered by verified professionals.
+              {t('servicesAlt.bannerSubtitle')}
             </p>
           </div>
         </div>
@@ -224,7 +226,7 @@ export default function Services() {
               <Search size={18} className="absolute left-3.5 top-3.5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search services, providers..."
+                placeholder={t('servicesAlt.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-gray-800 border border-gray-700 rounded-2xl pl-10 pr-4 py-3 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-red-600 transition-colors"
@@ -234,7 +236,7 @@ export default function Services() {
             <div className="bg-gray-800/80 border border-gray-700/80 rounded-2xl p-4 shadow-lg">
               <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-gray-400 mb-4 px-2">
                 <Filter size={14} className="text-red-500" />
-                <span>Service Categories</span>
+                <span>{t('servicesAlt.serviceCategories')}</span>
               </div>
               <div className="space-y-1">
                 {SERVICE_CATEGORIES.map((cat) => {
@@ -252,7 +254,7 @@ export default function Services() {
                     >
                       <div className="flex items-center gap-2.5 truncate">
                         <Icon size={16} className="shrink-0" />
-                        <span className="truncate">{cat.name}</span>
+                        <span className="truncate">{t(cat.nameKey)}</span>
                       </div>
                     </button>
                   );
@@ -264,9 +266,9 @@ export default function Services() {
               <div className="flex items-start gap-3">
                 <ShieldCheck className="text-red-500 shrink-0 mt-0.5" size={20} />
                 <div>
-                  <h4 className="text-xs font-extrabold text-white uppercase">Verified Standards</h4>
+                  <h4 className="text-xs font-extrabold text-white uppercase">{t('servicesAlt.verifiedStandards')}</h4>
                   <p className="text-[11px] text-gray-400 mt-1">
-                    Every service request is backed by Hualink quality oversight and professional execution guarantees.
+                    {t('servicesAlt.verifiedStandardsDesc')}
                   </p>
                 </div>
               </div>
@@ -277,7 +279,7 @@ export default function Services() {
           <div className="lg:col-span-3">
             <div className="flex items-center justify-between mb-6 pb-3 border-b border-gray-800">
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                Available Services: <span className="text-white font-extrabold">{filteredServices.length}</span>
+                {t('servicesAlt.availableServices')} <span className="text-white font-extrabold">{filteredServices.length}</span>
               </div>
             </div>
 
@@ -301,7 +303,7 @@ export default function Services() {
 
                       <span className="absolute top-3 right-3 bg-emerald-500/20 backdrop-blur-md border border-emerald-500/40 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        {service.status}
+                        service.status === 'Online Now' ? t('servicesAlt.onlineNow') : service.status === 'Fast Response' ? t('servicesAlt.fastResponse') : service.status === 'Available' ? t('servicesAlt.available') : service.status
                       </span>
                     </div>
 
@@ -319,11 +321,11 @@ export default function Services() {
 
                       <div className="mt-4 pt-3 border-t border-gray-700/50 space-y-1.5">
                         <div className="flex justify-between items-center text-[11px]">
-                          <span className="text-gray-400">Estimate:</span>
+                          <span className="text-gray-400">{t('servicesAlt.estimate')}</span>
                           <span className="font-extrabold text-white">{service.price}</span>
                         </div>
                         <div className="flex justify-between items-center text-[11px]">
-                          <span className="text-gray-400">Timeline:</span>
+                          <span className="text-gray-400">{t('servicesAlt.timeline')}</span>
                           <span className="font-bold text-red-400">{service.timeline}</span>
                         </div>
                       </div>
@@ -335,7 +337,7 @@ export default function Services() {
                       onClick={() => handleOpenModal(service)}
                       className="w-full bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs py-2.5 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-md shadow-red-600/20"
                     >
-                      <span>Book Service</span>
+                      <span>{t('servicesAlt.bookService')}</span>
                       <ArrowRight size={14} />
                     </button>
 
@@ -344,7 +346,7 @@ export default function Services() {
                       className="w-full bg-gray-900/80 hover:bg-gray-900 border border-emerald-500/40 hover:border-emerald-500/80 text-emerald-400 hover:text-emerald-300 font-bold text-xs py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"
                     >
                       <MessageSquare size={14} />
-                      <span>Chat on WhatsApp</span>
+                      <span>{t('servicesAlt.chatOnWhatsApp')}</span>
                     </button>
                   </div>
                 </div>
@@ -375,10 +377,10 @@ export default function Services() {
                     {activeServiceModal.provider}
                   </span>
                   <h3 className="text-lg font-bold text-white mt-1 leading-snug">
-                    Book: {activeServiceModal.title}
+                    {t('servicesAlt.bookServiceTitle')}: {activeServiceModal.title}
                   </h3>
                   <p className="text-xs text-gray-400 mt-1">
-                    Estimate: <span className="text-white font-bold">{activeServiceModal.price}</span>
+                    {t('servicesAlt.estimateLabel')} <span className="text-white font-bold">{activeServiceModal.price}</span>
                   </p>
                 </div>
 
@@ -392,7 +394,7 @@ export default function Services() {
                 <form onSubmit={handleSubmitBooking} className="space-y-4">
                   <div>
                     <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">
-                      Full Name
+                      {t('servicesAlt.fullName')}
                     </label>
                     <input 
                       type="text" 
@@ -400,14 +402,14 @@ export default function Services() {
                       disabled={isLoading}
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="Enter your name" 
+                      placeholder={t('servicesAlt.fullNamePlaceholder')} 
                       className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-red-600 transition-colors disabled:opacity-50"
                     />
                   </div>
 
                   <div>
                     <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">
-                      Phone Number / WhatsApp
+                      {t('servicesAlt.phoneNumber')}
                     </label>
                     <input 
                       type="tel" 
@@ -415,14 +417,14 @@ export default function Services() {
                       disabled={isLoading}
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="e.g. 0758139770" 
+                      placeholder={t('servicesAlt.phonePlaceholder')} 
                       className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-red-600 transition-colors disabled:opacity-50"
                     />
                   </div>
 
                   <div>
                     <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">
-                      Project Scope & Specific Requirements
+                      {t('servicesAlt.projectScope')}
                     </label>
                     <textarea 
                       rows="3" 
@@ -430,7 +432,7 @@ export default function Services() {
                       disabled={isLoading}
                       value={formData.note}
                       onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-                      placeholder="Describe what you need designed, built, or repaired..." 
+                      placeholder="{t('servicesAlt.projectScopePlaceholder')}" 
                       className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-red-600 transition-colors disabled:opacity-50"
                     />
                   </div>
@@ -443,12 +445,12 @@ export default function Services() {
                     {isLoading ? (
                       <>
                         <Loader2 size={16} className="animate-spin" />
-                        <span>Sending Request...</span>
+                        <span>{t('servicesAlt.sendingRequest')}</span>
                       </>
                     ) : (
                       <>
                         <Send size={14} />
-                        <span>Submit Service Order</span>
+                        <span>{t('servicesAlt.submitServiceOrder')}</span>
                       </>
                     )}
                   </button>
@@ -460,13 +462,13 @@ export default function Services() {
                   <CheckCircle2 size={24} />
                 </div>
                 <div>
-                  <h4 className="text-base font-bold text-white">Booking Order Request Sent!</h4>
+                  <h4 className="text-base font-bold text-white">{t('servicesAlt.bookingSent')}</h4>
                   <p className="text-xs text-gray-400 mt-2">
-                    Thank you, <span className="text-white font-semibold">{formData.name}</span>. The team at <span className="text-white font-semibold">{activeServiceModal.provider}</span> will contact you shortly via <span className="text-white font-semibold">{formData.phone}</span>. An SMS confirmation has also been dispatched.
+                    {t('servicesAlt.bookingThanks')} <span className="text-white font-semibold">{formData.name}</span>. {t('servicesAlt.bookingContact')} <span className="text-white font-semibold">{activeServiceModal.provider}</span> {t('servicesAlt.bookingWillContact')} <span className="text-white font-semibold">{formData.phone}</span>. {t('servicesAlt.bookingSms')}
                   </p>
                   {submittedBooking?.id && (
                     <p className="text-[11px] text-slate-400 mt-1">
-                      Booking ID: <span className="font-mono text-white">#{submittedBooking.id}</span>
+                      {t('servicesAlt.bookingId')} <span className="font-mono text-white">#{submittedBooking.id}</span>
                     </p>
                   )}
                 </div>
@@ -481,7 +483,7 @@ export default function Services() {
                     className="flex-1 py-2.5 bg-orange-500 hover:bg-orange-400 text-slate-950 font-extrabold text-xs rounded-xl transition-colors cursor-pointer shadow-lg shadow-orange-500/20 flex items-center justify-center gap-1.5"
                   >
                     <MessageSquare size={14} />
-                    <span>Open Live Chat & WhatsApp</span>
+                    <span>{t('servicesAlt.openLiveChat')}</span>
                   </button>
                   <button 
                     type="button"
