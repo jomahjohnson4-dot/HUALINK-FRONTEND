@@ -152,3 +152,19 @@ header, nav {
   max-width: 100vw !important;
   box-sizing: border-box;
 }
+
+/* Strict Mobile Fixes & Clean Layout Containment */
+html, body {
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
